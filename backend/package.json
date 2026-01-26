@@ -1,6 +1,7 @@
 {
   "name": "ai-msme-summit-backend",
   "version": "1.0.0",
+  "type": "module",
   "description": "Backend API for AI for MSME Business Summit Registration",
   "main": "dist/index.js",
   "scripts": {

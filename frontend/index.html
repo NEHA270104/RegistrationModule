@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Register for AI for MSME Business Summit 2026 - Transform your business with AI insights from industry experts">
+    <meta name="keywords" content="AI, MSME, Business Summit, 2026, Registration, India">
+    <meta property="og:title" content="AI for MSME Business Summit 2026">
+    <meta property="og:description" content="Join 120 business leaders for a transformational one-day summit">
+    <meta property="og:type" content="website">
+
+    <title>AI for MSME Business Summit 2026 | Registration</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Razorpay Checkout -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loader">
+            <div class="loader-spinner"></div>
+            <p class="loader-text">Processing...</p>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="modal hidden">
+        <div class="modal-content success-modal">
+            <div class="success-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </div>
+            <h2>Registration Successful!</h2>
+            <p class="booking-id">Booking ID: <span id="booking-id-display"></span></p>
+            <p class="success-message">A confirmation email has been sent to your registered email address.</p>
+            <div class="booking-details" id="booking-details"></div>
+            <button class="btn btn-primary" onclick="closeSuccessModal()">Done</button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-text">AI for</span>
+                    <span class="logo-highlight">MSME</span>
+                    <span class="logo-text">Summit</span>
+                </div>
+                <div class="event-badge">
+                    <span class="badge-date">3rd Jan 2026</span>
+                    <span class="badge-divider">|</span>
+                    <span class="badge-location">Live on Zoom</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-content">
+                <div class="hero-tag">Limited Seats Available</div>
+                <h1 class="hero-title">
+                    Transform Your Business with
+                    <span class="gradient-text">Artificial Intelligence</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Join 120 visionary MSME leaders for an exclusive one-day summit featuring
+                    India's top AI experts and business strategists.
+                </p>
+
+                <div class="event-highlights">
+                    <div class="highlight-item">
+                        <div class="highlight-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                        </div>
+                        <div class="highlight-text">
+                            <span class="highlight-label">Date</span>
+                            <span class="highlight-value">3rd January 2026</span>
+                        </div>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </div>
+                        <div class="highlight-text">
+                            <span class="highlight-label">Time</span>
+                            <span class="highlight-value">9 AM - 2 PM IST</span>
+                        </div>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                        </div>
+                        <div class="highlight-text">
+                            <span class="highlight-label">Seats</span>
+                            <span class="highlight-value" id="total-seats-display">120 Only</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Seat Availability -->
+            <section class="seats-section">
+                <h2 class="section-title">Choose Your Pass</h2>
+                <p class="section-subtitle">Select the tier that best fits your needs</p>
+
+                <div class="seats-grid" id="seats-grid">
+                    <!-- Seats will be loaded dynamically -->
+                    <div class="seats-loading">
+                        <div class="loader-spinner small"></div>
+                        <p>Loading available seats...</p>
+                    </div>
+                </div>
+
+                <!-- Waitlist Notice -->
+                <div id="waitlist-notice" class="waitlist-notice hidden">
+                    <div class="notice-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                    </div>
+                    <div class="notice-content">
+                        <h3>All Seats Sold Out!</h3>
+                        <p>Join our waitlist to be notified when seats become available, or purchase live stream access.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Registration Form -->
+            <section class="form-section" id="registration-section">
+                <div class="form-container">
+                    <div class="form-header">
+                        <h2 class="form-title">Register Now</h2>
+                        <p class="form-subtitle">Fill in your details to secure your spot</p>
+                    </div>
+
+                    <form id="registration-form" class="registration-form">
+                        <!-- Selected Tier Display -->
+                        <div class="selected-tier-display" id="selected-tier-display">
+                            <span class="tier-label">Selected Pass:</span>
+                            <span class="tier-name" id="selected-tier-name">-</span>
+                            <span class="tier-price" id="selected-tier-price">-</span>
+                        </div>
+
+                        <!-- Hidden tier input -->
+                        <input type="hidden" id="tier" name="tier" required>
+
+                        <!-- Personal Details -->
+                        <div class="form-section-group">
+                            <h3 class="form-group-title">Personal Details</h3>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="name" class="form-label">Full Name <span class="required">*</span></label>
+                                    <input
+                                        type="text"
+                                        id="name"
+                                        name="name"
+                                        class="form-input"
+                                        placeholder="Enter your full name"
+                                        required
+                                        minlength="2"
+                                        maxlength="100"
+                                    >
+                                    <span class="form-error" id="name-error"></span>
+                                </div>
+                            </div>
+
+                            <div class="form-row two-columns">
+                                <div class="form-group">
+                                    <label for="email" class="form-label">Email Address <span class="required">*</span></label>
+                                    <input
+                                        type="email"
+                                        id="email"
+                                        name="email"
+                                        class="form-input"
+                                        placeholder="your@email.com"
+                                        required
+                                    >
+                                    <span class="form-error" id="email-error"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="phone" class="form-label">Phone Number <span class="required">*</span></label>
+                                    <div class="phone-input-wrapper">
+                                        <span class="phone-prefix">+91</span>
+                                        <input
+                                            type="tel"
+                                            id="phone"
+                                            name="phone"
+                                            class="form-input phone-input"
+                                            placeholder="98765 43210"
+                                            required
+                                            pattern="[6-9][0-9]{9}"
+                                            maxlength="10"
+                                        >
+                                    </div>
+                                    <span class="form-error" id="phone-error"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Business Details -->
+                        <div class="form-section-group">
+                            <h3 class="form-group-title">Business Details <span class="optional">(Optional)</span></h3>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="business_name" class="form-label">Business/Company Name</label>
+                                    <input
+                                        type="text"
+                                        id="business_name"
+                                        name="business_name"
+                                        class="form-input"
+                                        placeholder="Your company name"
+                                        maxlength="200"
+                                    >
+                                </div>
+                            </div>
+
+                            <div class="form-row two-columns">
+                                <div class="form-group">
+                                    <label for="industry" class="form-label">Industry</label>
+                                    <select id="industry" name="industry" class="form-select">
+                                        <option value="">Select industry</option>
+                                        <option value="Manufacturing">Manufacturing</option>
+                                        <option value="Retail">Retail & E-commerce</option>
+                                        <option value="Services">Professional Services</option>
+                                        <option value="Technology">Technology & IT</option>
+                                        <option value="Healthcare">Healthcare</option>
+                                        <option value="Education">Education</option>
+                                        <option value="Food">Food & Beverage</option>
+                                        <option value="Agriculture">Agriculture</option>
+                                        <option value="Construction">Construction & Real Estate</option>
+                                        <option value="Finance">Finance & Banking</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="revenue_range" class="form-label">Annual Revenue</label>
+                                    <select id="revenue_range" name="revenue_range" class="form-select">
+                                        <option value="">Select range</option>
+                                        <option value="0-10L">Up to ₹10 Lakhs</option>
+                                        <option value="10L-50L">₹10L - ₹50 Lakhs</option>
+                                        <option value="50L-1Cr">₹50L - ₹1 Crore</option>
+                                        <option value="1Cr-5Cr">₹1Cr - ₹5 Crore</option>
+                                        <option value="5Cr-10Cr">₹5Cr - ₹10 Crore</option>
+                                        <option value="10Cr+">Above ₹10 Crore</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary btn-large" id="submit-btn" disabled>
+                                <span class="btn-text">Proceed to Payment</span>
+                                <span class="btn-price" id="btn-price"></span>
+                                <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </button>
+                            <p class="form-disclaimer">
+                                By registering, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- What You'll Learn -->
+            <section class="benefits-section">
+                <h2 class="section-title">What You'll Learn</h2>
+                <div class="benefits-grid">
+                    <div class="benefit-card">
+                        <div class="benefit-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                <path d="M2 17l10 5 10-5"></path>
+                                <path d="M2 12l10 5 10-5"></path>
+                            </svg>
+                        </div>
+                        <h3>AI Implementation Strategies</h3>
+                        <p>Learn practical ways to integrate AI into your daily business operations</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="1" x2="12" y2="23"></line>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                            </svg>
+                        </div>
+                        <h3>Cost Optimization</h3>
+                        <p>Discover how AI can reduce operational costs by up to 40%</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                        </div>
+                        <h3>Network with Leaders</h3>
+                        <p>Connect with 120 ambitious MSME owners and industry experts</p>
+                    </div>
+                    <div class="benefit-card">
+                        <div class="benefit-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                        </div>
+                        <h3>Expert Insights</h3>
+                        <p>Get actionable advice from 6 of India's leading AI and business experts</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p class="footer-text">© 2026 AI for MSME Summit. All rights reserved.</p>
+                <p class="footer-contact">
+                    Questions? Email us at <a href="mailto:support@aiformsme.com">support@aiformsme.com</a>
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

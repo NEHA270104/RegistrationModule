@@ -4,7 +4,7 @@ steps:
     args:
       - 'build'
       - '-t'
-      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/bizflow-registration:$SHORT_SHA'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/bizflow-registration:$BUILD_ID'
       - '-f'
       - 'backend/Dockerfile'
       - 'backend'
@@ -13,9 +13,9 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/bizflow-registration:$SHORT_SHA'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/bizflow-registration:$BUILD_ID'
 
-  # Deploy to Cloud Run
+  # Deploy to Cloud Run with secrets
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -23,12 +23,18 @@ steps:
       - 'deploy'
       - 'bizflow-registration'
       - '--image'
-      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/bizflow-registration:$SHORT_SHA'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/bizflow-registration:$BUILD_ID'
       - '--region'
-      - 'asia-southeast1'
+      - 'asia-south1'
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
+      - '--set-secrets'
+      - 'SUPABASE_URL=SUPABASE_URL:latest,SUPABASE_SERVICE_KEY=SUPABASE_SERVICE_KEY:latest,RAZORPAY_KEY_ID=RAZORPAY_KEY_ID:latest,RAZORPAY_KEY_SECRET=RAZORPAY_KEY_SECRET:latest'
+      - '--set-env-vars'
+      - 'NODE_ENV=production'
+      - '--timeout'
+      - '60'
 
 options:
   logging: CLOUD_LOGGING_ONLY

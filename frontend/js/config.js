@@ -4,8 +4,16 @@
  */
 
 const CONFIG = {
-  // API Configuration - auto-detect host for production
-  API_BASE_URL: window.location.origin + '/api',
+  // API Configuration
+  // Frontend and backend are served from the same origin on Cloud Run
+  API_BASE_URL: (() => {
+    // Use localhost for local development
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:3000/api';
+    }
+    // In production, use relative URL (same origin)
+    return '/api';
+  })(),
 
   // Razorpay Configuration
   RAZORPAY_KEY_ID: 'rzp_test_RlYiaIXp6zl52C',

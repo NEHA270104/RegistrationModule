@@ -5,20 +5,23 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY backend/package*.json ./
 
 # Install all dependencies (including dev for build)
 RUN npm ci
 
 # Copy TypeScript config and source
-COPY tsconfig.json ./
-COPY src ./src
+COPY backend/tsconfig.json ./
+COPY backend/src ./src
 
 # Build TypeScript
 RUN npm run build
 
 # Remove dev dependencies
 RUN npm prune --omit=dev
+
+# Copy frontend files
+COPY frontend ./frontend
 
 # Expose port
 EXPOSE 8080

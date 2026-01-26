@@ -17,10 +17,11 @@ export async function createOrder(req: Request, res: Response): Promise<void> {
     const orderData: CreateOrderRequest = req.body;
 
     // Get client metadata
+    const referer = req.headers['referer'] || req.headers['referrer'];
     const metadata = {
       ip_address: req.ip || req.socket.remoteAddress,
       user_agent: req.headers['user-agent'],
-      referrer: req.headers['referer'] || req.headers['referrer'],
+      referrer: Array.isArray(referer) ? referer[0] : referer,
     };
 
     const result = await paymentService.createOrder(orderData, metadata);

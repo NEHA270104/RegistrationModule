@@ -76,7 +76,7 @@ export class EmailService {
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
+      const data = await response.json() as { type?: string };
 
       if (!response.ok || data.type === 'error') {
         logger.error('MSG91 email error', {

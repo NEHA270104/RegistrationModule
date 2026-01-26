@@ -91,7 +91,13 @@ export async function createRazorpayOrder(
       receipt: order.receipt,
     });
 
-    return order;
+    return {
+      id: order.id,
+      amount: typeof order.amount === 'string' ? parseInt(order.amount, 10) : order.amount,
+      currency: order.currency,
+      receipt: order.receipt || receipt,
+      status: order.status,
+    };
   } catch (error) {
     logger.error('Error creating Razorpay order', {
       error: error instanceof Error ? error.message : 'Unknown error',

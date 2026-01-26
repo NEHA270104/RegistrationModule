@@ -85,12 +85,14 @@ export const config = {
   // Payment Timeout
   paymentTimeoutMinutes: 10,
 
-  // Pricing (in paise for Razorpay)
+  // Pricing (in paise for Razorpay) - Offered prices with Rs.1000 discount
+  // Original: VIP: 3499, Standard: 2499, Basic: 1999
+  // Offer: VIP: 2499, Standard: 1499, Basic: 999
   pricing: {
-    vip: 249900,
-    standard: 149900,
-    basic: 99900,
-    waitlist: 69900,
+    vip: 249900,      // Rs. 2,499 (offer price)
+    standard: 149900, // Rs. 1,499 (offer price)
+    basic: 99900,     // Rs. 999 (offer price)
+    waitlist: 0,      // Free waitlist
   } as const,
 } as const;
 

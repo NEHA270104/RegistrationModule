@@ -4,6 +4,7 @@ import paymentRouter from './payment.routes.js';
 import registrationRouter from './registration.routes.js';
 import waitlistRouter from './waitlist.routes.js';
 import adminRouter from './admin.routes.js';
+import settingsRouter from './settings.routes.js';
 
 const router = Router();
 
@@ -23,5 +24,6 @@ router.use('/', paymentRouter);
 router.use('/registration', registrationRouter);
 router.use('/waitlist', waitlistRouter);
 router.use('/admin', adminRouter);
+router.use('/settings', settingsRouter);
 
 export default router;

@@ -276,5 +276,5 @@ MIT License - Free for commercial use
 
 ## Support
 
-- Email: support@aiformsme.com
+- Email: support@bizflowai.in
 - Issues: Create GitHub issue

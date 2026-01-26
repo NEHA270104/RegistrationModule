@@ -1,6 +1,8 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { config } from './config/index.js';
 import { testDatabaseConnection } from './config/supabase.js';
 import { logger } from './utils/logger.js';
@@ -12,6 +14,9 @@ import {
 } from './middleware/errorHandler.js';
 import { standardLimiter } from './middleware/rateLimiter.js';
 import routes from './routes/index.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Handle uncaught errors
 handleUnhandledRejection();
@@ -89,26 +94,29 @@ app.use('/api', standardLimiter);
 // API routes
 app.use('/api', routes);
 
-// Root endpoint
-app.get('/', (req: Request, res: Response) => {
-  res.status(200).json({
-    success: true,
-    message: 'AI for MSME Summit Registration API',
-    version: '1.0.0',
-    endpoints: {
-      health: '/api/health',
-      seats: '/api/seats',
-      createOrder: '/api/create-order',
-      verifyPayment: '/api/verify-payment',
-      registration: '/api/registration/:bookingId',
-      waitlist: '/api/waitlist',
-      admin: '/api/admin/*',
-    },
-    documentation: '/api/docs',
-  });
+// Serve frontend static files
+const frontendPath = path.join(__dirname, '../../frontend');
+app.use(express.static(frontendPath));
+
+// Serve admin dashboard
+app.get('/admin', (req: Request, res: Response) => {
+  res.sendFile(path.join(frontendPath, 'admin', 'index.html'));
 });
 
-// 404 handler
+// Serve waitlist page
+app.get('/waitlist', (req: Request, res: Response) => {
+  res.sendFile(path.join(frontendPath, 'waitlist.html'));
+});
+
+// Serve index.html for all non-API routes (SPA support)
+app.get('*', (req: Request, res: Response, next: NextFunction) => {
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+  res.sendFile(path.join(frontendPath, 'index.html'));
+});
+
+// 404 handler for API routes
 app.use(notFoundHandler);
 
 // Global error handler

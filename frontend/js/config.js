@@ -27,6 +27,11 @@ const CONFIG = {
     venue: 'Ashish Plaza, opposite Fergusson college campus road, Shivajinagar, Pune, Maharashtra 411004',
   },
 
+  // WhatsApp Community Link
+  // Create a WhatsApp Community: https://faq.whatsapp.com/cxt?entrypointid=how_to_create_community
+  // Or WhatsApp Group: https://faq.whatsapp.com/1479185602613498/
+  WHATSAPP_COMMUNITY_LINK: 'https://chat.whatsapp.com/CQhaJSZzOv6LfzsdQ4M6Le',
+
   // 3-Day Early Bird Offer Configuration
   // Change these dates to control offer period
   OFFER: {

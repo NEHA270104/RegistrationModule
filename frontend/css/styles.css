@@ -1094,6 +1094,87 @@ body {
   color: var(--gray-800);
 }
 
+/* Message Modal */
+.message-modal {
+  padding: 2rem;
+  padding-top: 3rem;
+  text-align: center;
+  max-width: 400px;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.message-modal .modal-close {
+  position: sticky;
+  top: 0;
+  float: right;
+  margin-top: -2rem;
+  margin-right: -1rem;
+  z-index: 10;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.message-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.message-icon svg {
+  width: 40px;
+  height: 40px;
+}
+
+.message-icon.error {
+  background: #fef2f2;
+}
+
+.message-icon.error svg {
+  stroke: #ef4444;
+}
+
+.message-icon.warning {
+  background: #fffbeb;
+}
+
+.message-icon.warning svg {
+  stroke: #f59e0b;
+}
+
+.message-icon.info {
+  background: #eff6ff;
+}
+
+.message-icon.info svg {
+  stroke: #3b82f6;
+}
+
+.message-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 0.75rem;
+}
+
+.message-text {
+  font-size: 0.9375rem;
+  color: var(--gray-600);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.btn-message-close {
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+}
+
 /* Loading Overlay */
 .loading-overlay {
   position: fixed;

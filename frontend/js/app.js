@@ -423,6 +423,39 @@ function closeTermsModal() {
   document.body.style.overflow = '';
 }
 
+// Message Modal functions
+function showMessageModal(message, type = 'error', title = null) {
+  const modal = document.getElementById('message-modal');
+  const iconEl = document.getElementById('message-icon');
+  const titleEl = document.getElementById('message-title');
+  const textEl = document.getElementById('message-text');
+
+  // Set icon type
+  iconEl.className = 'message-icon ' + type;
+
+  // Set appropriate icon SVG based on type
+  if (type === 'error') {
+    iconEl.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+    titleEl.textContent = title || 'Error';
+  } else if (type === 'warning') {
+    iconEl.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+    titleEl.textContent = title || 'Warning';
+  } else {
+    iconEl.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+    titleEl.textContent = title || 'Notice';
+  }
+
+  textEl.textContent = message;
+  modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMessageModal() {
+  document.getElementById('message-modal').classList.remove('hidden');
+  document.getElementById('message-modal').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
 // FAQ toggle
 function toggleFaq(button) {
   const faqItem = button.parentElement;
@@ -528,6 +561,12 @@ class RegistrationApp {
       }
     });
 
+    document.getElementById('message-modal')?.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal')) {
+        closeMessageModal();
+      }
+    });
+
     // Close modal on escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
@@ -536,6 +575,7 @@ class RegistrationApp {
         closeBizflowModal();
         closePrivacyModal();
         closeTermsModal();
+        closeMessageModal();
       }
     });
   }
@@ -610,7 +650,12 @@ class RegistrationApp {
       },
       modal: {
         ondismiss: () => {
-          console.log('Payment modal closed');
+          closeRegistrationModal();
+          this.showError(
+            'Payment was cancelled. Your registration is not complete. Please try again to secure your seat.',
+            'warning',
+            'Payment Cancelled'
+          );
         },
       },
     };
@@ -664,9 +709,9 @@ class RegistrationApp {
       `;
     }
 
-    // Set WhatsApp group link (you can configure this in config.js)
+    // Set WhatsApp community link from config
     if (this.elements.whatsappLink) {
-      this.elements.whatsappLink.href = 'https://chat.whatsapp.com/your-group-link';
+      this.elements.whatsappLink.href = CONFIG.WHATSAPP_COMMUNITY_LINK;
     }
 
     this.elements.successModal.classList.remove('hidden');
@@ -788,8 +833,8 @@ class RegistrationApp {
     this.elements.loadingOverlay?.classList.add('hidden');
   }
 
-  showError(message) {
-    alert(message);
+  showError(message, type = 'error', title = null) {
+    showMessageModal(message, type, title);
   }
 
   escapeHtml(text) {

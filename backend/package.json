@@ -5,11 +5,14 @@
   "description": "Backend API for AI for MSME Business Summit Registration",
   "main": "dist/index.js",
   "scripts": {
+    "predev": "kill-port 3000 || exit 0",
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
+    "prestart": "kill-port 3000 || exit 0",
     "start": "node dist/index.js",
     "lint": "eslint src/**/*.ts",
     "test": "jest",
+    "kill-port": "kill-port 3000",
     "db:migrate": "supabase db push",
     "db:reset": "supabase db reset"
   },
@@ -40,6 +43,7 @@
     "@types/express": "^4.17.21",
     "@types/node": "^20.10.5",
     "@types/uuid": "^9.0.7",
+    "kill-port": "^2.0.1",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   },

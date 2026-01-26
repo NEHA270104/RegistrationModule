@@ -260,6 +260,19 @@
         </div>
     </div>
 
+    <!-- Message Box Modal -->
+    <div id="message-modal" class="modal hidden">
+        <div class="modal-content message-modal">
+            <button class="modal-close" onclick="closeMessageModal()">&times;</button>
+            <div class="message-icon" id="message-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <h2 class="message-title" id="message-title">Notice</h2>
+            <p class="message-text" id="message-text"></p>
+            <button class="btn btn-primary btn-message-close" onclick="closeMessageModal()">OK</button>
+        </div>
+    </div>
+
     <!-- Privacy Policy Modal -->
     <div id="privacy-modal" class="modal hidden">
         <div class="modal-content legal-modal">

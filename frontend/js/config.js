@@ -4,8 +4,8 @@
  */
 
 const CONFIG = {
-  // API Configuration
-  API_BASE_URL: 'http://localhost:3000/api',
+  // API Configuration - auto-detect host for production
+  API_BASE_URL: window.location.origin + '/api',
 
   // Razorpay Configuration
   RAZORPAY_KEY_ID: 'rzp_test_RlYiaIXp6zl52C',
@@ -15,33 +15,96 @@ const CONFIG = {
     name: 'AI for MSME Business Summit 2026',
     description: 'Transform Your Business with AI',
     date: '7th Feb 2026',
-    time: '8:30 AM - 5:00 PM IST',
-    venue: 'Ashish Plaza, opposite Fergusson college campus road, Shivajinagar, Pune,Maharashtra 411004',
+    time: '10:00 AM - 5:00 PM IST',
+    venue: 'Ashish Plaza, opposite Fergusson college campus road, Shivajinagar, Pune, Maharashtra 411004',
   },
 
-  // Tier Configuration
+  // 3-Day Early Bird Offer Configuration
+  // Change these dates to control offer period
+  OFFER: {
+    startDate: '2026-01-26T00:00:00+05:30', // Offer start date (IST)
+    durationDays: 3, // Number of days the offer runs
+    discountAmount: 1000, // Rs. 1000 off
+    isActive: true, // Toggle offer on/off
+  },
+
+  // Empathetic Tier Configuration
+  // All tiers include: Full Summit Access, Lunch & Refreshments, Certificate, WhatsApp Community
   TIERS: {
     vip: {
-      name: 'VIP Pass',
+      name: 'Executive Experience',
+      displayName: 'Executive Experience',
+      tagline: 'Your success deserves the spotlight',
       color: '#f59e0b',
       class: 'vip',
+      originalPrice: 3499,
+      offerPrice: 2499,
+      discount: 1000,
+      benefits: [
+        'Priority Front Row Seating',
+        'All Session Recordings (30 days)',
+        '1-on-1 AI Consultation (15 mins)',
+        'VIP Networking Lounge Access',
+        'Premium Resource Kit',
+      ],
     },
     standard: {
-      name: 'Standard Pass',
+      name: 'Business Builder',
+      displayName: 'Business Builder',
+      tagline: 'Everything you need to transform',
       color: '#10b981',
       class: 'standard',
+      originalPrice: 2499,
+      offerPrice: 1499,
+      discount: 1000,
+      benefits: [
+        'Reserved Seating',
+        'Session Recordings (7 days)',
+        'Group Q&A Priority',
+        'Networking Session Access',
+      ],
     },
     basic: {
-      name: 'Basic Pass',
+      name: 'Growth Starter',
+      displayName: 'Growth Starter',
+      tagline: 'Take your first step with confidence',
       color: '#6b7280',
       class: 'basic',
+      originalPrice: 1999,
+      offerPrice: 999,
+      discount: 1000,
+      benefits: [
+        'General Seating',
+        'Same-Day Recording Access',
+        'Community Q&A Access',
+      ],
     },
     waitlist: {
-      name: 'Waitlist - Live Stream',
+      name: 'Livestream Access',
+      displayName: 'Livestream Access',
+      tagline: 'Join us from anywhere',
       color: '#3b82f6',
       class: 'waitlist',
+      originalPrice: 699,
+      offerPrice: 699,
+      discount: 0,
+      benefits: [
+        'Full Live Stream Access',
+        'Chat Participation',
+        '3-Day Recording Access',
+        'Digital Certificate',
+      ],
     },
   },
+
+  // Common benefits for ALL paid tiers (displayed separately)
+  COMMON_BENEFITS: [
+    'Full Summit Access (10 AM - 5 PM)',
+    'Complimentary Lunch & Refreshments',
+    'Digital Certificate of Participation',
+    'WhatsApp Community Access',
+    'Event Materials & Resources',
+  ],
 
   // Validation Rules
   VALIDATION: {
@@ -74,9 +137,8 @@ const CONFIG = {
   SEAT_POLL_INTERVAL: 30000, // 30 seconds
 };
 
-// Freeze configuration to prevent modification
-Object.freeze(CONFIG);
-Object.freeze(CONFIG.EVENT);
-Object.freeze(CONFIG.TIERS);
+// Freeze static configuration to prevent accidental modification
+// Note: OFFER, TIERS, and EVENT are NOT frozen to allow dynamic updates from API
+Object.freeze(CONFIG.COMMON_BENEFITS);
 Object.freeze(CONFIG.VALIDATION);
 Object.freeze(CONFIG.MESSAGES);

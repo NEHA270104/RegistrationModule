@@ -3,239 +3,598 @@
  * AI for MSME Summit Registration
  */
 
+// Dynamic settings loaded from API
+let dynamicConfig = null;
+
+// 3-Day Offer System
+let offerCountdownInterval;
+let offerExpired = false;
+let offerEndDate = null;
+
+// Seat availability cache
+let seatAvailability = null;
+
+// Current selected tier
+let selectedTier = 'vip'; // Default to VIP (will be adjusted based on availability)
+
+/**
+ * Fetch dynamic settings from API and merge with static config
+ * Falls back to static config if API fails
+ */
+async function loadDynamicSettings() {
+  try {
+    const response = await fetch(`${CONFIG.API_BASE_URL}/settings`);
+    if (!response.ok) {
+      console.warn('Failed to fetch dynamic settings, using static config');
+      return;
+    }
+
+    dynamicConfig = await response.json();
+
+    // Merge offer settings
+    if (dynamicConfig.offer) {
+      CONFIG.OFFER = {
+        ...CONFIG.OFFER,
+        startDate: dynamicConfig.offer.startDate || CONFIG.OFFER.startDate,
+        durationDays: dynamicConfig.offer.durationDays || CONFIG.OFFER.durationDays,
+        discountAmount: dynamicConfig.offer.discountAmount || CONFIG.OFFER.discountAmount,
+        isActive: dynamicConfig.offer.isActive ?? CONFIG.OFFER.isActive,
+      };
+    }
+
+    // Merge pricing settings
+    if (dynamicConfig.pricing) {
+      if (dynamicConfig.pricing.vip) {
+        CONFIG.TIERS.vip.offerPrice = dynamicConfig.pricing.vip.offerPrice || CONFIG.TIERS.vip.offerPrice;
+        CONFIG.TIERS.vip.originalPrice = dynamicConfig.pricing.vip.originalPrice || CONFIG.TIERS.vip.originalPrice;
+      }
+      if (dynamicConfig.pricing.standard) {
+        CONFIG.TIERS.standard.offerPrice = dynamicConfig.pricing.standard.offerPrice || CONFIG.TIERS.standard.offerPrice;
+        CONFIG.TIERS.standard.originalPrice = dynamicConfig.pricing.standard.originalPrice || CONFIG.TIERS.standard.originalPrice;
+      }
+      if (dynamicConfig.pricing.basic) {
+        CONFIG.TIERS.basic.offerPrice = dynamicConfig.pricing.basic.offerPrice || CONFIG.TIERS.basic.offerPrice;
+        CONFIG.TIERS.basic.originalPrice = dynamicConfig.pricing.basic.originalPrice || CONFIG.TIERS.basic.originalPrice;
+      }
+      if (dynamicConfig.pricing.waitlist) {
+        CONFIG.TIERS.waitlist.offerPrice = dynamicConfig.pricing.waitlist.price || CONFIG.TIERS.waitlist.offerPrice;
+        CONFIG.TIERS.waitlist.originalPrice = dynamicConfig.pricing.waitlist.price || CONFIG.TIERS.waitlist.originalPrice;
+      }
+    }
+
+    // Merge event settings
+    if (dynamicConfig.event) {
+      CONFIG.EVENT = {
+        ...CONFIG.EVENT,
+        name: dynamicConfig.event.name || CONFIG.EVENT.name,
+        date: dynamicConfig.event.date || CONFIG.EVENT.date,
+        time: dynamicConfig.event.time || CONFIG.EVENT.time,
+        venue: dynamicConfig.event.venue || CONFIG.EVENT.venue,
+      };
+    }
+
+    console.log('Dynamic settings loaded successfully');
+  } catch (error) {
+    console.warn('Error loading dynamic settings:', error);
+    // Continue with static config
+  }
+}
+
+/**
+ * Initialize the 3-day offer countdown system
+ */
+function initOfferCountdown() {
+  if (!CONFIG.OFFER.isActive) {
+    offerExpired = true;
+    updatePricingDisplay(true);
+    return;
+  }
+
+  // Calculate offer end date
+  const startDate = new Date(CONFIG.OFFER.startDate);
+  offerEndDate = new Date(startDate.getTime() + (CONFIG.OFFER.durationDays * 24 * 60 * 60 * 1000));
+
+  // Check if offer has expired
+  const now = new Date();
+  if (now >= offerEndDate) {
+    offerExpired = true;
+    handleOfferExpiry();
+    return;
+  }
+
+  // Start countdown
+  updateOfferCountdown();
+  offerCountdownInterval = setInterval(updateOfferCountdown, 1000);
+}
+
+/**
+ * Update the offer countdown display
+ */
+function updateOfferCountdown() {
+  const now = new Date();
+  const remaining = offerEndDate - now;
+
+  if (remaining <= 0) {
+    clearInterval(offerCountdownInterval);
+    offerExpired = true;
+    handleOfferExpiry();
+    return;
+  }
+
+  // Calculate days, hours, minutes, seconds
+  const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+
+  // Update timer displays
+  const countdownTimer = document.getElementById('countdown-timer');
+  const offerTimer = document.getElementById('offer-timer');
+  const offerBanner = document.getElementById('offer-banner');
+
+  let timeString;
+  if (days > 0) {
+    timeString = `${days}d ${hours}h ${minutes}m`;
+  } else if (hours > 0) {
+    timeString = `${hours}h ${minutes}m ${seconds}s`;
+  } else {
+    timeString = `${minutes}m ${seconds}s`;
+  }
+
+  if (countdownTimer) countdownTimer.textContent = timeString;
+  if (offerTimer) offerTimer.textContent = timeString;
+
+  // Update banner text
+  if (offerBanner) {
+    const offerText = offerBanner.querySelector('.offer-text');
+    if (offerText) {
+      if (days > 0) {
+        offerText.innerHTML = `Early Bird ends in <strong>${days} day${days > 1 ? 's' : ''}</strong>`;
+      } else if (hours > 0) {
+        offerText.innerHTML = `Only <strong>${hours} hour${hours > 1 ? 's' : ''}</strong> left!`;
+      } else {
+        offerText.innerHTML = `<strong>Last chance!</strong> Offer ending soon`;
+      }
+    }
+  }
+}
+
+/**
+ * Handle offer expiry
+ */
+function handleOfferExpiry() {
+  const offerBanner = document.getElementById('offer-banner');
+  const countdownTimer = document.getElementById('countdown-timer');
+  const offerTimer = document.getElementById('offer-timer');
+
+  if (offerBanner) {
+    offerBanner.classList.add('expired');
+    const offerText = offerBanner.querySelector('.offer-text');
+    if (offerText) {
+      offerText.innerHTML = 'Early bird offer has <strong>ended</strong>';
+    }
+  }
+
+  if (countdownTimer) countdownTimer.textContent = 'ENDED';
+  if (offerTimer) offerTimer.textContent = 'ENDED';
+
+  // Update pricing to original
+  updatePricingDisplay(true);
+}
+
+/**
+ * Update pricing display based on offer status
+ */
+function updatePricingDisplay(showOriginal = false) {
+  const tierCards = document.querySelectorAll('.tier-card');
+  tierCards.forEach(card => {
+    const tier = card.dataset.tier;
+    const tierConfig = CONFIG.TIERS[tier];
+    if (!tierConfig) return;
+
+    const offerPriceEl = card.querySelector('.tier-offer-price');
+    const discountEl = card.querySelector('.tier-discount');
+    const originalPriceEl = card.querySelector('.tier-original-price');
+
+    if (showOriginal || offerExpired) {
+      if (offerPriceEl) offerPriceEl.innerHTML = `&#8377;${tierConfig.originalPrice.toLocaleString('en-IN')}`;
+      if (discountEl) discountEl.style.display = 'none';
+      if (originalPriceEl) originalPriceEl.style.display = 'none';
+    } else {
+      if (offerPriceEl) offerPriceEl.innerHTML = `&#8377;${tierConfig.offerPrice.toLocaleString('en-IN')}`;
+      if (discountEl) discountEl.style.display = 'inline-block';
+      if (originalPriceEl) originalPriceEl.style.display = 'block';
+    }
+  });
+
+  // Update sticky bar
+  updateStickyBarPrice();
+}
+
+/**
+ * Select a tier
+ */
+function selectTier(tier) {
+  selectedTier = tier;
+
+  // Update hidden input
+  const tierInput = document.getElementById('tier');
+  if (tierInput) tierInput.value = tier;
+
+  // Update visual selection
+  document.querySelectorAll('.tier-card').forEach(card => {
+    card.classList.remove('selected');
+    if (card.dataset.tier === tier) {
+      card.classList.add('selected');
+    }
+  });
+
+  // Update sticky bar price
+  updateStickyBarPrice();
+}
+
+/**
+ * Update sticky bar with current tier price
+ */
+function updateStickyBarPrice() {
+  const tierConfig = CONFIG.TIERS[selectedTier];
+  if (!tierConfig) return;
+
+  const stickyOfferPrice = document.querySelector('.offer-price');
+  const stickyOriginalPrice = document.querySelector('.offer-original');
+  const offerBadge = document.querySelector('.offer-badge');
+
+  if (stickyOfferPrice) {
+    const price = offerExpired ? tierConfig.originalPrice : tierConfig.offerPrice;
+    stickyOfferPrice.innerHTML = `&#8377;${price.toLocaleString('en-IN')}`;
+  }
+
+  if (stickyOriginalPrice) {
+    stickyOriginalPrice.innerHTML = `&#8377;${tierConfig.originalPrice.toLocaleString('en-IN')}`;
+    stickyOriginalPrice.style.display = offerExpired ? 'none' : 'inline';
+  }
+
+  if (offerBadge) {
+    offerBadge.style.display = offerExpired ? 'none' : 'inline-block';
+  }
+}
+
+/**
+ * Get current price for tier (considers offer status)
+ */
+function getOfferPrice(tier) {
+  const tierConfig = CONFIG.TIERS[tier];
+  if (!tierConfig) return 0;
+  return offerExpired ? tierConfig.originalPrice : tierConfig.offerPrice;
+}
+
+/**
+ * Fetch seat availability and set default tier
+ */
+async function initSeatAvailability() {
+  try {
+    const response = await fetch(`${CONFIG.API_BASE_URL}/seats`);
+    if (response.ok) {
+      seatAvailability = await response.json();
+      setDefaultTierByAvailability();
+      updateLiveSeatCounter();
+    }
+  } catch (error) {
+    console.error('Failed to fetch seat availability:', error);
+    // Default to VIP if API fails
+    selectTier('vip');
+  }
+}
+
+/**
+ * Set default tier based on availability (VIP → Standard → Basic → Waitlist)
+ */
+function setDefaultTierByAvailability() {
+  if (!seatAvailability || !seatAvailability.seats) {
+    selectTier('vip');
+    return;
+  }
+
+  const seats = seatAvailability.seats;
+  const vipSeats = seats.find(s => s.tier_name === 'vip');
+  const standardSeats = seats.find(s => s.tier_name === 'standard');
+  const basicSeats = seats.find(s => s.tier_name === 'basic');
+
+  if (vipSeats && vipSeats.available_seats > 0) {
+    selectTier('vip');
+  } else if (standardSeats && standardSeats.available_seats > 0) {
+    selectTier('standard');
+  } else if (basicSeats && basicSeats.available_seats > 0) {
+    selectTier('basic');
+  } else {
+    // All sold out - redirect to waitlist
+    window.location.href = '/waitlist.html';
+  }
+}
+
+/**
+ * Update live seat counter display
+ */
+function updateLiveSeatCounter() {
+  if (!seatAvailability || !seatAvailability.seats) return;
+
+  const seats = seatAvailability.seats;
+  let totalAvailable = 0;
+  let totalSold = 0;
+
+  seats.forEach(seat => {
+    if (seat.tier_name !== 'waitlist') {
+      totalAvailable += seat.available_seats || 0;
+      totalSold += seat.sold_seats || 0;
+    }
+  });
+
+  // Update counter displays
+  const seatsLeftEl = document.getElementById('seats-left');
+  const registeredEl = document.getElementById('total-registered');
+
+  if (seatsLeftEl) seatsLeftEl.textContent = totalAvailable;
+  if (registeredEl) registeredEl.textContent = totalSold;
+
+  // Update tier-specific availability
+  seats.forEach(seat => {
+    const tierCard = document.querySelector(`.tier-card[data-tier="${seat.tier_name}"]`);
+    if (tierCard) {
+      const availabilityEl = tierCard.querySelector('.tier-availability');
+      if (availabilityEl) {
+        if (seat.available_seats <= 0) {
+          availabilityEl.textContent = 'SOLD OUT';
+          availabilityEl.classList.add('sold-out');
+          tierCard.classList.add('sold-out');
+        } else if (seat.available_seats <= 5) {
+          availabilityEl.textContent = `Only ${seat.available_seats} left!`;
+          availabilityEl.classList.add('low-stock');
+        } else {
+          availabilityEl.textContent = `${seat.available_seats} seats available`;
+        }
+      }
+    }
+  });
+}
+
+/**
+ * Start polling for seat updates
+ */
+function startSeatPolling() {
+  setInterval(async () => {
+    try {
+      const response = await fetch(`${CONFIG.API_BASE_URL}/seats`);
+      if (response.ok) {
+        seatAvailability = await response.json();
+        updateLiveSeatCounter();
+      }
+    } catch (error) {
+      console.error('Seat polling error:', error);
+    }
+  }, CONFIG.SEAT_POLL_INTERVAL);
+}
+
+// Modal functions
+function openRegistrationModal() {
+  document.getElementById('registration-modal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeRegistrationModal() {
+  document.getElementById('registration-modal').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+function closeSuccessModal() {
+  document.getElementById('success-modal').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+// BizFlow modal functions
+function openBizflowModal() {
+  document.getElementById('bizflow-modal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeBizflowModal() {
+  document.getElementById('bizflow-modal').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+// Privacy Policy modal functions
+function openPrivacyModal() {
+  document.getElementById('privacy-modal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePrivacyModal() {
+  document.getElementById('privacy-modal').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+// Terms of Service modal functions
+function openTermsModal() {
+  document.getElementById('terms-modal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeTermsModal() {
+  document.getElementById('terms-modal').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+// FAQ toggle
+function toggleFaq(button) {
+  const faqItem = button.parentElement;
+  const answer = faqItem.querySelector('.faq-answer');
+  const isActive = button.classList.contains('active');
+
+  // Close all FAQs
+  document.querySelectorAll('.faq-question').forEach(q => {
+    q.classList.remove('active');
+    q.parentElement.querySelector('.faq-answer').classList.remove('active');
+  });
+
+  // Open clicked FAQ if it wasn't already open
+  if (!isActive) {
+    button.classList.add('active');
+    answer.classList.add('active');
+  }
+}
+
 class RegistrationApp {
   constructor() {
-    this.selectedTier = null;
-    this.selectedPrice = 0;
-    this.seats = [];
-    this.isWaitlistMode = false;
-
     this.init();
   }
 
-  /**
-   * Initialize application
-   */
   async init() {
     this.cacheElements();
     this.bindEvents();
-    await this.loadSeats();
-    this.startSeatPolling();
+
+    // Load dynamic settings from API first (falls back to static config)
+    await loadDynamicSettings();
+
+    // Initialize 3-day offer countdown
+    initOfferCountdown();
+
+    // Initialize seat availability and set default tier
+    await initSeatAvailability();
+
+    // Start polling for seat updates
+    startSeatPolling();
   }
 
-  /**
-   * Cache DOM elements
-   */
   cacheElements() {
     this.elements = {
-      seatsGrid: document.getElementById('seats-grid'),
-      waitlistNotice: document.getElementById('waitlist-notice'),
       registrationForm: document.getElementById('registration-form'),
-      selectedTierDisplay: document.getElementById('selected-tier-display'),
-      selectedTierName: document.getElementById('selected-tier-name'),
-      selectedTierPrice: document.getElementById('selected-tier-price'),
-      tierInput: document.getElementById('tier'),
       submitBtn: document.getElementById('submit-btn'),
-      btnPrice: document.getElementById('btn-price'),
       loadingOverlay: document.getElementById('loading-overlay'),
       successModal: document.getElementById('success-modal'),
-      bookingIdDisplay: document.getElementById('booking-id-display'),
+      registrationModal: document.getElementById('registration-modal'),
       bookingDetails: document.getElementById('booking-details'),
-      totalSeatsDisplay: document.getElementById('total-seats-display'),
+      whatsappLink: document.getElementById('whatsapp-link'),
     };
   }
 
-  /**
-   * Bind event listeners
-   */
   bindEvents() {
     // Form submission
-    this.elements.registrationForm.addEventListener('submit', (e) => this.handleSubmit(e));
+    if (this.elements.registrationForm) {
+      this.elements.registrationForm.addEventListener('submit', (e) => this.handleSubmit(e));
+    }
 
     // Form input validation
-    const inputs = this.elements.registrationForm.querySelectorAll('input, select');
-    inputs.forEach(input => {
+    const inputs = this.elements.registrationForm?.querySelectorAll('input, select');
+    inputs?.forEach(input => {
       input.addEventListener('blur', () => this.validateField(input));
       input.addEventListener('input', () => this.clearFieldError(input));
     });
 
     // Phone number formatting
     const phoneInput = document.getElementById('phone');
-    phoneInput.addEventListener('input', (e) => {
-      e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
-    });
-  }
-
-  /**
-   * Load seat availability
-   */
-  async loadSeats() {
-    try {
-      const response = await api.getSeats();
-
-      if (response.success) {
-        this.seats = response.seats;
-        this.isWaitlistMode = response.waitlist_mode;
-        this.renderSeats();
-        this.updateTotalSeats(response.total_available);
-
-        if (this.isWaitlistMode) {
-          this.elements.waitlistNotice.classList.remove('hidden');
-        }
-      }
-    } catch (error) {
-      this.showError(CONFIG.MESSAGES.SEAT_FETCH_ERROR);
-      this.elements.seatsGrid.innerHTML = `
-        <div class="seats-loading">
-          <p class="text-error">Failed to load seats. Please refresh the page.</p>
-        </div>
-      `;
-    }
-  }
-
-  /**
-   * Render seat cards
-   */
-  renderSeats() {
-    this.elements.seatsGrid.innerHTML = this.seats.map(seat => this.createSeatCard(seat)).join('');
-
-    // Bind click events to seat cards
-    this.elements.seatsGrid.querySelectorAll('.seat-card').forEach(card => {
-      card.addEventListener('click', () => {
-        const tier = card.dataset.tier;
-        const isSoldOut = card.classList.contains('sold-out');
-        if (!isSoldOut) {
-          this.selectTier(tier);
-        }
+    if (phoneInput) {
+      phoneInput.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
       });
-    });
-  }
+    }
 
-  /**
-   * Create seat card HTML
-   */
-  createSeatCard(seat) {
-    const tierConfig = CONFIG.TIERS[seat.tier_name] || {};
-    const isSoldOut = seat.is_sold_out;
-    const isLow = seat.available_seats <= 5 && seat.available_seats > 0;
-    const isSelected = this.selectedTier === seat.tier_name;
-
-    const benefitsHtml = (seat.benefits || []).slice(0, 4).map(benefit =>
-      `<li>${this.escapeHtml(benefit)}</li>`
-    ).join('');
-
-    return `
-      <div class="seat-card ${tierConfig.class || ''} ${isSoldOut ? 'sold-out' : ''} ${isSelected ? 'selected' : ''}"
-           data-tier="${seat.tier_name}"
-           data-price="${seat.price_inr}">
-        ${isSoldOut ? '<span class="sold-out-badge">Sold Out</span>' : ''}
-        <div class="seat-card-header">
-          <span class="tier-badge ${tierConfig.class || ''}">${tierConfig.name || seat.display_name}</span>
-          <span class="seats-remaining ${isLow ? 'low' : ''}">
-            ${isSoldOut ? 'No seats' : `${seat.available_seats} seats left`}
-          </span>
-        </div>
-        <h3 class="seat-card-title">${this.escapeHtml(seat.display_name)}</h3>
-        <div class="seat-card-price">
-          ${seat.price_display}
-        </div>
-        <ul class="seat-card-benefits">
-          ${benefitsHtml}
-        </ul>
-        <button class="select-tier-btn ${isSelected ? 'selected' : ''}" ${isSoldOut ? 'disabled' : ''}>
-          ${isSoldOut ? 'Sold Out' : (isSelected ? 'Selected' : 'Select This Pass')}
-        </button>
-      </div>
-    `;
-  }
-
-  /**
-   * Select a tier
-   */
-  selectTier(tierName) {
-    const seat = this.seats.find(s => s.tier_name === tierName);
-    if (!seat || seat.is_sold_out) return;
-
-    this.selectedTier = tierName;
-    this.selectedPrice = seat.price_inr;
-
-    // Update UI
-    const tierConfig = CONFIG.TIERS[tierName] || {};
-    this.elements.selectedTierName.textContent = tierConfig.name || seat.display_name;
-    this.elements.selectedTierPrice.textContent = seat.price_display;
-    this.elements.tierInput.value = tierName;
-    this.elements.btnPrice.textContent = seat.price_display;
-    this.elements.submitBtn.disabled = false;
-
-    // Update card selection
-    this.elements.seatsGrid.querySelectorAll('.seat-card').forEach(card => {
-      const isSelected = card.dataset.tier === tierName;
-      card.classList.toggle('selected', isSelected);
-      const btn = card.querySelector('.select-tier-btn');
-      if (btn && !card.classList.contains('sold-out')) {
-        btn.textContent = isSelected ? 'Selected' : 'Select This Pass';
-        btn.classList.toggle('selected', isSelected);
+    // Close modal on outside click
+    document.getElementById('registration-modal')?.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal')) {
+        closeRegistrationModal();
       }
     });
 
-    // Scroll to form
-    this.elements.registrationForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('success-modal')?.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal')) {
+        closeSuccessModal();
+      }
+    });
+
+    document.getElementById('bizflow-modal')?.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal')) {
+        closeBizflowModal();
+      }
+    });
+
+    document.getElementById('privacy-modal')?.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal')) {
+        closePrivacyModal();
+      }
+    });
+
+    document.getElementById('terms-modal')?.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal')) {
+        closeTermsModal();
+      }
+    });
+
+    // Close modal on escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeRegistrationModal();
+        closeSuccessModal();
+        closeBizflowModal();
+        closePrivacyModal();
+        closeTermsModal();
+      }
+    });
   }
 
-  /**
-   * Handle form submission
-   */
   async handleSubmit(e) {
     e.preventDefault();
 
-    // Validate form
     if (!this.validateForm()) {
       return;
     }
 
-    // Get form data
     const formData = this.getFormData();
-
-    // Show loading
-    this.showLoading('Creating your order...');
+    this.showLoading('Registering...');
 
     try {
-      // Create order
-      const orderResponse = await api.createOrder(formData);
+      // For free registration, we'll create a direct registration without payment
+      const response = await api.createOrder(formData);
 
-      if (!orderResponse.success) {
-        throw new ApiError(orderResponse.error?.message || 'Order creation failed', 'ORDER_ERROR');
+      if (!response.success) {
+        throw new ApiError(response.error?.message || 'Registration failed', response.error?.code || 'ERROR');
       }
 
-      // Hide loading before Razorpay opens
       this.hideLoading();
 
-      // Initialize Razorpay checkout
-      this.openRazorpayCheckout(orderResponse, formData);
+      // If payment is required (price > 0), open Razorpay
+      if (response.amount > 0) {
+        this.openRazorpayCheckout(response, formData);
+      } else {
+        // Free registration - show success directly
+        this.showSuccessModal({
+          booking_id: response.booking_id || response.order_id,
+          registration: {
+            name: formData.name,
+            email: formData.email,
+            tier: formData.tier,
+            amount_paid: 0
+          }
+        });
+        this.resetForm();
+        closeRegistrationModal();
+      }
     } catch (error) {
       this.hideLoading();
 
       if (error.code === 'EMAIL_ALREADY_REGISTERED') {
-        this.showError(CONFIG.MESSAGES.ALREADY_REGISTERED);
-      } else if (error.code === 'TIER_SOLD_OUT' || error.code === 'SOLD_OUT') {
-        this.showError(CONFIG.MESSAGES.SOLD_OUT);
-        await this.loadSeats(); // Refresh seats
+        this.showError('This email is already registered for the event.');
       } else {
-        this.showError(error.message || CONFIG.MESSAGES.ORDER_CREATE_ERROR);
+        this.showError(error.message || 'Registration failed. Please try again.');
       }
     }
   }
 
-  /**
-   * Open Razorpay checkout
-   */
   openRazorpayCheckout(orderData, formData) {
     const options = {
       key: orderData.key_id || CONFIG.RAZORPAY_KEY_ID,
       amount: orderData.amount,
       currency: orderData.currency || 'INR',
       name: CONFIG.EVENT.name,
-      description: `${CONFIG.TIERS[formData.tier]?.name || 'Pass'} Registration`,
+      description: 'Summit Registration',
       order_id: orderData.order_id,
       prefill: orderData.prefill || {
         name: formData.name,
@@ -254,34 +613,6 @@ class RegistrationApp {
           console.log('Payment modal closed');
         },
       },
-      // Enable UPI with QR code option
-      config: {
-        display: {
-          blocks: {
-            banks: {
-              name: 'Pay via UPI / QR',
-              instruments: [
-                {
-                  method: 'upi',
-                  flows: ['qrcode', 'collect', 'intent'],
-                },
-              ],
-            },
-            other: {
-              name: 'Other Payment Methods',
-              instruments: [
-                { method: 'card' },
-                { method: 'netbanking' },
-                { method: 'wallet' },
-              ],
-            },
-          },
-          sequence: ['block.banks', 'block.other'],
-          preferences: {
-            show_default_blocks: false,
-          },
-        },
-      },
     };
 
     const rzp = new Razorpay(options);
@@ -291,9 +622,6 @@ class RegistrationApp {
     rzp.open();
   }
 
-  /**
-   * Handle successful payment
-   */
   async handlePaymentSuccess(response) {
     this.showLoading('Verifying payment...');
 
@@ -309,53 +637,49 @@ class RegistrationApp {
       if (verifyResponse.success) {
         this.showSuccessModal(verifyResponse);
         this.resetForm();
-        await this.loadSeats(); // Refresh seats
+        closeRegistrationModal();
       } else {
-        this.showError(CONFIG.MESSAGES.PAYMENT_VERIFY_ERROR);
+        this.showError('Payment verification failed. Please contact support.');
       }
     } catch (error) {
       this.hideLoading();
-      this.showError(error.message || CONFIG.MESSAGES.PAYMENT_VERIFY_ERROR);
+      this.showError(error.message || 'Payment verification failed. Please contact support.');
     }
   }
 
-  /**
-   * Handle payment failure
-   */
   handlePaymentFailure(response) {
     console.error('Payment failed:', response.error);
     this.showError(`Payment failed: ${response.error.description}`);
   }
 
-  /**
-   * Show success modal
-   */
   showSuccessModal(data) {
-    this.elements.bookingIdDisplay.textContent = data.booking_id;
-
     const reg = data.registration || {};
     const tierConfig = CONFIG.TIERS[reg.tier] || {};
 
-    this.elements.bookingDetails.innerHTML = `
-      <p><span class="label">Name</span><span class="value">${this.escapeHtml(reg.name || '-')}</span></p>
-      <p><span class="label">Email</span><span class="value">${this.escapeHtml(reg.email || '-')}</span></p>
-      <p><span class="label">Pass Type</span><span class="value">${tierConfig.name || reg.tier || '-'}</span></p>
-      <p><span class="label">Amount Paid</span><span class="value">${this.formatPrice(reg.amount_paid || 0)}</span></p>
-    `;
+    if (this.elements.bookingDetails) {
+      this.elements.bookingDetails.innerHTML = `
+        <p><span class="label">Name</span><span class="value">${this.escapeHtml(reg.name || '-')}</span></p>
+        <p><span class="label">Email</span><span class="value">${this.escapeHtml(reg.email || '-')}</span></p>
+        <p><span class="label">Booking ID</span><span class="value">${this.escapeHtml(data.booking_id || '-')}</span></p>
+      `;
+    }
+
+    // Set WhatsApp group link (you can configure this in config.js)
+    if (this.elements.whatsappLink) {
+      this.elements.whatsappLink.href = 'https://chat.whatsapp.com/your-group-link';
+    }
 
     this.elements.successModal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
   }
 
-  /**
-   * Validate form
-   */
   validateForm() {
     let isValid = true;
-    const requiredFields = ['name', 'email', 'phone', 'tier'];
+    const requiredFields = ['name', 'email', 'phone', 'business_name', 'industry', 'designation'];
 
     requiredFields.forEach(fieldName => {
       const input = document.getElementById(fieldName);
-      if (!this.validateField(input)) {
+      if (input && !this.validateField(input)) {
         isValid = false;
       }
     });
@@ -363,9 +687,6 @@ class RegistrationApp {
     return isValid;
   }
 
-  /**
-   * Validate single field
-   */
   validateField(input) {
     const fieldName = input.name || input.id;
     const value = input.value.trim();
@@ -375,17 +696,15 @@ class RegistrationApp {
       case 'name':
         if (!value) {
           errorMessage = 'Name is required';
-        } else if (value.length < CONFIG.VALIDATION.name.minLength) {
+        } else if (value.length < 2) {
           errorMessage = 'Name must be at least 2 characters';
-        } else if (!CONFIG.VALIDATION.name.pattern.test(value)) {
-          errorMessage = 'Name contains invalid characters';
         }
         break;
 
       case 'email':
         if (!value) {
           errorMessage = 'Email is required';
-        } else if (!CONFIG.VALIDATION.email.pattern.test(value)) {
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
           errorMessage = 'Please enter a valid email address';
         }
         break;
@@ -393,14 +712,26 @@ class RegistrationApp {
       case 'phone':
         if (!value) {
           errorMessage = 'Phone number is required';
-        } else if (!CONFIG.VALIDATION.phone.pattern.test(value)) {
-          errorMessage = 'Please enter a valid 10-digit Indian phone number';
+        } else if (!/^[6-9]\d{9}$/.test(value)) {
+          errorMessage = 'Please enter a valid 10-digit phone number';
         }
         break;
 
-      case 'tier':
+      case 'business_name':
         if (!value) {
-          errorMessage = 'Please select a pass type';
+          errorMessage = 'Business name is required';
+        }
+        break;
+
+      case 'industry':
+        if (!value) {
+          errorMessage = 'Please select an industry';
+        }
+        break;
+
+      case 'designation':
+        if (!value) {
+          errorMessage = 'Designation is required';
         }
         break;
     }
@@ -409,9 +740,6 @@ class RegistrationApp {
     return !errorMessage;
   }
 
-  /**
-   * Set field error
-   */
   setFieldError(input, message) {
     const errorElement = document.getElementById(`${input.id}-error`);
     if (errorElement) {
@@ -420,9 +748,6 @@ class RegistrationApp {
     input.classList.toggle('error', !!message);
   }
 
-  /**
-   * Clear field error
-   */
   clearFieldError(input) {
     const errorElement = document.getElementById(`${input.id}-error`);
     if (errorElement) {
@@ -431,116 +756,52 @@ class RegistrationApp {
     input.classList.remove('error');
   }
 
-  /**
-   * Get form data
-   */
   getFormData() {
     const form = this.elements.registrationForm;
     return {
-      tier: form.tier.value,
+      tier: form.tier?.value || 'standard',
       name: form.name.value.trim(),
       email: form.email.value.trim().toLowerCase(),
       phone: form.phone.value.trim().replace(/\D/g, ''),
       business_name: form.business_name?.value.trim() || undefined,
       industry: form.industry?.value || undefined,
-      revenue_range: form.revenue_range?.value || undefined,
+      designation: form.designation?.value.trim() || undefined,
       utm_source: this.getUrlParam('utm_source'),
       utm_medium: this.getUrlParam('utm_medium'),
       utm_campaign: this.getUrlParam('utm_campaign'),
     };
   }
 
-  /**
-   * Reset form
-   */
   resetForm() {
-    this.elements.registrationForm.reset();
-    this.selectedTier = null;
-    this.selectedPrice = 0;
-    this.elements.selectedTierName.textContent = '-';
-    this.elements.selectedTierPrice.textContent = '-';
-    this.elements.btnPrice.textContent = '';
-    this.elements.submitBtn.disabled = true;
+    this.elements.registrationForm?.reset();
   }
 
-  /**
-   * Update total seats display
-   */
-  updateTotalSeats(available) {
-    const total = 120;
-    this.elements.totalSeatsDisplay.textContent =
-      available > 0 ? `${available} of ${total}` : 'Sold Out';
-  }
-
-  /**
-   * Start polling for seat updates
-   */
-  startSeatPolling() {
-    setInterval(() => {
-      this.loadSeats();
-    }, CONFIG.SEAT_POLL_INTERVAL);
-  }
-
-  /**
-   * Show loading overlay
-   */
   showLoading(message = 'Processing...') {
-    const loaderText = this.elements.loadingOverlay.querySelector('.loader-text');
+    const loaderText = this.elements.loadingOverlay?.querySelector('.loader-text');
     if (loaderText) {
       loaderText.textContent = message;
     }
-    this.elements.loadingOverlay.classList.remove('hidden');
+    this.elements.loadingOverlay?.classList.remove('hidden');
   }
 
-  /**
-   * Hide loading overlay
-   */
   hideLoading() {
-    this.elements.loadingOverlay.classList.add('hidden');
+    this.elements.loadingOverlay?.classList.add('hidden');
   }
 
-  /**
-   * Show error message
-   */
   showError(message) {
-    // Simple alert for now - could be replaced with toast notification
     alert(message);
   }
 
-  /**
-   * Format price
-   */
-  formatPrice(amountInPaise) {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-    }).format(amountInPaise / 100);
-  }
-
-  /**
-   * Escape HTML to prevent XSS
-   */
   escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
   }
 
-  /**
-   * Get URL parameter
-   */
   getUrlParam(param) {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get(param) || undefined;
   }
-}
-
-/**
- * Close success modal
- */
-function closeSuccessModal() {
-  document.getElementById('success-modal').classList.add('hidden');
 }
 
 // Initialize app when DOM is ready

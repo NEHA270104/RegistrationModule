@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Admin Dashboard | AI for MSME Summit 2026</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="auth-screen">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <span class="logo-ai">AI for</span>
+                <span class="logo-msme">MSME</span>
+                <span class="logo-summit">SUMMIT</span>
+            </div>
+            <h1 class="auth-title">Admin Dashboard</h1>
+            <p class="auth-subtitle">Enter your API key to access the dashboard</p>
+            <form id="auth-form" class="auth-form">
+                <div class="form-group">
+                    <label for="api-key" class="form-label">API Key</label>
+                    <input type="password" id="api-key" name="api-key" class="form-input" placeholder="Enter admin API key" required>
+                    <span class="form-error" id="auth-error"></span>
+                </div>
+                <button type="submit" class="btn-auth">Access Dashboard</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="dashboard hidden">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <div class="logo">
+                    <span class="logo-ai">AI for</span>
+                    <span class="logo-msme">MSME</span>
+                    <span class="logo-summit">SUMMIT</span>
+                </div>
+                <span class="header-badge">Admin</span>
+            </div>
+            <div class="header-right">
+                <span class="last-updated" id="last-updated">Last updated: --</span>
+                <button class="btn-refresh" id="btn-refresh" title="Refresh Data">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                    </svg>
+                    Refresh
+                </button>
+                <button class="btn-logout" id="btn-logout">Logout</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <!-- Stats Cards -->
+            <section class="stats-section">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon registrations">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Total Registrations</span>
+                            <span class="stat-value" id="stat-total">--</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon confirmed">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                                <polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Confirmed Payments</span>
+                            <span class="stat-value" id="stat-confirmed">--</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon revenue">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="1" x2="12" y2="23"/>
+                                <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Total Revenue</span>
+                            <span class="stat-value" id="stat-revenue">--</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon waitlist">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Waitlist Entries</span>
+                            <span class="stat-value" id="stat-waitlist">--</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seat Inventory -->
+            <section class="seats-section">
+                <h2 class="section-title">Seat Inventory</h2>
+                <div class="seats-grid">
+                    <div class="seat-card vip">
+                        <div class="seat-header">
+                            <span class="seat-tier">Executive Experience</span>
+                            <span class="seat-tier-badge">VIP</span>
+                        </div>
+                        <div class="seat-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-vip" style="width: 0%"></div>
+                            </div>
+                            <div class="seat-numbers">
+                                <span><strong id="sold-vip">0</strong> Sold</span>
+                                <span><strong id="available-vip">0</strong> Available</span>
+                                <span><strong id="total-vip">0</strong> Total</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="seat-card standard">
+                        <div class="seat-header">
+                            <span class="seat-tier">Business Builder</span>
+                            <span class="seat-tier-badge">STANDARD</span>
+                        </div>
+                        <div class="seat-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-standard" style="width: 0%"></div>
+                            </div>
+                            <div class="seat-numbers">
+                                <span><strong id="sold-standard">0</strong> Sold</span>
+                                <span><strong id="available-standard">0</strong> Available</span>
+                                <span><strong id="total-standard">0</strong> Total</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="seat-card basic">
+                        <div class="seat-header">
+                            <span class="seat-tier">Growth Starter</span>
+                            <span class="seat-tier-badge">BASIC</span>
+                        </div>
+                        <div class="seat-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-basic" style="width: 0%"></div>
+                            </div>
+                            <div class="seat-numbers">
+                                <span><strong id="sold-basic">0</strong> Sold</span>
+                                <span><strong id="available-basic">0</strong> Available</span>
+                                <span><strong id="total-basic">0</strong> Total</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Registrations Table -->
+            <section class="registrations-section">
+                <div class="section-header">
+                    <h2 class="section-title">Registrations</h2>
+                    <div class="section-actions">
+                        <button class="btn-export" id="btn-export">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            Export CSV
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters-bar">
+                    <div class="filter-group">
+                        <label for="filter-search" class="filter-label">Search</label>
+                        <input type="text" id="filter-search" class="filter-input" placeholder="Name, Email, Phone, Booking ID...">
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-tier" class="filter-label">Tier</label>
+                        <select id="filter-tier" class="filter-select">
+                            <option value="">All Tiers</option>
+                            <option value="vip">Executive (VIP)</option>
+                            <option value="standard">Business (Standard)</option>
+                            <option value="basic">Growth (Basic)</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-status" class="filter-label">Status</label>
+                        <select id="filter-status" class="filter-select">
+                            <option value="">All Status</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="pending">Pending</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-date" class="filter-label">Date Range</label>
+                        <select id="filter-date" class="filter-select">
+                            <option value="">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">Last 7 Days</option>
+                            <option value="month">Last 30 Days</option>
+                        </select>
+                    </div>
+                    <button class="btn-clear-filters" id="btn-clear-filters">Clear</button>
+                </div>
+
+                <!-- Table -->
+                <div class="table-container">
+                    <table class="registrations-table">
+                        <thead>
+                            <tr>
+                                <th>Booking ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Business</th>
+                                <th>Tier</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="registrations-tbody">
+                            <tr class="loading-row">
+                                <td colspan="9">Loading registrations...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination">
+                    <div class="pagination-info">
+                        Showing <span id="page-start">0</span> - <span id="page-end">0</span> of <span id="page-total">0</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <button class="btn-page" id="btn-prev" disabled>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15 18 9 12 15 6"/>
+                            </svg>
+                            Previous
+                        </button>
+                        <span class="page-number">Page <span id="current-page">1</span></span>
+                        <button class="btn-page" id="btn-next">
+                            Next
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section class="settings-section">
+                <div class="section-header">
+                    <h2 class="section-title">Site Settings</h2>
+                    <div class="section-actions">
+                        <span class="settings-status" id="settings-status"></span>
+                        <button class="btn-save-settings" id="btn-save-settings">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                                <polyline points="17 21 17 13 7 13 7 21"/>
+                                <polyline points="7 3 7 8 15 8"/>
+                            </svg>
+                            Save All Changes
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Settings Tabs -->
+                <div class="settings-tabs">
+                    <button class="settings-tab active" data-tab="offer">Offer Settings</button>
+                    <button class="settings-tab" data-tab="pricing">Tier Pricing</button>
+                    <button class="settings-tab" data-tab="event">Event Details</button>
+                    <button class="settings-tab" data-tab="registration">Registration</button>
+                </div>
+
+                <!-- Offer Settings -->
+                <div class="settings-panel active" id="panel-offer">
+                    <div class="settings-card">
+                        <h3 class="settings-card-title">Early Bird Offer Configuration</h3>
+                        <p class="settings-card-desc">Control the 3-day early bird offer period and discount.</p>
+
+                        <div class="settings-grid">
+                            <div class="setting-item">
+                                <label class="setting-label">Offer Status</label>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="setting-offer-active" checked>
+                                    <label for="setting-offer-active">
+                                        <span class="toggle-on">Active</span>
+                                        <span class="toggle-off">Inactive</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="setting-offer-start">Offer Start Date</label>
+                                <input type="datetime-local" id="setting-offer-start" class="setting-input">
+                                <span class="setting-hint">When the early bird offer begins</span>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="setting-offer-duration">Duration (Days)</label>
+                                <input type="number" id="setting-offer-duration" class="setting-input" min="1" max="30" value="3">
+                                <span class="setting-hint">How many days the offer runs</span>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="setting-offer-discount">Discount Amount (INR)</label>
+                                <input type="number" id="setting-offer-discount" class="setting-input" min="0" step="100" value="1000">
+                                <span class="setting-hint">Discount applied to all tiers</span>
+                            </div>
+                        </div>
+
+                        <div class="offer-preview">
+                            <h4>Preview</h4>
+                            <div class="preview-box">
+                                <span class="preview-label">Offer ends:</span>
+                                <span class="preview-value" id="offer-end-preview">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing Settings -->
+                <div class="settings-panel" id="panel-pricing">
+                    <div class="settings-card">
+                        <h3 class="settings-card-title">Tier Pricing</h3>
+                        <p class="settings-card-desc">Set original and offer prices for each tier.</p>
+
+                        <div class="pricing-grid">
+                            <!-- VIP -->
+                            <div class="pricing-tier vip">
+                                <h4>Executive Experience (VIP)</h4>
+                                <div class="pricing-inputs">
+                                    <div class="setting-item">
+                                        <label class="setting-label">Original Price</label>
+                                        <div class="input-prefix">
+                                            <span>&#8377;</span>
+                                            <input type="number" id="setting-vip-original" class="setting-input" min="0" step="100">
+                                        </div>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="setting-label">Offer Price</label>
+                                        <div class="input-prefix">
+                                            <span>&#8377;</span>
+                                            <input type="number" id="setting-vip-offer" class="setting-input" min="0" step="100">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Standard -->
+                            <div class="pricing-tier standard">
+                                <h4>Business Builder (Standard)</h4>
+                                <div class="pricing-inputs">
+                                    <div class="setting-item">
+                                        <label class="setting-label">Original Price</label>
+                                        <div class="input-prefix">
+                                            <span>&#8377;</span>
+                                            <input type="number" id="setting-standard-original" class="setting-input" min="0" step="100">
+                                        </div>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="setting-label">Offer Price</label>
+                                        <div class="input-prefix">
+                                            <span>&#8377;</span>
+                                            <input type="number" id="setting-standard-offer" class="setting-input" min="0" step="100">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Basic -->
+                            <div class="pricing-tier basic">
+                                <h4>Growth Starter (Basic)</h4>
+                                <div class="pricing-inputs">
+                                    <div class="setting-item">
+                                        <label class="setting-label">Original Price</label>
+                                        <div class="input-prefix">
+                                            <span>&#8377;</span>
+                                            <input type="number" id="setting-basic-original" class="setting-input" min="0" step="100">
+                                        </div>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="setting-label">Offer Price</label>
+                                        <div class="input-prefix">
+                                            <span>&#8377;</span>
+                                            <input type="number" id="setting-basic-offer" class="setting-input" min="0" step="100">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Waitlist -->
+                            <div class="pricing-tier waitlist">
+                                <h4>Livestream Access</h4>
+                                <div class="pricing-inputs">
+                                    <div class="setting-item">
+                                        <label class="setting-label">Price</label>
+                                        <div class="input-prefix">
+                                            <span>&#8377;</span>
+                                            <input type="number" id="setting-waitlist-price" class="setting-input" min="0" step="100">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Event Settings -->
+                <div class="settings-panel" id="panel-event">
+                    <div class="settings-card">
+                        <h3 class="settings-card-title">Event Details</h3>
+                        <p class="settings-card-desc">Update event information displayed to users.</p>
+
+                        <div class="settings-grid">
+                            <div class="setting-item full-width">
+                                <label class="setting-label" for="setting-event-name">Event Name</label>
+                                <input type="text" id="setting-event-name" class="setting-input">
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="setting-event-date">Event Date</label>
+                                <input type="text" id="setting-event-date" class="setting-input" placeholder="e.g., 7th Feb 2026">
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="setting-event-time">Event Time</label>
+                                <input type="text" id="setting-event-time" class="setting-input" placeholder="e.g., 10:00 AM - 5:00 PM IST">
+                            </div>
+
+                            <div class="setting-item full-width">
+                                <label class="setting-label" for="setting-event-venue">Venue</label>
+                                <textarea id="setting-event-venue" class="setting-input setting-textarea" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Registration Settings -->
+                <div class="settings-panel" id="panel-registration">
+                    <div class="settings-card">
+                        <h3 class="settings-card-title">Registration Controls</h3>
+                        <p class="settings-card-desc">Control registration availability and waitlist.</p>
+
+                        <div class="settings-grid">
+                            <div class="setting-item">
+                                <label class="setting-label">Registration Status</label>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="setting-reg-open" checked>
+                                    <label for="setting-reg-open">
+                                        <span class="toggle-on">Open</span>
+                                        <span class="toggle-off">Closed</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label">Waitlist</label>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="setting-waitlist-enabled" checked>
+                                    <label for="setting-waitlist-enabled">
+                                        <span class="toggle-on">Enabled</span>
+                                        <span class="toggle-off">Disabled</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="setting-reg-close">Registration Closes</label>
+                                <input type="datetime-local" id="setting-reg-close" class="setting-input">
+                                <span class="setting-hint">When registration automatically closes</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings History -->
+                <div class="settings-history">
+                    <button class="btn-toggle-history" id="btn-toggle-history">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        View Change History
+                    </button>
+                    <div class="history-panel hidden" id="history-panel">
+                        <div class="history-list" id="history-list">
+                            <p class="history-empty">No changes recorded.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Waitlist Section -->
+            <section class="waitlist-section">
+                <div class="section-header">
+                    <h2 class="section-title">Waitlist Entries</h2>
+                    <button class="btn-export" id="btn-export-waitlist">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Export Waitlist
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table class="registrations-table">
+                        <thead>
+                            <tr>
+                                <th>Position</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Business</th>
+                                <th>Livestream</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="waitlist-tbody">
+                            <tr class="loading-row">
+                                <td colspan="7">Loading waitlist...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="dashboard-footer">
+            <p>&copy; 2026 AI for MSME Summit. Admin Dashboard v1.0</p>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loader">
+            <div class="loader-spinner"></div>
+            <p class="loader-text">Loading...</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../js/config.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

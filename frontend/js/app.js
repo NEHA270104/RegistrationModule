@@ -196,6 +196,14 @@ function updatePricingDisplay(showOriginal = false) {
     const discountEl = card.querySelector('.tier-discount');
     const originalPriceEl = card.querySelector('.tier-original-price');
 
+    // Always update original price and discount from config
+    if (originalPriceEl) {
+      originalPriceEl.innerHTML = `&#8377;${tierConfig.originalPrice.toLocaleString('en-IN')}`;
+    }
+    if (discountEl) {
+      discountEl.innerHTML = `Save &#8377;${tierConfig.discount.toLocaleString('en-IN')}`;
+    }
+
     if (showOriginal || offerExpired) {
       if (offerPriceEl) offerPriceEl.innerHTML = `&#8377;${tierConfig.originalPrice.toLocaleString('en-IN')}`;
       if (discountEl) discountEl.style.display = 'none';
@@ -255,6 +263,7 @@ function updateStickyBarPrice() {
   }
 
   if (offerBadge) {
+    offerBadge.innerHTML = `&#8377;${tierConfig.discount.toLocaleString('en-IN')} OFF`;
     offerBadge.style.display = offerExpired ? 'none' : 'inline-block';
   }
 }

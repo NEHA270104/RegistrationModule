@@ -37,12 +37,12 @@ router.post(
 );
 
 /**
- * @route POST /api/webhook/razorpay
- * @desc Handle Razorpay webhook events
- * @access Razorpay Only (webhook signature verified)
+ * @route POST /api/webhook/payment
+ * @desc Handle payment gateway webhook events
+ * @access Payment Gateway Only (webhook signature verified)
  */
 router.post(
-  '/webhook/razorpay',
+  '/webhook/payment',
   webhookLimiter,
   webhookAuth,
   asyncHandler(handleWebhook)

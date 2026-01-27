@@ -14,7 +14,14 @@
       "Bash(gcloud builds submit:*)",
       "Bash(where:*)",
       "Bash(\"C:\\\\Users\\\\sanve\\\\AppData\\\\Local\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gcloud.cmd\" builds submit --config=cloudbuild.yaml --project=bizflowai-478116)",
-      "Bash(\"C:\\\\Users\\\\sanve\\\\AppData\\\\Local\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gcloud.cmd\" secrets describe ADMIN_API_KEY --project=bizflowai-478116)"
+      "Bash(\"C:\\\\Users\\\\sanve\\\\AppData\\\\Local\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gcloud.cmd\" secrets describe ADMIN_API_KEY --project=bizflowai-478116)",
+      "Bash(\"C:\\\\Users\\\\sanve\\\\AppData\\\\Local\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gcloud.cmd\" secrets versions access latest --secret=ADMIN_API_KEY --project=bizflowai-478116)",
+      "Bash(\"C:\\\\Users\\\\sanve\\\\AppData\\\\Local\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gcloud.cmd\" run services describe bizflow-registration --region=asia-south1 --project=bizflowai-478116 --format=\"yaml\\(spec.template.spec.containers[0].env\\)\")",
+      "Bash(curl:*)",
+      "Bash(\"C:\\\\Users\\\\sanve\\\\AppData\\\\Local\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gcloud.cmd\" run services describe bizflow-registration --region=asia-south1 --project=bizflowai-478116 --format=\"value\\(status.url\\)\")",
+      "Bash(\"C:\\\\Users\\\\sanve\\\\AppData\\\\Local\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gcloud.cmd\" run services update bizflow-registration --region=asia-south1 --project=bizflowai-478116 --update-secrets=ADMIN_API_KEY=ADMIN_API_KEY:latest)",
+      "Bash(\"C:\\\\Users\\\\sanve\\\\AppData\\\\Local\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gcloud.cmd\" run services logs read bizflow-registration --region=asia-south1 --project=bizflowai-478116 --limit=20)",
+      "Bash(\"C:\\\\Users\\\\sanve\\\\AppData\\\\Local\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gcloud.cmd\" secrets versions add ADMIN_API_KEY --data-file=- --project=bizflowai-478116)"
     ]
   }
 }

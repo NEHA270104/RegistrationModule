@@ -35,8 +35,8 @@ const CONFIG = {
   // 3-Day Early Bird Offer Configuration (28-30 Jan 2026)
   // Change these dates to control offer period
   OFFER: {
-    startDate: '2026-01-28T00:00:00+05:30', // Offer start date (IST)
-    durationDays: 3, // Number of days the offer runs (28, 29, 30 Jan)
+    startDate: '2026-01-27T00:00:00+05:30', // Offer start date (IST)
+    durationDays: 4, // Number of days the offer runs (27, 28, 29, 30 Jan)
     discountAmount: 1000, // Base discount (varies per tier)
     isActive: true, // Toggle offer on/off
   },

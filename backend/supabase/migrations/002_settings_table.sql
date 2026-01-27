@@ -46,8 +46,8 @@ CREATE POLICY "Anon can read public settings"
 
 -- Offer Settings
 INSERT INTO site_settings (setting_key, setting_value, setting_type, category, description, is_public) VALUES
-('offer_start_date', '"2026-01-26T00:00:00+05:30"', 'date', 'offer', 'Start date of the early bird offer (ISO 8601 format)', true),
-('offer_duration_days', '3', 'number', 'offer', 'Number of days the offer runs', true),
+('offer_start_date', '"2026-01-27T00:00:00+05:30"', 'date', 'offer', 'Start date of the early bird offer (ISO 8601 format)', true),
+('offer_duration_days', '4', 'number', 'offer', 'Number of days the offer runs (27, 28, 29, 30 Jan)', true),
 ('offer_discount_amount', '1000', 'number', 'offer', 'Discount amount in INR', true),
 ('offer_is_active', 'true', 'boolean', 'offer', 'Toggle offer on/off', true);
 
@@ -67,9 +67,9 @@ INSERT INTO site_settings (setting_key, setting_value, setting_type, category, d
 -- Tier Pricing Settings (offer prices - original prices are in seat_inventory)
 INSERT INTO site_settings (setting_key, setting_value, setting_type, category, description, is_public) VALUES
 ('tier_vip_offer_price', '2499', 'number', 'pricing', 'VIP tier offer price in INR', true),
-('tier_vip_original_price', '3499', 'number', 'pricing', 'VIP tier original price in INR', true),
+('tier_vip_original_price', '4999', 'number', 'pricing', 'VIP tier original price in INR', true),
 ('tier_standard_offer_price', '1499', 'number', 'pricing', 'Standard tier offer price in INR', true),
-('tier_standard_original_price', '2499', 'number', 'pricing', 'Standard tier original price in INR', true),
+('tier_standard_original_price', '2999', 'number', 'pricing', 'Standard tier original price in INR', true),
 ('tier_basic_offer_price', '999', 'number', 'pricing', 'Basic tier offer price in INR', true),
 ('tier_basic_original_price', '1999', 'number', 'pricing', 'Basic tier original price in INR', true),
 ('tier_waitlist_price', '699', 'number', 'pricing', 'Waitlist/Livestream price in INR', true);

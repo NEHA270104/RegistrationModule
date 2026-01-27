@@ -620,8 +620,31 @@ class RegistrationApp {
     } catch (error) {
       this.hideLoading();
 
+      // Handle duplicate registration errors
       if (error.code === 'EMAIL_ALREADY_REGISTERED') {
-        this.showError('This email is already registered for the event.');
+        this.showError(
+          'This email address is already registered for the summit. Please use a different email or contact support if you need assistance.',
+          'warning',
+          'Already Registered'
+        );
+      } else if (error.code === 'PHONE_ALREADY_REGISTERED') {
+        this.showError(
+          'This phone number is already registered for the summit. Please use a different phone number or contact support if you need assistance.',
+          'warning',
+          'Already Registered'
+        );
+      } else if (error.code === 'PERSON_ALREADY_REGISTERED') {
+        this.showError(
+          'A registration with this name and phone number already exists. If you need to make changes to your registration, please contact support.',
+          'warning',
+          'Already Registered'
+        );
+      } else if (error.code === 'ALREADY_REGISTERED') {
+        this.showError(
+          error.message || 'You are already registered for the summit.',
+          'warning',
+          'Already Registered'
+        );
       } else {
         this.showError(error.message || 'Registration failed. Please try again.');
       }

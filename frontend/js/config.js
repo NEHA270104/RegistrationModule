@@ -32,12 +32,12 @@ const CONFIG = {
   // Or WhatsApp Group: https://faq.whatsapp.com/1479185602613498/
   WHATSAPP_COMMUNITY_LINK: 'https://chat.whatsapp.com/CQhaJSZzOv6LfzsdQ4M6Le',
 
-  // 3-Day Early Bird Offer Configuration
+  // 3-Day Early Bird Offer Configuration (28-30 Jan 2026)
   // Change these dates to control offer period
   OFFER: {
-    startDate: '2026-01-26T00:00:00+05:30', // Offer start date (IST)
-    durationDays: 3, // Number of days the offer runs
-    discountAmount: 1000, // Rs. 1000 off
+    startDate: '2026-01-28T00:00:00+05:30', // Offer start date (IST)
+    durationDays: 3, // Number of days the offer runs (28, 29, 30 Jan)
+    discountAmount: 1000, // Base discount (varies per tier)
     isActive: true, // Toggle offer on/off
   },
 
@@ -50,9 +50,9 @@ const CONFIG = {
       tagline: 'Your success deserves the spotlight',
       color: '#f59e0b',
       class: 'vip',
-      originalPrice: 3499,
+      originalPrice: 4999,
       offerPrice: 2499,
-      discount: 1000,
+      discount: 2500,
       benefits: [
         'Priority Front Row Seating',
         'All Session Recordings (30 days)',
@@ -67,9 +67,9 @@ const CONFIG = {
       tagline: 'Everything you need to transform',
       color: '#10b981',
       class: 'standard',
-      originalPrice: 2499,
+      originalPrice: 2999,
       offerPrice: 1499,
-      discount: 1000,
+      discount: 1500,
       benefits: [
         'Reserved Seating',
         'Session Recordings (7 days)',
@@ -144,6 +144,9 @@ const CONFIG = {
     NETWORK_ERROR: 'Network error. Please check your connection.',
     SOLD_OUT: 'This tier is sold out. Please select another tier.',
     ALREADY_REGISTERED: 'This email is already registered for the event.',
+    EMAIL_ALREADY_REGISTERED: 'This email address is already registered for the summit.',
+    PHONE_ALREADY_REGISTERED: 'This phone number is already registered for the summit.',
+    PERSON_ALREADY_REGISTERED: 'A registration with this name and phone already exists.',
   },
 
   // Polling interval for seat updates (ms)

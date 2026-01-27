@@ -6,7 +6,15 @@
       "Bash(git commit:*)",
       "Bash(npm run dev:*)",
       "Bash(netstat:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(firebase deploy:*)",
+      "Bash(gcloud builds submit:*)",
+      "Bash(where:*)",
+      "Bash(\"C:\\\\Users\\\\sanve\\\\AppData\\\\Local\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gcloud.cmd\" builds submit --config=cloudbuild.yaml --project=bizflowai-478116)",
+      "Bash(\"C:\\\\Users\\\\sanve\\\\AppData\\\\Local\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gcloud.cmd\" secrets describe ADMIN_API_KEY --project=bizflowai-478116)"
     ]
   }
 }

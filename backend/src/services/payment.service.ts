@@ -31,13 +31,17 @@ export class PaymentService {
     const tier = data.tier;
 
     try {
-      // Check if email is already registered
-      const isRegistered = await registrationService.isEmailRegistered(data.email);
-      if (isRegistered) {
+      // Check for duplicate registration (email, phone, or name+phone)
+      const duplicateCheck = await registrationService.checkDuplicateRegistration(
+        data.email,
+        data.phone,
+        data.name
+      );
+      if (duplicateCheck.isDuplicate) {
         throw new AppError(
-          'This email is already registered for the summit',
+          duplicateCheck.reason || 'You are already registered for the summit',
           400,
-          'EMAIL_ALREADY_REGISTERED'
+          duplicateCheck.code || 'ALREADY_REGISTERED'
         );
       }
 

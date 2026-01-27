@@ -75,13 +75,32 @@ export const errorHandler: ErrorRequestHandler = (
     return;
   }
 
+  // Handle CORS errors
+  if (err.message?.includes('CORS') || err.message?.includes('Not allowed by CORS')) {
+    res.status(403).json({
+      success: false,
+      error: {
+        message: 'Request blocked. Please try again.',
+        code: 'CORS_ERROR',
+      },
+    });
+    return;
+  }
+
   // Default to 500 Internal Server Error
+  // Provide more helpful message in production
+  const productionMessage = err.message?.includes('network')
+    ? 'Network error. Please check your connection and try again.'
+    : err.message?.includes('timeout')
+    ? 'Request timed out. Please try again.'
+    : 'Something went wrong. Please try again or contact support.';
+
   res.status(500).json({
     success: false,
     error: {
       message:
         config.nodeEnv === 'production'
-          ? 'An unexpected error occurred'
+          ? productionMessage
           : err.message,
       code: 'INTERNAL_ERROR',
       ...(config.nodeEnv === 'development' && {

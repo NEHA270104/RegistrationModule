@@ -247,6 +247,107 @@ export class RegistrationService {
   }
 
   /**
+   * Check if phone is already registered
+   */
+  async isPhoneRegistered(phone: string): Promise<boolean> {
+    try {
+      // Normalize phone number (remove any non-digits)
+      const normalizedPhone = phone.replace(/\D/g, '').slice(-10);
+
+      const { data, error } = await supabase
+        .from('registrations')
+        .select('id')
+        .eq('phone', normalizedPhone)
+        .eq('payment_status', 'confirmed')
+        .limit(1);
+
+      if (error) {
+        return false;
+      }
+
+      return data && data.length > 0;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Check if same person (name + phone combination) is already registered
+   */
+  async isPersonRegistered(name: string, phone: string): Promise<boolean> {
+    try {
+      const normalizedPhone = phone.replace(/\D/g, '').slice(-10);
+      const normalizedName = name.trim().toLowerCase();
+
+      const { data, error } = await supabase
+        .from('registrations')
+        .select('id, name')
+        .eq('phone', normalizedPhone)
+        .eq('payment_status', 'confirmed');
+
+      if (error || !data || data.length === 0) {
+        return false;
+      }
+
+      // Check if any registration has a similar name (fuzzy match)
+      return data.some(reg => {
+        const regName = reg.name.trim().toLowerCase();
+        // Exact match or one name contains the other
+        return regName === normalizedName ||
+               regName.includes(normalizedName) ||
+               normalizedName.includes(regName);
+      });
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Check for all duplicate conditions and return specific error
+   */
+  async checkDuplicateRegistration(
+    email: string,
+    phone: string,
+    name: string
+  ): Promise<{ isDuplicate: boolean; reason?: string; code?: string }> {
+    try {
+      // Check email first (most common identifier)
+      if (await this.isEmailRegistered(email)) {
+        return {
+          isDuplicate: true,
+          reason: 'This email address is already registered for the summit.',
+          code: 'EMAIL_ALREADY_REGISTERED',
+        };
+      }
+
+      // Check phone number
+      if (await this.isPhoneRegistered(phone)) {
+        return {
+          isDuplicate: true,
+          reason: 'This phone number is already registered for the summit.',
+          code: 'PHONE_ALREADY_REGISTERED',
+        };
+      }
+
+      // Check name + phone combination (same person with different email)
+      if (await this.isPersonRegistered(name, phone)) {
+        return {
+          isDuplicate: true,
+          reason: 'A registration with this name and phone number already exists.',
+          code: 'PERSON_ALREADY_REGISTERED',
+        };
+      }
+
+      return { isDuplicate: false };
+    } catch (error) {
+      logger.error('Error checking duplicate registration', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      return { isDuplicate: false };
+    }
+  }
+
+  /**
    * Update confirmation email sent status
    */
   async markEmailSent(bookingId: string): Promise<void> {

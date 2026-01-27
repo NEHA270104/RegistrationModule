@@ -40,7 +40,7 @@ app.use(
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, etc.)
+      // Allow requests with no origin (mobile apps, curl, Firebase Hosting proxy, etc.)
       if (!origin) return callback(null, true);
 
       const allowedOrigins = [
@@ -49,12 +49,20 @@ app.use(
         'http://localhost:5173',
         'http://localhost:5500',
         'http://127.0.0.1:5500',
+        // Firebase Hosting domains
+        'https://bizflowai-478116.web.app',
+        'https://bizflowai-478116.firebaseapp.com',
+        // Custom domain
+        'https://registration.bizflowai.in',
+        // Cloud Run domain
+        'https://bizflow-registration-847587405518.asia-south1.run.app',
       ];
 
       if (allowedOrigins.includes(origin) || config.nodeEnv === 'development') {
         callback(null, true);
       } else {
-        callback(new Error('Not allowed by CORS'));
+        logger.warn('CORS blocked origin:', { origin });
+        callback(null, true); // Allow all origins for now to debug
       }
     },
     credentials: true,

@@ -808,18 +808,35 @@ body {
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border: none;
-  background: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.95);
   border-radius: 50%;
   font-size: 1.5rem;
   cursor: pointer;
-  z-index: 10;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--gray-600);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.modal-close:hover {
+  background: white;
+  color: var(--gray-800);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+}
+
+/* Make close button sticky in registration modal */
+.registration-modal .modal-close {
+  position: sticky;
+  top: 0.75rem;
+  float: right;
+  margin-top: 0.75rem;
+  margin-right: 0.75rem;
+  margin-bottom: -2.5rem;
 }
 
 /* Registration Modal */
@@ -934,6 +951,23 @@ body {
 
 .input-with-icon .form-input {
   padding-left: 2.75rem;
+}
+
+/* Phone input with country code */
+.phone-input-group .country-code {
+  position: absolute;
+  left: 2.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--gray-600);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.phone-input-group .form-input {
+  padding-left: 5rem;
 }
 
 .form-input,

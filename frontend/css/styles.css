@@ -954,6 +954,16 @@ body {
 }
 
 /* Phone input with country code */
+.phone-input-group {
+  display: flex;
+  align-items: center;
+}
+
+.phone-input-group svg {
+  position: absolute;
+  left: 0.875rem;
+}
+
 .phone-input-group .country-code {
   position: absolute;
   left: 2.75rem;
@@ -964,10 +974,16 @@ body {
   color: var(--gray-600);
   pointer-events: none;
   z-index: 1;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding-right: 0.5rem;
+  border-right: 1px solid var(--gray-300);
 }
 
 .phone-input-group .form-input {
-  padding-left: 5rem;
+  padding-left: 5.5rem;
 }
 
 .form-input,

@@ -31,6 +31,8 @@ export class PaymentService {
     const tier = data.tier;
 
     try {
+      logger.info('Creating order - Step 1: Checking duplicates', { email: data.email, phone: data.phone });
+
       // Check for duplicate registration (email, phone, or name+phone)
       const duplicateCheck = await registrationService.checkDuplicateRegistration(
         data.email,
@@ -45,6 +47,8 @@ export class PaymentService {
         );
       }
 
+      logger.info('Creating order - Step 2: Checking seat availability', { tier });
+
       // Check if all seats are sold and redirect to waitlist
       const allSold = await seatService.checkAllSeatsSold();
       if (allSold && tier !== 'waitlist') {
@@ -54,6 +58,8 @@ export class PaymentService {
           'SOLD_OUT'
         );
       }
+
+      logger.info('Creating order - Step 3: Reserving seat', { tier });
 
       // Check tier availability and reserve seat
       const reserveResult = await seatService.reserveSeat(tier);
@@ -65,8 +71,12 @@ export class PaymentService {
         );
       }
 
+      logger.info('Creating order - Step 4: Getting tier price', { tier });
+
       // Get tier price
       const amount = await seatService.getTierPrice(tier);
+
+      logger.info('Creating order - Step 5: Creating Razorpay order', { tier, amount });
 
       // Generate unique receipt ID
       const receiptId = `rcpt_${Date.now()}_${uuidv4().slice(0, 8)}`;
@@ -78,6 +88,8 @@ export class PaymentService {
         phone: data.phone,
       });
 
+      logger.info('Creating order - Step 6: Creating pending order', { orderId: razorpayOrder.id });
+
       // Create pending order record
       await this.createPendingOrder(
         razorpayOrder.id,
@@ -87,6 +99,8 @@ export class PaymentService {
         config.paymentTimeoutMinutes
       );
 
+      logger.info('Creating order - Step 7: Creating registration', { orderId: razorpayOrder.id });
+
       // Create registration record
       const registration = await registrationService.createRegistration(
         data,
@@ -94,6 +108,8 @@ export class PaymentService {
         amount,
         metadata
       );
+
+      logger.info('Creating order - Step 8: Order created successfully', { orderId: razorpayOrder.id, registrationId: registration.id });
 
       logPayment('order_created', razorpayOrder.id, undefined, 'pending');
 
@@ -121,9 +137,19 @@ export class PaymentService {
       }
 
       if (error instanceof AppError) throw error;
-      logger.error('Unexpected error in createOrder', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+
+      // Log detailed error information for debugging
+      const errorDetails = {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        name: error instanceof Error ? error.name : 'Unknown',
+        stack: error instanceof Error ? error.stack : undefined,
+        tier: tier,
+        email: data.email,
+        // Include Razorpay-specific error details if available
+        razorpayError: (error as { error?: { description?: string; code?: string } })?.error,
+      };
+      logger.error('Unexpected error in createOrder', errorDetails);
+
       throw new AppError('Failed to create order', 500, 'ORDER_CREATE_ERROR');
     }
   }

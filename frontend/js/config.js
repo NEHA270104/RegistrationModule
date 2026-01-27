@@ -15,8 +15,8 @@ const CONFIG = {
     return '/api';
   })(),
 
-  // Razorpay Configuration
-  RAZORPAY_KEY_ID: 'rzp_test_RlYiaIXp6zl52C',
+  // Razorpay Configuration (Live Mode)
+  RAZORPAY_KEY_ID: 'rzp_live_S8WYJcBeRJUOVw',
 
   // Event Details
   EVENT: {

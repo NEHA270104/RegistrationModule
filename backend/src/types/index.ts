@@ -161,20 +161,21 @@ export interface CreateOrderRequest {
 
 export interface CreateOrderResponse {
   success: boolean;
-  order_id: string;
-  amount: number;
-  currency: string;
-  key_id: string;
-  registration_id: string;
-  prefill: {
+  order_id?: string;
+  amount?: number;
+  currency?: string;
+  key_id?: string;
+  registration_id?: string;
+  prefill?: {
     name: string;
     email: string;
     contact: string;
   };
-  notes: {
+  notes?: {
     tier: string;
     registration_id: string;
   };
+  error?: string;
 }
 
 export interface VerifyPaymentRequest {

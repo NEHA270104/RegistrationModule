@@ -26,7 +26,9 @@ export async function createOrder(req: Request, res: Response): Promise<void> {
 
     const result = await paymentService.createOrder(orderData, metadata);
 
-    logPayment('create_order_success', result.order_id);
+    if (result.success && result.order_id) {
+      logPayment('create_order_success', result.order_id);
+    }
 
     res.status(200).json(result);
   } catch (error) {

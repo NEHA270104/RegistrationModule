@@ -324,12 +324,13 @@ export class EmailService {
   /**
    * Format price for display
    * Note: Database stores amounts in RUPEES (INR) directly
+   * Returns number with Indian formatting (e.g., "2,499") without currency symbol
+   * since MSG91 templates already include the ₹ symbol
    */
   private formatPrice(amount: number): string {
     return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
       minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(amount);
   }
 }

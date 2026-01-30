@@ -78,26 +78,27 @@ body {
    ============================================ */
 .logo {
     display: flex;
-    align-items: baseline;
-    gap: 0.25rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.1rem;
     font-weight: 800;
 }
 
-.logo-ai {
-    font-size: 1rem;
+.logo-text {
+    font-size: 0.85rem;
     color: var(--gray-600);
+    font-weight: 600;
 }
 
 .logo-msme {
-    font-size: 1.25rem;
+    font-size: 1rem;
     color: var(--primary-600);
 }
 
-.logo-summit {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--gray-500);
-    letter-spacing: 0.1em;
+.header-bizflow-logo {
+    height: 32px;
+    width: auto;
+    margin-right: 0.75rem;
 }
 
 /* ============================================
@@ -123,10 +124,37 @@ body {
 
 .auth-logo {
     display: flex;
-    align-items: baseline;
-    justify-content: center;
-    gap: 0.25rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
     margin-bottom: 1.5rem;
+}
+
+.auth-bizflow-logo {
+    height: 50px;
+    width: auto;
+}
+
+.auth-by {
+    font-size: 0.7rem;
+    color: var(--gray-500);
+    font-weight: 500;
+}
+
+.auth-event-name {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    font-weight: 800;
+}
+
+.auth-event-name .logo-text {
+    font-size: 0.9rem;
+}
+
+.auth-event-name .logo-msme {
+    font-size: 1.1rem;
 }
 
 .auth-title {
@@ -587,6 +615,18 @@ body {
     font-size: 0.875rem;
 }
 
+/* Fix column widths for better layout */
+.registrations-table th:first-child,
+.registrations-table td:first-child {
+    min-width: 120px;
+    white-space: nowrap;
+}
+
+.registrations-table th:last-child,
+.registrations-table td:last-child {
+    min-width: 140px;
+}
+
 .registrations-table th {
     background: var(--gray-50);
     font-weight: 600;
@@ -710,6 +750,64 @@ body {
 .btn-export svg {
     width: 16px;
     height: 16px;
+}
+
+/* Add Button */
+.btn-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: white;
+    background: var(--blue-600);
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-add:hover {
+    background: var(--blue-500);
+}
+
+.btn-add svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Delete Button */
+.btn-action.btn-delete {
+    background: #fee2e2;
+    color: var(--red-600);
+}
+
+.btn-action.btn-delete:hover {
+    background: #fecaca;
+    color: var(--red-500);
+}
+
+/* Form Grid in Modal */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.form-grid .form-group {
+    margin-bottom: 0;
+}
+
+@media (max-width: 600px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.section-actions {
+    display: flex;
+    gap: 0.75rem;
 }
 
 /* ============================================
@@ -1162,12 +1260,12 @@ body {
 /* Pricing Grid */
 .pricing-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: 1.5rem;
 }
 
 .pricing-tier {
-    padding: 1.25rem;
+    padding: 1.5rem;
     border-radius: var(--radius-lg);
     border: 2px solid var(--gray-200);
 }
@@ -1193,16 +1291,36 @@ body {
 }
 
 .pricing-tier h4 {
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     font-weight: 600;
     color: var(--gray-900);
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pricing-tier .setting-label {
+    font-size: 0.75rem;
 }
 
 .pricing-inputs {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    gap: 1.25rem;
+}
+
+.pricing-inputs .setting-item {
+    min-width: 0;
+}
+
+.pricing-inputs .input-prefix {
+    min-width: 0;
+}
+
+.pricing-inputs .setting-input {
+    min-width: 0;
+    width: 100%;
 }
 
 .pricing-tier.waitlist .pricing-inputs {
@@ -1324,4 +1442,637 @@ body {
     .pricing-inputs {
         grid-template-columns: 1fr;
     }
+}
+
+/* ============================================
+   Pending Registrations Section (Held Seats)
+   ============================================ */
+
+.pending-section {
+    background: white;
+    border-radius: var(--radius-xl);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 2rem;
+}
+
+.section-desc {
+    color: var(--gray-500);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.pending-table .expired-row {
+    background-color: #fef2f2;
+}
+
+/* Time Badge */
+.time-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-md);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.time-badge.active {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.time-badge.expiring-soon {
+    background: #fef3c7;
+    color: #b45309;
+    animation: pulse 2s infinite;
+}
+
+.time-badge.expired {
+    background: #fecaca;
+    color: #b91c1c;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Cleanup Button */
+.btn-cleanup {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-cleanup:hover {
+    background: #fecaca;
+    border-color: #f87171;
+}
+
+.btn-cleanup svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Resync Button */
+.btn-resync {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-resync:hover {
+    background: #dbeafe;
+    border-color: #93c5fd;
+}
+
+.btn-resync:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-resync svg {
+    width: 16px;
+    height: 16px;
+}
+
+.btn-resync.syncing svg {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.btn-release {
+    background: #fef2f2 !important;
+    color: #b91c1c !important;
+}
+
+.btn-release:hover {
+    background: #fecaca !important;
+}
+
+.text-muted {
+    color: var(--gray-400);
+    font-size: 0.75rem;
+}
+
+/* ============================================
+   Payment Abandonments Section
+   ============================================ */
+
+.abandonments-section {
+    background: white;
+    border-radius: var(--radius-xl);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 2rem;
+}
+
+/* Abandonment Stats */
+.abandonment-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.mini-stat {
+    background: var(--gray-50);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    text-align: center;
+}
+
+.mini-stat.abandoned {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+}
+
+.mini-stat.pending-followup {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+}
+
+.mini-stat.converted {
+    background: var(--primary-50);
+    border: 1px solid var(--primary-200);
+}
+
+.mini-stat.lost-revenue {
+    background: #fef3f2;
+    border: 1px solid #fecdd3;
+}
+
+.mini-stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+.mini-stat-label {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Type Badge */
+.type-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-md);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.type-badge.cancelled {
+    background: #fffbeb;
+    color: #b45309;
+}
+
+.type-badge.failed {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.type-badge.timeout {
+    background: #faf5ff;
+    color: #7c3aed;
+}
+
+/* Followup Status Badge */
+.followup-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-md);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.followup-badge.pending {
+    background: #fffbeb;
+    color: #b45309;
+}
+
+.followup-badge.email_sent {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.followup-badge.contacted {
+    background: #f0fdf4;
+    color: #15803d;
+}
+
+.followup-badge.converted {
+    background: var(--primary-50);
+    color: var(--primary-700);
+}
+
+.followup-badge.declined {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.followup-badge.unresponsive {
+    background: var(--gray-100);
+    color: var(--gray-600);
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: flex-start;
+    min-width: 140px;
+}
+
+.btn-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    background: var(--gray-100);
+    color: var(--gray-600);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.btn-action:hover {
+    background: var(--gray-200);
+    color: var(--gray-900);
+}
+
+.btn-action.btn-email:hover {
+    background: var(--primary-100);
+    color: var(--primary-700);
+}
+
+.text-muted {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: var(--radius-xl);
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-content.modal-small {
+    max-width: 400px;
+}
+
+.modal-content.modal-small .modal-body {
+    text-align: center;
+    padding: 2rem 1.5rem;
+}
+
+.modal-content.modal-small .modal-body p {
+    color: var(--gray-700);
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.modal-content.modal-small .modal-footer {
+    justify-content: center;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.modal-header h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.modal-close {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: var(--gray-100);
+    color: var(--gray-600);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 1.25rem;
+    transition: all 0.2s;
+}
+
+.modal-close:hover {
+    background: var(--gray-200);
+    color: var(--gray-900);
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--gray-200);
+}
+
+/* Detail Section */
+.detail-section {
+    margin-bottom: 1.5rem;
+}
+
+.detail-section h4 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.detail-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.detail-label {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+.detail-value {
+    font-size: 0.875rem;
+    color: var(--gray-900);
+}
+
+.detail-value a {
+    color: var(--primary-600);
+    text-decoration: none;
+}
+
+.detail-value a:hover {
+    text-decoration: underline;
+}
+
+.modal-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.75rem;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: var(--radius-md);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: var(--primary-600);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-700);
+}
+
+.btn-secondary {
+    background: var(--gray-200);
+    color: var(--gray-700);
+}
+
+.btn-secondary:hover {
+    background: var(--gray-300);
+}
+
+/* Responsive Abandonments */
+@media (max-width: 768px) {
+    .abandonment-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============================================
+   Failed Registration Call Reminder
+   ============================================ */
+
+/* Blinking call reminder indicator */
+.call-reminder {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.625rem;
+    background: linear-gradient(135deg, #fef2f2, #fee2e2);
+    border: 1px solid #f87171;
+    border-radius: var(--radius-md);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #b91c1c;
+    animation: blink-reminder 1.5s ease-in-out infinite;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.call-reminder:hover {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+}
+
+.call-reminder svg {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+}
+
+@keyframes blink-reminder {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.7);
+    }
+    50% {
+        opacity: 0.7;
+        box-shadow: 0 0 0 6px rgba(248, 113, 113, 0);
+    }
+}
+
+/* Row highlight for failed registrations needing call */
+.registrations-table tbody tr.needs-call {
+    background: linear-gradient(90deg, #fef2f2 0%, white 100%);
+}
+
+.registrations-table tbody tr.needs-call:hover {
+    background: linear-gradient(90deg, #fee2e2 0%, var(--gray-50) 100%);
+}
+
+/* Mark as called button */
+.btn-mark-called {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #86efac;
+    border-radius: var(--radius-md);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-mark-called:hover {
+    background: #bbf7d0;
+    border-color: #4ade80;
+}
+
+.btn-mark-called svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Called status badge */
+.called-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    background: #dcfce7;
+    color: #15803d;
+    border-radius: var(--radius-sm);
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.called-badge svg {
+    width: 12px;
+    height: 12px;
+}
+
+/* Failed registrations counter in header */
+.failed-counter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    background: #ef4444;
+    color: white;
+    border-radius: 10px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    animation: pulse-counter 2s ease-in-out infinite;
+}
+
+@keyframes pulse-counter {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* Send reminder button for pending payments */
+.btn-send-reminder {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+    border-radius: var(--radius-md);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-send-reminder:hover {
+    background: #dbeafe;
+    border-color: #93c5fd;
+}
+
+.btn-send-reminder svg {
+    width: 14px;
+    height: 14px;
 }

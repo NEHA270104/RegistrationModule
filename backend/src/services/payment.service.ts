@@ -8,6 +8,7 @@ import { logger, logPayment } from '../utils/logger.js';
 import { seatService } from './seat.service.js';
 import { registrationService } from './registration.service.js';
 import { emailService } from './email.service.js';
+import { abandonmentService } from './abandonment.service.js';
 import type {
   CreateOrderRequest,
   CreateOrderResponse,
@@ -73,7 +74,7 @@ export class PaymentService {
 
       logger.info('Creating order - Step 4: Getting tier price', { tier });
 
-      // Get tier price
+      // Get tier price from database (stored in RUPEES)
       const amount = await seatService.getTierPrice(tier);
 
       logger.info('Creating order - Step 5: Creating Razorpay order', { tier, amount });
@@ -81,7 +82,7 @@ export class PaymentService {
       // Generate unique receipt ID
       const receiptId = `rcpt_${Date.now()}_${uuidv4().slice(0, 8)}`;
 
-      // Create Razorpay order
+      // Create Razorpay order - amount in RUPEES, function converts to paise for Razorpay
       const razorpayOrder = await createRazorpayOrder(amount, receiptId, {
         tier: tier,
         email: data.email,
@@ -116,7 +117,7 @@ export class PaymentService {
       return {
         success: true,
         order_id: razorpayOrder.id,
-        amount: amount,
+        amount: amount, // Pass directly to frontend for Razorpay
         currency: 'INR',
         key_id: config.razorpay.keyId,
         registration_id: registration.id,
@@ -350,6 +351,29 @@ export class PaymentService {
 
     // Mark pending order as expired
     await this.expirePendingOrder(payment.order_id);
+
+    // Record abandonment for follow-up
+    try {
+      await abandonmentService.recordAbandonment({
+        registration_id: registration.id,
+        razorpay_order_id: payment.order_id,
+        name: registration.name,
+        email: registration.email,
+        phone: registration.phone,
+        business_name: registration.business_name || undefined,
+        tier: registration.tier,
+        amount: registration.amount_paid,
+        abandonment_type: 'failed',
+        abandonment_reason: `Payment failed: ${payment.description || 'Unknown error'}`,
+        utm_source: registration.utm_source || undefined,
+        utm_campaign: registration.utm_campaign || undefined,
+      });
+    } catch (error) {
+      logger.error('Failed to record abandonment', {
+        orderId: payment.order_id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
   }
 
   /**

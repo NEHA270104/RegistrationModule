@@ -3,6 +3,16 @@ import { logger } from '../utils/logger.js';
 import type { SeatInventory, SeatAvailability, TierType } from '../types/index.js';
 import { AppError } from '../types/index.js';
 
+// Import dynamically to avoid circular dependency
+let abandonmentService: { releaseOldestHeldSeat: (tier: TierType) => Promise<{ success: boolean }> } | null = null;
+const getAbandonmentService = async () => {
+  if (!abandonmentService) {
+    const module = await import('./abandonment.service.js');
+    abandonmentService = module.abandonmentService;
+  }
+  return abandonmentService;
+};
+
 export class SeatService {
   /**
    * Get all seat availability information
@@ -30,6 +40,8 @@ export class SeatService {
           tier_name: seat.tier_name,
           display_name: seat.display_name,
           total_seats: seat.total_seats,
+          sold_seats: seat.sold_seats,
+          held_seats: seat.held_seats,
           available_seats: seat.total_seats - seat.sold_seats - seat.held_seats,
           price_inr: seat.price_inr,
           price_display: this.formatPrice(seat.price_inr),
@@ -84,8 +96,9 @@ export class SeatService {
 
   /**
    * Reserve a seat atomically (prevents race conditions)
+   * If all seats are held (not sold), tries to release the oldest held seat (FIFO)
    */
-  async reserveSeat(tier: TierType): Promise<{ success: boolean; available: number; error?: string }> {
+  async reserveSeat(tier: TierType): Promise<{ success: boolean; available: number; error?: string; fifoReleased?: boolean }> {
     try {
       const { data, error } = await supabase.rpc('reserve_seat', {
         p_tier: tier,
@@ -99,6 +112,38 @@ export class SeatService {
       const result = data as { success: boolean; available?: number; error?: string };
 
       if (!result.success) {
+        // Check if we can release an old held seat (FIFO)
+        const inventory = await this.getTierAvailability(tier);
+        if (inventory && inventory.held_seats > 0) {
+          logger.info('Attempting FIFO release for new booking', { tier, heldSeats: inventory.held_seats });
+
+          try {
+            const abandonment = await getAbandonmentService();
+            const releaseResult = await abandonment.releaseOldestHeldSeat(tier);
+
+            if (releaseResult.success) {
+              // Try reserving again after FIFO release
+              const retryResult = await supabase.rpc('reserve_seat', { p_tier: tier });
+              if (!retryResult.error) {
+                const retryData = retryResult.data as { success: boolean; available?: number };
+                if (retryData.success) {
+                  logger.info('Seat reserved after FIFO release', { tier });
+                  return {
+                    success: true,
+                    available: retryData.available || 0,
+                    fifoReleased: true,
+                  };
+                }
+              }
+            }
+          } catch (fifoError) {
+            logger.error('FIFO release failed', {
+              tier,
+              error: fifoError instanceof Error ? fifoError.message : 'Unknown error',
+            });
+          }
+        }
+
         logger.warn('Seat reservation failed', { tier, reason: result.error });
         return {
           success: false,
@@ -203,6 +248,70 @@ export class SeatService {
   }
 
   /**
+   * Release a sold seat (for admin delete)
+   */
+  async releaseSoldSeat(tier: TierType): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('seat_inventory')
+        .update({ sold_seats: supabase.rpc('decrement_sold_seats') })
+        .eq('tier_name', tier);
+
+      // Direct update as fallback
+      const { data: inventory } = await supabase
+        .from('seat_inventory')
+        .select('sold_seats')
+        .eq('tier_name', tier)
+        .single();
+
+      if (inventory && inventory.sold_seats > 0) {
+        await supabase
+          .from('seat_inventory')
+          .update({ sold_seats: inventory.sold_seats - 1 })
+          .eq('tier_name', tier);
+      }
+
+      logger.info('Sold seat released', { tier });
+      return true;
+    } catch (error) {
+      logger.error('Error releasing sold seat', {
+        tier,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      return false;
+    }
+  }
+
+  /**
+   * Increment sold seat count (for admin manual registration)
+   */
+  async incrementSoldSeat(tier: TierType): Promise<boolean> {
+    try {
+      const { data: inventory } = await supabase
+        .from('seat_inventory')
+        .select('sold_seats')
+        .eq('tier_name', tier)
+        .single();
+
+      if (inventory) {
+        await supabase
+          .from('seat_inventory')
+          .update({ sold_seats: inventory.sold_seats + 1 })
+          .eq('tier_name', tier);
+      }
+
+      logger.info('Sold seat incremented', { tier });
+      return true;
+    } catch (error) {
+      logger.error('Error incrementing sold seat', {
+        tier,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      return false;
+    }
+  }
+
+  /**
    * Get tier price
    */
   async getTierPrice(tier: TierType): Promise<number> {
@@ -214,16 +323,126 @@ export class SeatService {
   }
 
   /**
-   * Format price for display
+   * Resync seat counts from registrations table
+   * This fixes any discrepancy between seat_inventory and registrations tables
    */
-  private formatPrice(priceInPaise: number): string {
-    const priceInRupees = priceInPaise / 100;
+  async resyncFromRegistrations(): Promise<{
+    changes: Array<{
+      tier: string;
+      field: string;
+      before: number;
+      after: number;
+    }>;
+    summary: {
+      tiersChecked: number;
+      tiersUpdated: number;
+    };
+  }> {
+    const changes: Array<{ tier: string; field: string; before: number; after: number }> = [];
+    const tiers: TierType[] = ['vip', 'standard', 'basic'];
+
+    try {
+      for (const tier of tiers) {
+        // Get current seat inventory
+        const { data: inventory } = await supabase
+          .from('seat_inventory')
+          .select('sold_seats, held_seats')
+          .eq('tier_name', tier)
+          .single();
+
+        if (!inventory) continue;
+
+        // Count confirmed registrations for this tier
+        const { count: confirmedCount } = await supabase
+          .from('registrations')
+          .select('*', { count: 'exact', head: true })
+          .eq('tier', tier)
+          .eq('payment_status', 'confirmed');
+
+        // Count pending registrations for this tier
+        const { count: pendingCount } = await supabase
+          .from('registrations')
+          .select('*', { count: 'exact', head: true })
+          .eq('tier', tier)
+          .eq('payment_status', 'pending');
+
+        const actualSold = confirmedCount || 0;
+        const actualHeld = pendingCount || 0;
+
+        // Check if update needed
+        const needsUpdate =
+          inventory.sold_seats !== actualSold || inventory.held_seats !== actualHeld;
+
+        if (needsUpdate) {
+          // Track changes
+          if (inventory.sold_seats !== actualSold) {
+            changes.push({
+              tier,
+              field: 'sold_seats',
+              before: inventory.sold_seats,
+              after: actualSold,
+            });
+          }
+          if (inventory.held_seats !== actualHeld) {
+            changes.push({
+              tier,
+              field: 'held_seats',
+              before: inventory.held_seats,
+              after: actualHeld,
+            });
+          }
+
+          // Update seat inventory
+          await supabase
+            .from('seat_inventory')
+            .update({
+              sold_seats: actualSold,
+              held_seats: actualHeld,
+            })
+            .eq('tier_name', tier);
+
+          logger.info('Resynced seat counts for tier', {
+            tier,
+            sold: { before: inventory.sold_seats, after: actualSold },
+            held: { before: inventory.held_seats, after: actualHeld },
+          });
+        }
+      }
+
+      const tiersUpdated = new Set(changes.map((c) => c.tier)).size;
+
+      logger.info('Seat resync completed', {
+        tiersChecked: tiers.length,
+        tiersUpdated,
+        totalChanges: changes.length,
+      });
+
+      return {
+        changes,
+        summary: {
+          tiersChecked: tiers.length,
+          tiersUpdated,
+        },
+      };
+    } catch (error) {
+      logger.error('Error resyncing seat counts', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw new AppError('Failed to resync seat counts', 500, 'RESYNC_ERROR');
+    }
+  }
+
+  /**
+   * Format price for display
+   * Note: Database stores prices in RUPEES (INR) directly
+   */
+  private formatPrice(price: number): string {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(priceInRupees);
+    }).format(price);
   }
 }
 

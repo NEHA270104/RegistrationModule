@@ -66,20 +66,24 @@ export function verifyWebhookSignature(
 }
 
 // Create Razorpay order
+// Note: This function receives amount in RUPEES (INR) and converts to PAISE for Razorpay
 export async function createRazorpayOrder(
-  amount: number,
+  amountInRupees: number,
   receipt: string,
   notes: Record<string, string>
 ): Promise<{
   id: string;
-  amount: number;
+  amount: number; // Returns amount in RUPEES (same as input)
   currency: string;
   receipt: string;
   status: string;
 }> {
   try {
+    // Convert RUPEES to PAISE for Razorpay API (Razorpay expects smallest currency unit)
+    const amountInPaise = Math.round(amountInRupees * 100);
+
     const order = await razorpay.orders.create({
-      amount: amount, // Amount in paise
+      amount: amountInPaise, // Razorpay needs amount in paise
       currency: 'INR',
       receipt: receipt,
       notes: notes,
@@ -87,13 +91,14 @@ export async function createRazorpayOrder(
 
     logger.info('Razorpay order created', {
       orderId: order.id,
-      amount: order.amount,
+      amountInRupees: amountInRupees,
+      amountInPaise: amountInPaise,
       receipt: order.receipt,
     });
 
     return {
       id: order.id,
-      amount: typeof order.amount === 'string' ? parseInt(order.amount, 10) : order.amount,
+      amount: amountInRupees, // Return in RUPEES for our database
       currency: order.currency,
       receipt: order.receipt || receipt,
       status: order.status,
@@ -102,7 +107,7 @@ export async function createRazorpayOrder(
     logger.error('Error creating Razorpay order', {
       error: error instanceof Error ? error.message : 'Unknown error',
       receipt,
-      amount,
+      amountInRupees,
     });
     throw error;
   }

@@ -1,6 +1,7 @@
 /**
  * Frontend Configuration
- * AI for MSME Summit Registration
+ * AI Summit for MSME Business Owners
+ * By BRTNeura Technology LLP
  */
 
 const CONFIG = {
@@ -20,11 +21,13 @@ const CONFIG = {
 
   // Event Details
   EVENT: {
-    name: 'AI for MSME Business Summit 2026',
+    name: 'AI Summit for MSME Business Owners 2026',
+    tagline: 'From Survival to Scale',
     description: 'Transform Your Business with AI',
-    date: '7th Feb 2026',
-    time: '10:00 AM - 5:00 PM IST',
+    date: '21st Feb 2026',
+    time: '9:00 AM - 5:00 PM IST',
     venue: 'Ashish Plaza, opposite Fergusson college campus road, Shivajinagar, Pune, Maharashtra 411004',
+    organizer: 'BRTNeura Technology LLP',
   },
 
   // WhatsApp Community Link
@@ -112,7 +115,7 @@ const CONFIG = {
 
   // Common benefits for ALL paid tiers (displayed separately)
   COMMON_BENEFITS: [
-    'Full Summit Access (10 AM - 5 PM)',
+    'Full Summit Access (9 AM - 5 PM)',
     'Complimentary Lunch & Refreshments',
     'Digital Certificate of Participation',
     'WhatsApp Community Access',
@@ -124,7 +127,7 @@ const CONFIG = {
     name: {
       minLength: 2,
       maxLength: 100,
-      pattern: /^[a-zA-Z\s.'-]+$/,
+      pattern: /^[a-zA-Z0-9\s.'-]+$/,
     },
     email: {
       pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,

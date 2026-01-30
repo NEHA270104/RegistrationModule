@@ -11,6 +11,55 @@ let totalRegistrations = 0;
 let registrations = [];
 let autoRefreshInterval = null;
 
+// ============================================
+// Failed Registration Call Tracking
+// ============================================
+const CALLED_REGISTRATIONS_KEY = 'admin_called_registrations';
+
+function getCalledRegistrations() {
+    try {
+        return JSON.parse(localStorage.getItem(CALLED_REGISTRATIONS_KEY) || '{}');
+    } catch {
+        return {};
+    }
+}
+
+function markRegistrationAsCalled(bookingId) {
+    const called = getCalledRegistrations();
+    called[bookingId] = {
+        calledAt: new Date().toISOString(),
+        calledBy: 'admin'
+    };
+    localStorage.setItem(CALLED_REGISTRATIONS_KEY, JSON.stringify(called));
+    renderRegistrations(); // Re-render to update UI
+    updateFailedCallCounter();
+}
+
+function isRegistrationCalled(bookingId) {
+    const called = getCalledRegistrations();
+    return !!called[bookingId];
+}
+
+function getFailedRegistrationsNeedingCall() {
+    return registrations.filter(reg =>
+        reg.payment_status === 'failed' && !isRegistrationCalled(reg.booking_id)
+    );
+}
+
+function updateFailedCallCounter() {
+    const failedNeedingCall = getFailedRegistrationsNeedingCall();
+    const counterEl = document.getElementById('failed-call-counter');
+
+    if (counterEl) {
+        if (failedNeedingCall.length > 0) {
+            counterEl.textContent = failedNeedingCall.length;
+            counterEl.classList.remove('hidden');
+        } else {
+            counterEl.classList.add('hidden');
+        }
+    }
+}
+
 // DOM Elements
 const authScreen = document.getElementById('auth-screen');
 const dashboard = document.getElementById('dashboard');
@@ -31,6 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-export').addEventListener('click', exportRegistrations);
     document.getElementById('btn-export-waitlist').addEventListener('click', exportWaitlist);
     document.getElementById('btn-clear-filters').addEventListener('click', clearFilters);
+    document.getElementById('btn-resync-seats')?.addEventListener('click', resyncSeatCounts);
     document.getElementById('btn-prev').addEventListener('click', () => changePage(-1));
     document.getElementById('btn-next').addEventListener('click', () => changePage(1));
 
@@ -54,7 +104,68 @@ function debounce(func, wait) {
     };
 }
 
+// ============================================
+// Modal Helper Functions (Replace browser alerts/confirms)
+// ============================================
+let confirmCallback = null;
+
+function showConfirmModal(title, message, onConfirm) {
+    const modal = document.getElementById('confirm-modal');
+    const titleEl = document.getElementById('confirm-modal-title');
+    const messageEl = document.getElementById('confirm-modal-message');
+    const okBtn = document.getElementById('confirm-modal-ok');
+
+    if (!modal) return;
+
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    confirmCallback = onConfirm;
+
+    // Remove old listener and add new one
+    const newOkBtn = okBtn.cloneNode(true);
+    okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+    newOkBtn.addEventListener('click', () => {
+        // Save callback reference before closeConfirmModal sets it to null
+        const callback = confirmCallback;
+        closeConfirmModal();
+        if (callback) callback();
+    });
+
+    modal.classList.remove('hidden');
+}
+
+function closeConfirmModal() {
+    const modal = document.getElementById('confirm-modal');
+    if (modal) modal.classList.add('hidden');
+    confirmCallback = null;
+}
+
+function showAlertModal(title, message, isSuccess = true) {
+    const modal = document.getElementById('alert-modal');
+    const titleEl = document.getElementById('alert-modal-title');
+    const messageEl = document.getElementById('alert-modal-message');
+
+    if (!modal) return;
+
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+
+    // Update modal header color based on success/error
+    const header = modal.querySelector('.modal-header');
+    if (header) {
+        header.style.borderBottomColor = isSuccess ? 'var(--green-500)' : 'var(--red-500)';
+    }
+
+    modal.classList.remove('hidden');
+}
+
+function closeAlertModal() {
+    const modal = document.getElementById('alert-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
 function formatCurrency(amount) {
+    // Database stores amounts in RUPEES (INR) directly
     return new Intl.NumberFormat('en-IN', {
         style: 'currency',
         currency: 'INR',
@@ -105,8 +216,9 @@ async function validateAndShowDashboard() {
     showLoading();
 
     try {
-        const response = await fetch(`${CONFIG.API_BASE_URL}/admin/stats`, {
-            headers: { 'X-API-Key': apiKey }
+        const response = await fetch(`${CONFIG.API_BASE_URL}/admin/stats?_t=${Date.now()}`, {
+            headers: { 'X-API-Key': apiKey },
+            cache: 'no-store'
         });
 
         if (!response.ok) {
@@ -150,7 +262,7 @@ function handleLogout() {
 // Auto Refresh
 function startAutoRefresh() {
     stopAutoRefresh();
-    autoRefreshInterval = setInterval(refreshDashboard, 60000); // 60 seconds
+    autoRefreshInterval = setInterval(refreshDashboard, 30000); // 30 seconds (reduced to prevent rate limiting)
 }
 
 function stopAutoRefresh() {
@@ -186,18 +298,20 @@ async function loadDashboardData() {
 // Stats
 async function loadStats() {
     try {
-        const response = await fetch(`${CONFIG.API_BASE_URL}/admin/stats`, {
-            headers: { 'X-API-Key': apiKey }
+        const response = await fetch(`${CONFIG.API_BASE_URL}/admin/stats?_t=${Date.now()}`, {
+            headers: { 'X-API-Key': apiKey },
+            cache: 'no-store'
         });
 
         if (!response.ok) throw new Error('Failed to load stats');
 
-        const data = await response.json();
+        const result = await response.json();
+        const data = result.data || result; // Unwrap nested data
 
-        document.getElementById('stat-total').textContent = data.total_registrations || 0;
-        document.getElementById('stat-confirmed').textContent = data.confirmed_payments || 0;
-        document.getElementById('stat-revenue').textContent = formatCurrency(data.total_revenue || 0);
-        document.getElementById('stat-waitlist').textContent = data.waitlist_count || 0;
+        document.getElementById('stat-total').textContent = data.totalRegistrations || data.total_registrations || 0;
+        document.getElementById('stat-confirmed').textContent = data.confirmedRegistrations || data.confirmed_registrations || data.confirmedPayments || data.confirmed_payments || 0;
+        document.getElementById('stat-revenue').textContent = data.revenue_formatted || formatCurrency(data.totalRevenue || data.total_revenue || 0);
+        document.getElementById('stat-waitlist').textContent = data.waitlist_count || data.waitlistCount || 0;
 
     } catch (error) {
         console.error('Error loading stats:', error);
@@ -207,31 +321,96 @@ async function loadStats() {
 // Seats
 async function loadSeats() {
     try {
-        const response = await fetch(`${CONFIG.API_BASE_URL}/admin/seats`, {
-            headers: { 'X-API-Key': apiKey }
+        const response = await fetch(`${CONFIG.API_BASE_URL}/admin/seats?_t=${Date.now()}`, {
+            headers: { 'X-API-Key': apiKey },
+            cache: 'no-store'
         });
 
         if (!response.ok) throw new Error('Failed to load seats');
 
-        const data = await response.json();
+        const result = await response.json();
+        const seats = result.data?.seats || result.seats || result;
 
         // Process each tier
         const tiers = ['vip', 'standard', 'basic'];
         tiers.forEach(tier => {
-            const tierData = data.find(s => s.tier === tier);
+            const tierData = Array.isArray(seats) ? seats.find(s => s.tier === tier || s.tier_name === tier) : null;
             if (tierData) {
-                const sold = tierData.total_seats - tierData.available_seats;
-                const percentage = (sold / tierData.total_seats) * 100;
+                const totalSeats = tierData.total_seats || tierData.totalSeats || 0;
+                const availableSeats = tierData.available_seats || tierData.availableSeats || 0;
+                const soldSeats = tierData.sold_seats || tierData.soldSeats || 0;
+                const heldSeats = tierData.held_seats || tierData.heldSeats || 0;
+                const percentage = totalSeats > 0 ? ((soldSeats + heldSeats) / totalSeats) * 100 : 0;
 
-                document.getElementById(`sold-${tier}`).textContent = sold;
-                document.getElementById(`available-${tier}`).textContent = tierData.available_seats;
-                document.getElementById(`total-${tier}`).textContent = tierData.total_seats;
+                // Show actual sold count (not held)
+                const soldEl = document.getElementById(`sold-${tier}`);
+                if (soldEl) {
+                    // Show sold count, with held count in parentheses if any
+                    if (heldSeats > 0) {
+                        soldEl.innerHTML = `${soldSeats} <span style="color: #f59e0b; font-size: 0.75rem;">(+${heldSeats} pending)</span>`;
+                    } else {
+                        soldEl.textContent = soldSeats;
+                    }
+                }
+                document.getElementById(`available-${tier}`).textContent = availableSeats;
+                document.getElementById(`total-${tier}`).textContent = totalSeats;
                 document.getElementById(`progress-${tier}`).style.width = `${percentage}%`;
             }
         });
 
     } catch (error) {
         console.error('Error loading seats:', error);
+    }
+}
+
+// Resync Seat Counts
+async function resyncSeatCounts() {
+    const btn = document.getElementById('btn-resync-seats');
+    if (!btn) return;
+
+    const originalText = btn.innerHTML;
+    btn.classList.add('syncing');
+    btn.disabled = true;
+    btn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+        </svg>
+        Syncing...
+    `;
+
+    try {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/admin/seats/resync`, {
+            method: 'POST',
+            headers: { 'X-API-Key': apiKey }
+        });
+
+        if (!response.ok) throw new Error('Failed to resync seats');
+
+        const result = await response.json();
+
+        if (result.success) {
+            const changes = result.data?.changes || [];
+            if (changes.length > 0) {
+                const changesText = changes.map(c =>
+                    `${c.tier}: ${c.field} ${c.before} → ${c.after}`
+                ).join(', ');
+                showAlertModal('Resync Complete', `Changes made: ${changesText}`, true);
+            } else {
+                showAlertModal('No Changes Needed', 'Seat counts are already in sync.', true);
+            }
+            // Refresh dashboard to show updated counts
+            await loadDashboardData();
+        } else {
+            throw new Error(result.error?.message || 'Unknown error');
+        }
+
+    } catch (error) {
+        console.error('Error resyncing seats:', error);
+        showAlertModal('Error', 'Failed to resync seat counts. Please try again.', false);
+    } finally {
+        btn.classList.remove('syncing');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
     }
 }
 
@@ -245,15 +424,17 @@ async function loadRegistrations() {
             ...filters
         });
 
-        const response = await fetch(`${CONFIG.API_BASE_URL}/admin/registrations?${queryParams}`, {
-            headers: { 'X-API-Key': apiKey }
+        const response = await fetch(`${CONFIG.API_BASE_URL}/admin/registrations?${queryParams}&_t=${Date.now()}`, {
+            headers: { 'X-API-Key': apiKey },
+            cache: 'no-store'
         });
 
         if (!response.ok) throw new Error('Failed to load registrations');
 
-        const data = await response.json();
+        const result = await response.json();
+        const data = result.data || result;
         registrations = data.registrations || [];
-        totalRegistrations = data.total || 0;
+        totalRegistrations = data.pagination?.total || data.total || 0;
 
         renderRegistrations();
         updatePagination();
@@ -304,14 +485,45 @@ function renderRegistrations() {
     if (registrations.length === 0) {
         tbody.innerHTML = `
             <tr class="loading-row">
-                <td colspan="9">No registrations found.</td>
+                <td colspan="10">No registrations found.</td>
             </tr>
         `;
+        updateFailedCallCounter();
         return;
     }
 
-    tbody.innerHTML = registrations.map(reg => `
-        <tr>
+    tbody.innerHTML = registrations.map(reg => {
+        const isFailed = reg.payment_status === 'failed';
+        const isCalled = isRegistrationCalled(reg.booking_id);
+        const needsCall = isFailed && !isCalled;
+        const rowClass = needsCall ? 'needs-call' : '';
+
+        // Build call action based on status
+        let callAction = '';
+        if (isFailed) {
+            if (isCalled) {
+                callAction = `
+                    <span class="called-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Called
+                    </span>
+                `;
+            } else {
+                callAction = `
+                    <button class="call-reminder" onclick="markRegistrationAsCalled('${reg.booking_id}')" title="Mark as Called">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                        </svg>
+                        Call
+                    </button>
+                `;
+            }
+        }
+
+        return `
+        <tr class="${rowClass}">
             <td><code style="font-size: 0.75rem; background: var(--gray-100); padding: 0.25rem 0.5rem; border-radius: 4px;">${reg.booking_id || '--'}</code></td>
             <td><strong>${escapeHtml(reg.name || '--')}</strong></td>
             <td>${escapeHtml(reg.email || '--')}</td>
@@ -319,10 +531,27 @@ function renderRegistrations() {
             <td>${escapeHtml(reg.business_name || '--')}</td>
             <td><span class="tier-badge ${reg.tier}">${getTierDisplayName(reg.tier)}</span></td>
             <td>${formatCurrency(reg.amount_paid || 0)}</td>
-            <td><span class="status-badge ${reg.payment_status}">${capitalizeFirst(reg.payment_status || 'pending')}</span></td>
+            <td>
+                <span class="status-badge ${reg.payment_status}">${capitalizeFirst(reg.payment_status || 'pending')}</span>
+                ${needsCall ? '<br><small style="color: #b91c1c; font-size: 0.625rem;">Needs follow-up</small>' : ''}
+            </td>
             <td>${formatDate(reg.created_at)}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="btn-action btn-delete" onclick="deleteRegistration('${reg.booking_id}')" title="Delete">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </button>
+                    ${callAction}
+                </div>
+            </td>
         </tr>
-    `).join('');
+    `}).join('');
+
+    // Update counter after rendering
+    updateFailedCallCounter();
 }
 
 function getTierDisplayName(tier) {
@@ -369,17 +598,105 @@ function changePage(delta) {
     }
 }
 
+// Delete Registration
+async function deleteRegistration(bookingId) {
+    showConfirmModal(
+        'Delete Registration',
+        `Are you sure you want to delete registration ${bookingId}? This action cannot be undone.`,
+        async () => {
+            try {
+                showLoading();
+                const response = await fetch(`${CONFIG.API_BASE_URL}/admin/registrations/${bookingId}`, {
+                    method: 'DELETE',
+                    headers: { 'X-API-Key': apiKey }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error?.message || 'Failed to delete registration');
+                }
+
+                showAlertModal('Success', 'Registration deleted successfully', true);
+                loadDashboardData();
+            } catch (error) {
+                console.error('Error deleting registration:', error);
+                showAlertModal('Error', error.message, false);
+            } finally {
+                hideLoading();
+            }
+        }
+    );
+}
+
+// Show Add Registration Modal
+function showAddRegistrationModal() {
+    document.getElementById('add-registration-modal').classList.remove('hidden');
+}
+
+// Hide Add Registration Modal
+function hideAddRegistrationModal() {
+    document.getElementById('add-registration-modal').classList.add('hidden');
+    document.getElementById('add-registration-form').reset();
+}
+
+// Create Manual Registration
+async function createManualRegistration(event) {
+    event.preventDefault();
+
+    const form = event.target;
+    const formData = {
+        name: form.name.value.trim(),
+        email: form.email.value.trim().toLowerCase(),
+        phone: form.phone.value.trim(),
+        business_name: form.business_name.value.trim() || undefined,
+        industry: form.industry.value || undefined,
+        tier: form.tier.value,
+        amount_paid: parseInt(form.amount_paid.value) || 0,
+        payment_status: form.payment_status.value
+    };
+
+    try {
+        showLoading();
+        const response = await fetch(`${CONFIG.API_BASE_URL}/admin/registrations`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key': apiKey
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error?.message || 'Failed to create registration');
+        }
+
+        showAlertModal('Success', `Registration created successfully! Booking ID: ${result.data.booking_id}`, true);
+        hideAddRegistrationModal();
+        loadDashboardData();
+    } catch (error) {
+        console.error('Error creating registration:', error);
+        showAlertModal('Error', error.message, false);
+    } finally {
+        hideLoading();
+    }
+}
+
 // Waitlist
 async function loadWaitlist() {
     try {
-        const response = await fetch(`${CONFIG.API_BASE_URL}/admin/waitlist`, {
-            headers: { 'X-API-Key': apiKey }
+        const response = await fetch(`${CONFIG.API_BASE_URL}/admin/waitlist?_t=${Date.now()}`, {
+            headers: { 'X-API-Key': apiKey },
+            cache: 'no-store'
         });
 
         if (!response.ok) throw new Error('Failed to load waitlist');
 
-        const data = await response.json();
-        renderWaitlist(data.waitlist || []);
+        const result = await response.json();
+        const data = result.data || result;
+        renderWaitlist(data.entries || data.waitlist || []);
 
     } catch (error) {
         console.error('Error loading waitlist:', error);
@@ -421,8 +738,9 @@ async function exportRegistrations() {
     showLoading();
 
     try {
-        const response = await fetch(`${CONFIG.API_BASE_URL}/admin/export`, {
-            headers: { 'X-API-Key': apiKey }
+        const response = await fetch(`${CONFIG.API_BASE_URL}/admin/export?_t=${Date.now()}`, {
+            headers: { 'X-API-Key': apiKey },
+            cache: 'no-store'
         });
 
         if (!response.ok) throw new Error('Failed to export');
@@ -432,7 +750,7 @@ async function exportRegistrations() {
 
     } catch (error) {
         console.error('Error exporting registrations:', error);
-        alert('Failed to export registrations. Please try again.');
+        showAlertModal('Export Failed', 'Failed to export registrations. Please try again.', false);
     } finally {
         hideLoading();
     }
@@ -442,8 +760,9 @@ async function exportWaitlist() {
     showLoading();
 
     try {
-        const response = await fetch(`${CONFIG.API_BASE_URL}/admin/waitlist`, {
-            headers: { 'X-API-Key': apiKey }
+        const response = await fetch(`${CONFIG.API_BASE_URL}/admin/waitlist?_t=${Date.now()}`, {
+            headers: { 'X-API-Key': apiKey },
+            cache: 'no-store'
         });
 
         if (!response.ok) throw new Error('Failed to fetch waitlist');
@@ -472,7 +791,7 @@ async function exportWaitlist() {
 
     } catch (error) {
         console.error('Error exporting waitlist:', error);
-        alert('Failed to export waitlist. Please try again.');
+        showAlertModal('Export Failed', 'Failed to export waitlist. Please try again.', false);
     } finally {
         hideLoading();
     }
@@ -546,8 +865,9 @@ function markSettingsModified() {
 // Load settings from API
 async function loadSettings() {
     try {
-        const response = await fetch(`${CONFIG.API_BASE_URL}/settings/admin`, {
-            headers: { 'X-API-Key': apiKey }
+        const response = await fetch(`${CONFIG.API_BASE_URL}/settings/admin?_t=${Date.now()}`, {
+            headers: { 'X-API-Key': apiKey },
+            cache: 'no-store'
         });
 
         if (!response.ok) throw new Error('Failed to load settings');
@@ -575,7 +895,11 @@ function populateSettingsForm() {
     setCheckbox('setting-offer-active', currentSettings.offer_is_active);
     setDateTimeInput('setting-offer-start', currentSettings.offer_start_date);
     setInput('setting-offer-duration', currentSettings.offer_duration_days);
-    setInput('setting-offer-discount', currentSettings.offer_discount_amount);
+
+    // Tier-specific discounts
+    setInput('setting-offer-discount-vip', currentSettings.offer_discount_vip || currentSettings.offer_discount_amount || 1000);
+    setInput('setting-offer-discount-standard', currentSettings.offer_discount_standard || currentSettings.offer_discount_amount || 1000);
+    setInput('setting-offer-discount-basic', currentSettings.offer_discount_basic || currentSettings.offer_discount_amount || 1000);
 
     // Pricing settings
     setInput('setting-vip-original', currentSettings.tier_vip_original_price);
@@ -591,6 +915,11 @@ function populateSettingsForm() {
     setInput('setting-event-date', currentSettings.event_date);
     setInput('setting-event-time', currentSettings.event_time);
     setInput('setting-event-venue', currentSettings.event_venue);
+
+    // Support settings
+    setInput('setting-support-email', currentSettings.support_email);
+    setInput('setting-support-phone', currentSettings.support_phone);
+    setInput('setting-support-whatsapp', currentSettings.support_whatsapp);
 
     // Registration settings
     setCheckbox('setting-reg-open', currentSettings.registration_open);
@@ -731,7 +1060,11 @@ function collectSettingsUpdates() {
         addUpdate('offer_start_date', isoDate);
     }
     addUpdate('offer_duration_days', parseInt(document.getElementById('setting-offer-duration')?.value) || 3);
-    addUpdate('offer_discount_amount', parseInt(document.getElementById('setting-offer-discount')?.value) || 1000);
+
+    // Tier-specific discounts
+    addUpdate('offer_discount_vip', parseInt(document.getElementById('setting-offer-discount-vip')?.value) || 1000);
+    addUpdate('offer_discount_standard', parseInt(document.getElementById('setting-offer-discount-standard')?.value) || 1000);
+    addUpdate('offer_discount_basic', parseInt(document.getElementById('setting-offer-discount-basic')?.value) || 1000);
 
     // Pricing settings
     addUpdate('tier_vip_original_price', parseInt(document.getElementById('setting-vip-original')?.value) || 0);
@@ -747,6 +1080,11 @@ function collectSettingsUpdates() {
     addUpdate('event_date', document.getElementById('setting-event-date')?.value || '');
     addUpdate('event_time', document.getElementById('setting-event-time')?.value || '');
     addUpdate('event_venue', document.getElementById('setting-event-venue')?.value || '');
+
+    // Support settings
+    addUpdate('support_email', document.getElementById('setting-support-email')?.value || '');
+    addUpdate('support_phone', document.getElementById('setting-support-phone')?.value || '');
+    addUpdate('support_whatsapp', document.getElementById('setting-support-whatsapp')?.value || '');
 
     // Registration settings
     addUpdate('registration_open', document.getElementById('setting-reg-open')?.checked || false);
@@ -786,8 +1124,9 @@ async function loadSettingsHistory() {
     if (!listEl) return;
 
     try {
-        const response = await fetch(`${CONFIG.API_BASE_URL}/settings/admin/history?limit=20`, {
-            headers: { 'X-API-Key': apiKey }
+        const response = await fetch(`${CONFIG.API_BASE_URL}/settings/admin/history?limit=20&_t=${Date.now()}`, {
+            headers: { 'X-API-Key': apiKey },
+            cache: 'no-store'
         });
 
         if (!response.ok) throw new Error('Failed to load history');
@@ -853,3 +1192,751 @@ loadDashboardData = async function() {
 document.addEventListener('DOMContentLoaded', () => {
     initSettingsUI();
 });
+
+// ============================================
+// Payment Abandonments Management
+// ============================================
+
+let abandonmentPage = 1;
+let abandonmentPageSize = 20;
+let totalAbandonments = 0;
+let abandonments = [];
+let selectedAbandonment = null;
+let pendingRegistrations = [];
+
+// Initialize Abandonments UI
+document.addEventListener('DOMContentLoaded', () => {
+    initAbandonmentsUI();
+});
+
+function initAbandonmentsUI() {
+    // Event listeners for abandonment section
+    const exportBtn = document.getElementById('btn-export-abandonments');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportAbandonments);
+    }
+
+    const clearFiltersBtn = document.getElementById('btn-clear-abandonment-filters');
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener('click', clearAbandonmentFilters);
+    }
+
+    const cleanupBtn = document.getElementById('btn-cleanup-expired');
+    if (cleanupBtn) {
+        cleanupBtn.addEventListener('click', cleanupExpiredRegistrations);
+    }
+
+    const prevBtn = document.getElementById('btn-abandonment-prev');
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => changeAbandonmentPage(-1));
+    }
+
+    const nextBtn = document.getElementById('btn-abandonment-next');
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => changeAbandonmentPage(1));
+    }
+
+    // Filter listeners
+    const searchInput = document.getElementById('filter-abandonment-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(applyAbandonmentFilters, 500));
+    }
+
+    const typeFilter = document.getElementById('filter-abandonment-type');
+    if (typeFilter) {
+        typeFilter.addEventListener('change', applyAbandonmentFilters);
+    }
+
+    const statusFilter = document.getElementById('filter-followup-status');
+    if (statusFilter) {
+        statusFilter.addEventListener('change', applyAbandonmentFilters);
+    }
+
+    // Modal listeners
+    const closeModalBtn = document.getElementById('close-abandonment-modal');
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeAbandonmentModal);
+    }
+
+    const closeBtn = document.getElementById('btn-close-modal');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeAbandonmentModal);
+    }
+
+    const sendEmailBtn = document.getElementById('btn-send-recovery-email');
+    if (sendEmailBtn) {
+        sendEmailBtn.addEventListener('click', sendRecoveryEmailFromModal);
+    }
+}
+
+// Load Abandonments
+async function loadAbandonments() {
+    try {
+        const filters = getAbandonmentFilters();
+        const queryParams = new URLSearchParams({
+            page: abandonmentPage,
+            limit: abandonmentPageSize,
+            ...filters
+        });
+
+        const response = await fetch(`${CONFIG.API_BASE_URL}/admin/abandonments?${queryParams}&_t=${Date.now()}`, {
+            headers: { 'X-API-Key': apiKey },
+            cache: 'no-store'
+        });
+
+        if (!response.ok) throw new Error('Failed to load abandonments');
+
+        const data = await response.json();
+        abandonments = data.data?.abandonments || [];
+        totalAbandonments = data.data?.pagination?.total || 0;
+
+        renderAbandonments();
+        updateAbandonmentPagination();
+
+    } catch (error) {
+        console.error('Error loading abandonments:', error);
+        const tbody = document.getElementById('abandonments-tbody');
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr class="loading-row">
+                    <td colspan="9">Error loading abandonments. Please try again.</td>
+                </tr>
+            `;
+        }
+    }
+}
+
+// Load Abandonment Stats
+async function loadAbandonmentStats() {
+    try {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/admin/abandonments/stats?_t=${Date.now()}`, {
+            headers: { 'X-API-Key': apiKey },
+            cache: 'no-store'
+        });
+
+        if (!response.ok) throw new Error('Failed to load abandonment stats');
+
+        const data = await response.json();
+        const stats = data.data || {};
+
+        const totalEl = document.getElementById('stat-abandoned-total');
+        if (totalEl) totalEl.textContent = stats.total_abandonments || 0;
+
+        const pendingEl = document.getElementById('stat-abandoned-pending');
+        if (pendingEl) pendingEl.textContent = stats.pending_followup || 0;
+
+        const convertedEl = document.getElementById('stat-abandoned-converted');
+        if (convertedEl) convertedEl.textContent = stats.converted || 0;
+
+        const revenueEl = document.getElementById('stat-abandoned-revenue');
+        if (revenueEl) revenueEl.textContent = stats.lost_revenue_formatted || formatCurrency(stats.total_lost_revenue || 0);
+
+    } catch (error) {
+        console.error('Error loading abandonment stats:', error);
+    }
+}
+
+function getAbandonmentFilters() {
+    const filters = {};
+
+    const searchEl = document.getElementById('filter-abandonment-search');
+    const typeEl = document.getElementById('filter-abandonment-type');
+    const statusEl = document.getElementById('filter-followup-status');
+
+    const search = searchEl ? searchEl.value.trim() : '';
+    const type = typeEl ? typeEl.value : '';
+    const status = statusEl ? statusEl.value : '';
+
+    if (search) filters.search = search;
+    if (type) filters.abandonment_type = type;
+    if (status) filters.followup_status = status;
+
+    return filters;
+}
+
+function applyAbandonmentFilters() {
+    abandonmentPage = 1;
+    loadAbandonments();
+}
+
+function clearAbandonmentFilters() {
+    const searchEl = document.getElementById('filter-abandonment-search');
+    const typeEl = document.getElementById('filter-abandonment-type');
+    const statusEl = document.getElementById('filter-followup-status');
+
+    if (searchEl) searchEl.value = '';
+    if (typeEl) typeEl.value = '';
+    if (statusEl) statusEl.value = '';
+
+    abandonmentPage = 1;
+    loadAbandonments();
+}
+
+function renderAbandonments() {
+    const tbody = document.getElementById('abandonments-tbody');
+    if (!tbody) return;
+
+    if (abandonments.length === 0) {
+        tbody.innerHTML = `
+            <tr class="loading-row">
+                <td colspan="9">No payment abandonments found.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = abandonments.map(item => `
+        <tr>
+            <td><strong>${escapeHtml(item.name || '--')}</strong></td>
+            <td>
+                <div>${escapeHtml(item.email || '--')}</div>
+                <div class="text-muted">${escapeHtml(item.phone || '--')}</div>
+            </td>
+            <td>${escapeHtml(item.business_name || '--')}</td>
+            <td><span class="tier-badge ${item.tier}">${getTierDisplayName(item.tier)}</span></td>
+            <td>${formatCurrency(item.amount || 0)}</td>
+            <td><span class="type-badge ${item.abandonment_type}">${capitalizeFirst(item.abandonment_type || 'unknown')}</span></td>
+            <td><span class="followup-badge ${item.followup_status}">${formatFollowupStatus(item.followup_status)}</span></td>
+            <td>${formatDate(item.abandoned_at)}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="btn-action" onclick="viewAbandonmentDetails('${item.id}')" title="View Details">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </button>
+                    <button class="btn-action btn-email" onclick="sendRecoveryEmail('${item.id}')" title="Send Recovery Email">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                    </button>
+                    <button class="btn-action btn-delete" onclick="deleteAbandonment('${item.id}', '${escapeHtml(item.name)}')" title="Delete">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function formatFollowupStatus(status) {
+    const statusNames = {
+        pending: 'Pending',
+        email_sent: 'Email Sent',
+        contacted: 'Contacted',
+        converted: 'Converted',
+        declined: 'Declined',
+        unresponsive: 'Unresponsive'
+    };
+    return statusNames[status] || capitalizeFirst(status || 'pending');
+}
+
+function updateAbandonmentPagination() {
+    const start = totalAbandonments === 0 ? 0 : (abandonmentPage - 1) * abandonmentPageSize + 1;
+    const end = Math.min(abandonmentPage * abandonmentPageSize, totalAbandonments);
+
+    const startEl = document.getElementById('abandonment-page-start');
+    const endEl = document.getElementById('abandonment-page-end');
+    const totalEl = document.getElementById('abandonment-page-total');
+    const currentEl = document.getElementById('abandonment-current-page');
+
+    if (startEl) startEl.textContent = start;
+    if (endEl) endEl.textContent = end;
+    if (totalEl) totalEl.textContent = totalAbandonments;
+    if (currentEl) currentEl.textContent = abandonmentPage;
+
+    const totalPages = Math.ceil(totalAbandonments / abandonmentPageSize);
+
+    const prevBtn = document.getElementById('btn-abandonment-prev');
+    const nextBtn = document.getElementById('btn-abandonment-next');
+
+    if (prevBtn) prevBtn.disabled = abandonmentPage <= 1;
+    if (nextBtn) nextBtn.disabled = abandonmentPage >= totalPages;
+}
+
+function changeAbandonmentPage(delta) {
+    const totalPages = Math.ceil(totalAbandonments / abandonmentPageSize);
+    const newPage = abandonmentPage + delta;
+
+    if (newPage >= 1 && newPage <= totalPages) {
+        abandonmentPage = newPage;
+        loadAbandonments();
+    }
+}
+
+// View Abandonment Details
+async function viewAbandonmentDetails(id) {
+    showLoading();
+
+    try {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/admin/abandonments/${id}?_t=${Date.now()}`, {
+            headers: { 'X-API-Key': apiKey },
+            cache: 'no-store'
+        });
+
+        if (!response.ok) throw new Error('Failed to load abandonment details');
+
+        const data = await response.json();
+        selectedAbandonment = data.data;
+
+        renderAbandonmentModal(selectedAbandonment);
+        openAbandonmentModal();
+
+    } catch (error) {
+        console.error('Error loading abandonment details:', error);
+        showAlertModal('Error', 'Failed to load abandonment details. Please try again.', false);
+    } finally {
+        hideLoading();
+    }
+}
+
+function renderAbandonmentModal(item) {
+    const modalBody = document.getElementById('abandonment-modal-body');
+    if (!modalBody) return;
+
+    modalBody.innerHTML = `
+        <div class="abandonment-details">
+            <div class="detail-section">
+                <h4>Contact Information</h4>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Name</span>
+                        <span class="detail-value">${escapeHtml(item.name || '--')}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Email</span>
+                        <span class="detail-value"><a href="mailto:${item.email}">${escapeHtml(item.email || '--')}</a></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Phone</span>
+                        <span class="detail-value"><a href="tel:${item.phone}">${escapeHtml(item.phone || '--')}</a></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Business</span>
+                        <span class="detail-value">${escapeHtml(item.business_name || '--')}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h4>Abandonment Details</h4>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Tier</span>
+                        <span class="detail-value"><span class="tier-badge ${item.tier}">${getTierDisplayName(item.tier)}</span></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Amount</span>
+                        <span class="detail-value">${formatCurrency(item.amount || 0)}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Type</span>
+                        <span class="detail-value"><span class="type-badge ${item.abandonment_type}">${capitalizeFirst(item.abandonment_type || 'unknown')}</span></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Reason</span>
+                        <span class="detail-value">${escapeHtml(item.abandonment_reason || '--')}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Abandoned At</span>
+                        <span class="detail-value">${formatDate(item.abandoned_at)}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h4>Follow-up Status</h4>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Status</span>
+                        <span class="detail-value">
+                            <select id="modal-followup-status" class="filter-select" value="${item.followup_status}">
+                                <option value="pending" ${item.followup_status === 'pending' ? 'selected' : ''}>Pending</option>
+                                <option value="email_sent" ${item.followup_status === 'email_sent' ? 'selected' : ''}>Email Sent</option>
+                                <option value="contacted" ${item.followup_status === 'contacted' ? 'selected' : ''}>Contacted</option>
+                                <option value="converted" ${item.followup_status === 'converted' ? 'selected' : ''}>Converted</option>
+                                <option value="declined" ${item.followup_status === 'declined' ? 'selected' : ''}>Declined</option>
+                                <option value="unresponsive" ${item.followup_status === 'unresponsive' ? 'selected' : ''}>Unresponsive</option>
+                            </select>
+                        </span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Follow-up Attempts</span>
+                        <span class="detail-value">${item.followup_attempts || 0}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Last Follow-up</span>
+                        <span class="detail-value">${item.last_followup_at ? formatDate(item.last_followup_at) : '--'}</span>
+                    </div>
+                </div>
+
+                <div class="detail-item full-width">
+                    <span class="detail-label">Notes</span>
+                    <textarea id="modal-admin-notes" class="setting-input setting-textarea" rows="3" placeholder="Add notes...">${escapeHtml(item.admin_notes || '')}</textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="updateAbandonmentStatus('${item.id}')">Update Status</button>
+                </div>
+            </div>
+
+            ${item.recovery_token ? `
+            <div class="detail-section">
+                <h4>Recovery Link</h4>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Link</span>
+                        <span class="detail-value"><code>${CONFIG.FRONTEND_URL || window.location.origin}/recover/${item.recovery_token}</code></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Expires</span>
+                        <span class="detail-value">${item.recovery_link_expires_at ? formatDate(item.recovery_link_expires_at) : '--'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Used</span>
+                        <span class="detail-value">${item.recovery_link_used ? 'Yes' : 'No'}</span>
+                    </div>
+                </div>
+            </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+function openAbandonmentModal() {
+    const modal = document.getElementById('abandonment-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+    }
+}
+
+function closeAbandonmentModal() {
+    const modal = document.getElementById('abandonment-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+    selectedAbandonment = null;
+}
+
+// Update Abandonment Status
+async function updateAbandonmentStatus(id) {
+    const statusEl = document.getElementById('modal-followup-status');
+    const notesEl = document.getElementById('modal-admin-notes');
+
+    if (!statusEl) return;
+
+    const status = statusEl.value;
+    const notes = notesEl ? notesEl.value : '';
+
+    showLoading();
+
+    try {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/admin/abandonments/${id}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key': apiKey
+            },
+            body: JSON.stringify({ status, notes })
+        });
+
+        if (!response.ok) throw new Error('Failed to update status');
+
+        showAlertModal('Success', 'Status updated successfully', true);
+        closeAbandonmentModal();
+        await loadAbandonments();
+        await loadAbandonmentStats();
+
+    } catch (error) {
+        console.error('Error updating abandonment status:', error);
+        showAlertModal('Error', 'Failed to update status. Please try again.', false);
+    } finally {
+        hideLoading();
+    }
+}
+
+// Send Recovery Email
+async function sendRecoveryEmail(id) {
+    showConfirmModal(
+        'Send Recovery Email',
+        'Send recovery email to this user?',
+        async () => {
+            showLoading();
+
+            try {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/admin/abandonments/${id}/send-email`, {
+                    method: 'POST',
+                    headers: { 'X-API-Key': apiKey }
+                });
+
+                if (!response.ok) throw new Error('Failed to send email');
+
+                showAlertModal('Success', 'Recovery email sent successfully!', true);
+                await loadAbandonments();
+                await loadAbandonmentStats();
+
+            } catch (error) {
+                console.error('Error sending recovery email:', error);
+                showAlertModal('Error', 'Failed to send recovery email. Please try again.', false);
+            } finally {
+                hideLoading();
+            }
+        }
+    );
+}
+
+function sendRecoveryEmailFromModal() {
+    if (selectedAbandonment) {
+        sendRecoveryEmail(selectedAbandonment.id);
+    }
+}
+
+// Delete Abandonment
+async function deleteAbandonment(id, name) {
+    showConfirmModal(
+        'Delete Abandonment',
+        `Are you sure you want to delete the abandonment record for ${name}? This action cannot be undone.`,
+        async () => {
+            showLoading();
+
+            try {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/admin/abandonments/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-API-Key': apiKey }
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error?.message || 'Failed to delete');
+                }
+
+                showAlertModal('Success', 'Abandonment record deleted successfully.', true);
+                await loadAbandonments();
+                await loadAbandonmentStats();
+
+            } catch (error) {
+                console.error('Error deleting abandonment:', error);
+                showAlertModal('Error', error.message || 'Failed to delete abandonment. Please try again.', false);
+            } finally {
+                hideLoading();
+            }
+        }
+    );
+}
+
+// Export Abandonments
+async function exportAbandonments() {
+    showLoading();
+
+    try {
+        const filters = getAbandonmentFilters();
+        const queryParams = new URLSearchParams(filters);
+
+        const response = await fetch(`${CONFIG.API_BASE_URL}/admin/abandonments/export?${queryParams}&_t=${Date.now()}`, {
+            headers: { 'X-API-Key': apiKey },
+            cache: 'no-store'
+        });
+
+        if (!response.ok) throw new Error('Failed to export');
+
+        const blob = await response.blob();
+        downloadBlob(blob, `abandonments_${new Date().toISOString().split('T')[0]}.csv`);
+
+    } catch (error) {
+        console.error('Error exporting abandonments:', error);
+        showAlertModal('Export Failed', 'Failed to export abandonments. Please try again.', false);
+    } finally {
+        hideLoading();
+    }
+}
+
+// Load Pending Registrations (held seats awaiting payment)
+async function loadPendingRegistrations() {
+    try {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/admin/abandonments/pending?_t=${Date.now()}`, {
+            headers: { 'X-API-Key': apiKey },
+            cache: 'no-store'
+        });
+
+        if (!response.ok) throw new Error('Failed to load pending registrations');
+
+        const data = await response.json();
+        pendingRegistrations = data.data?.registrations || [];
+
+        renderPendingRegistrations();
+
+    } catch (error) {
+        console.error('Error loading pending registrations:', error);
+        const tbody = document.getElementById('pending-registrations-tbody');
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr class="loading-row">
+                    <td colspan="8">Error loading pending registrations. Please try again.</td>
+                </tr>
+            `;
+        }
+    }
+}
+
+function renderPendingRegistrations() {
+    const tbody = document.getElementById('pending-registrations-tbody');
+    if (!tbody) return;
+
+    if (pendingRegistrations.length === 0) {
+        tbody.innerHTML = `
+            <tr class="loading-row">
+                <td colspan="8">No pending registrations (held seats) found.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = pendingRegistrations.map(item => {
+        const statusClass = item.is_expired ? 'expired' : (item.time_remaining_minutes <= 15 ? 'expiring-soon' : 'active');
+        const statusText = item.is_expired ? 'EXPIRED' : `${item.time_remaining_minutes}m left`;
+
+        return `
+        <tr class="${item.is_expired ? 'expired-row' : ''}">
+            <td><strong>${escapeHtml(item.name || '--')}</strong></td>
+            <td>
+                <div>${escapeHtml(item.email || '--')}</div>
+                <div class="text-muted">${escapeHtml(item.phone || '--')}</div>
+            </td>
+            <td>${escapeHtml(item.business_name || '--')}</td>
+            <td><span class="tier-badge ${item.tier}">${getTierDisplayName(item.tier)}</span></td>
+            <td>${formatCurrency(item.amount || 0)}</td>
+            <td><span class="time-badge ${statusClass}">${statusText}</span></td>
+            <td>${formatDate(item.created_at)}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="btn-send-reminder" onclick="sendPaymentReminder('${item.id}', '${escapeHtml(item.email)}', '${escapeHtml(item.name)}', '${item.tier}')" title="Send Reminder Email">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                        Remind
+                    </button>
+                    ${item.is_expired ? `
+                        <button class="btn-action btn-release" onclick="releaseExpiredRegistration('${item.id}')" title="Release Seat">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+                            </svg>
+                        </button>
+                    ` : ''}
+                </div>
+            </td>
+        </tr>
+    `}).join('');
+}
+
+// Send Payment Reminder for Pending Registrations
+async function sendPaymentReminder(registrationId, email, name, tier) {
+    showConfirmModal(
+        'Send Payment Reminder',
+        `Send a payment reminder email to ${name} (${email})?`,
+        async () => {
+            showLoading();
+
+            try {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/admin/registrations/${registrationId}/remind`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': apiKey
+                    },
+                    body: JSON.stringify({ email, name, tier })
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error?.message || 'Failed to send reminder');
+                }
+
+                showAlertModal('Reminder Sent', `Payment reminder sent to ${email}`, true);
+
+            } catch (error) {
+                console.error('Error sending payment reminder:', error);
+                showAlertModal('Error', error.message || 'Failed to send payment reminder. Please try again.', false);
+            } finally {
+                hideLoading();
+            }
+        }
+    );
+}
+
+// Cleanup Expired Registrations
+async function cleanupExpiredRegistrations() {
+    showConfirmModal(
+        'Cleanup Expired Registrations',
+        'This will release all expired held seats and record them as abandonments. Continue?',
+        async () => {
+            showLoading();
+
+            try {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/admin/abandonments/cleanup`, {
+                    method: 'POST',
+                    headers: { 'X-API-Key': apiKey }
+                });
+
+                if (!response.ok) throw new Error('Failed to cleanup');
+
+                const data = await response.json();
+                showAlertModal('Cleanup Complete', `Released ${data.data?.released || 0} expired registration(s).`, true);
+
+                // Refresh all data
+                await loadDashboardData();
+
+            } catch (error) {
+                console.error('Error cleaning up expired registrations:', error);
+                showAlertModal('Error', 'Failed to cleanup expired registrations. Please try again.', false);
+            } finally {
+                hideLoading();
+            }
+        }
+    );
+}
+
+// Release single expired registration
+async function releaseExpiredRegistration(registrationId) {
+    showConfirmModal(
+        'Release Registration',
+        'Release this expired registration and free the held seat?',
+        async () => {
+            showLoading();
+
+            try {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/admin/abandonments/cleanup`, {
+                    method: 'POST',
+                    headers: { 'X-API-Key': apiKey }
+                });
+
+                if (!response.ok) throw new Error('Failed to release');
+
+                showAlertModal('Success', 'Registration released successfully.', true);
+                await loadDashboardData();
+
+            } catch (error) {
+                console.error('Error releasing registration:', error);
+                showAlertModal('Error', 'Failed to release registration. Please try again.', false);
+            } finally {
+                hideLoading();
+            }
+        }
+    );
+}
+
+// Update loadDashboardData to include abandonments
+const originalLoadDashboardDataWithSettings = loadDashboardData;
+loadDashboardData = async function() {
+    await originalLoadDashboardDataWithSettings();
+    await Promise.all([
+        loadAbandonments(),
+        loadAbandonmentStats(),
+        loadPendingRegistrations()
+    ]);
+};

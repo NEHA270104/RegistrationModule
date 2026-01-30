@@ -49,6 +49,7 @@ export const config = {
       registrationConfirmation: process.env.MSG91_TEMPLATE_REGISTRATION || '',
       waitlistConfirmation: process.env.MSG91_TEMPLATE_WAITLIST || '',
       paymentReminder: process.env.MSG91_TEMPLATE_REMINDER || '',
+      paymentRecovery: process.env.MSG91_TEMPLATE_RECOVERY || '',
       otp: process.env.MSG91_TEMPLATE_OTP || '',
     },
   },
@@ -61,7 +62,11 @@ export const config = {
   },
 
   // Admin
-  adminApiKey: process.env.ADMIN_API_KEY || 'change-this-in-production',
+  adminApiKey: (() => {
+    const key = process.env.ADMIN_API_KEY || 'change-this-in-production';
+    console.log(`[Config] ADMIN_API_KEY loaded, length: ${key.length}`);
+    return key;
+  })(),
 
   // Rate Limiting
   rateLimit: {
@@ -72,14 +77,14 @@ export const config = {
   // CORS
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
 
-  // Event Details
+  // Event Details (fallback values - actual values fetched from database)
   event: {
     name: 'AI for MSME Business Summit 2026',
-    date: '3rd January 2026',
-    time: '9:00 AM - 2:00 PM IST',
-    venue: 'Live on Zoom',
-    supportEmail: 'support@aiformsme.com',
-    supportPhone: '+91 98765 43210',
+    date: '21st February 2026',
+    time: '9:00 AM - 5:00 PM IST',
+    venue: 'TBD soon',
+    supportEmail: 'support@bizflowai.in',
+    supportPhone: '+91 8188050895',
   },
 
   // Payment Timeout

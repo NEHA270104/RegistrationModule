@@ -5,6 +5,8 @@
 export type TierType = 'vip' | 'standard' | 'basic' | 'waitlist';
 export type PaymentStatus = 'pending' | 'processing' | 'confirmed' | 'failed' | 'refunded' | 'expired';
 export type RegistrationStatus = 'pending' | 'confirmed' | 'cancelled' | 'waitlisted';
+export type AbandonmentType = 'cancelled' | 'failed' | 'timeout';
+export type FollowupStatus = 'pending' | 'email_sent' | 'contacted' | 'converted' | 'declined' | 'unresponsive';
 
 // ============================================
 // Database Models
@@ -108,6 +110,37 @@ export interface PaymentWebhookLog {
   created_at: string;
 }
 
+export interface PaymentAbandonment {
+  id: string;
+  registration_id: string | null;
+  razorpay_order_id: string | null;
+  name: string;
+  email: string;
+  phone: string;
+  business_name: string | null;
+  tier: TierType;
+  amount: number;
+  abandonment_type: AbandonmentType;
+  abandonment_reason: string | null;
+  followup_status: FollowupStatus;
+  followup_attempts: number;
+  last_followup_at: string | null;
+  assigned_to: string | null;
+  admin_notes: string | null;
+  recovery_token: string | null;
+  recovery_link_expires_at: string | null;
+  recovery_link_used: boolean;
+  converted_at: string | null;
+  converted_registration_id: string | null;
+  abandoned_at: string;
+  created_at: string;
+  updated_at: string;
+  ip_address: string | null;
+  user_agent: string | null;
+  utm_source: string | null;
+  utm_campaign: string | null;
+}
+
 // ============================================
 // API Request/Response Types
 // ============================================
@@ -161,6 +194,8 @@ export interface SeatAvailability {
   tier_name: TierType;
   display_name: string;
   total_seats: number;
+  sold_seats: number;
+  held_seats: number;
   available_seats: number;
   price_inr: number;
   price_display: string;
@@ -282,6 +317,71 @@ export interface ExportOptions {
   format: 'csv' | 'json';
   filters?: AdminRegistrationFilters;
   fields?: string[];
+}
+
+// ============================================
+// Abandonment Types
+// ============================================
+
+export interface CreateAbandonmentRequest {
+  registration_id?: string;
+  razorpay_order_id?: string;
+  name: string;
+  email: string;
+  phone: string;
+  business_name?: string;
+  tier: TierType;
+  amount: number;
+  abandonment_type: AbandonmentType;
+  abandonment_reason?: string;
+  ip_address?: string;
+  user_agent?: string;
+  utm_source?: string;
+  utm_campaign?: string;
+}
+
+export interface TrackAbandonmentRequest {
+  razorpay_order_id: string;
+  reason?: string;
+}
+
+export interface AbandonmentFilters {
+  abandonment_type?: AbandonmentType;
+  followup_status?: FollowupStatus;
+  tier?: TierType;
+  search?: string;
+  date_from?: string;
+  date_to?: string;
+  page?: number;
+  limit?: number;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+}
+
+export interface AbandonmentStats {
+  total_abandonments: number;
+  pending_followup: number;
+  email_sent: number;
+  contacted: number;
+  converted: number;
+  declined: number;
+  unresponsive: number;
+  total_lost_revenue: number;
+  conversion_rate: number;
+}
+
+export interface RecoveryLinkResponse {
+  success: boolean;
+  token: string;
+  link: string;
+  qr_code_data_url: string;
+  expires_at: string;
+}
+
+export interface UpdateFollowupRequest {
+  status: FollowupStatus;
+  notes?: string;
+  assigned_to?: string;
 }
 
 // ============================================

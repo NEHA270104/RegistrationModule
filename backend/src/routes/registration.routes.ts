@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   getRegistration,
   checkRegistration,
+  checkPendingRegistration,
   resendConfirmationEmail,
 } from '../controllers/registration.controller.js';
 import { readOnlyLimiter, standardLimiter } from '../middleware/rateLimiter.js';
@@ -28,6 +29,13 @@ router.get(
  * @access Public
  */
 router.post('/check', standardLimiter, asyncHandler(checkRegistration));
+
+/**
+ * @route POST /api/registration/pending
+ * @desc Check for pending registrations by email (to continue payment)
+ * @access Public
+ */
+router.post('/pending', standardLimiter, asyncHandler(checkPendingRegistration));
 
 /**
  * @route POST /api/registration/:bookingId/resend-email

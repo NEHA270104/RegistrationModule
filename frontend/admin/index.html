@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Admin Dashboard | AI for MSME Summit 2026</title>
+    <title>Admin Dashboard | AI Summit for MSME Business Owners 2026</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/images/BizflowLogo.png">
+    <link rel="apple-touch-icon" href="/images/BizflowLogo.png">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,16 +16,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Styles -->
-    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="/admin/css/admin.css">
 </head>
 <body>
     <!-- Auth Screen -->
     <div id="auth-screen" class="auth-screen">
         <div class="auth-card">
             <div class="auth-logo">
-                <span class="logo-ai">AI for</span>
-                <span class="logo-msme">MSME</span>
-                <span class="logo-summit">SUMMIT</span>
+                <img src="/images/BizflowLogo.png" alt="BizFlowAI" class="auth-bizflow-logo">
+                <span class="auth-by">by BRTNeura</span>
+                <div class="auth-event-name">
+                    <span class="logo-text">AI Summit for</span>
+                    <span class="logo-msme">MSME Business Owners</span>
+                </div>
             </div>
             <h1 class="auth-title">Admin Dashboard</h1>
             <p class="auth-subtitle">Enter your API key to access the dashboard</p>
@@ -41,12 +48,13 @@
         <!-- Header -->
         <header class="dashboard-header">
             <div class="header-left">
+                <img src="/images/BizflowLogo.png" alt="BizFlowAI" class="header-bizflow-logo">
                 <div class="logo">
-                    <span class="logo-ai">AI for</span>
-                    <span class="logo-msme">MSME</span>
-                    <span class="logo-summit">SUMMIT</span>
+                    <span class="logo-text">AI Summit for</span>
+                    <span class="logo-msme">MSME Business Owners</span>
                 </div>
                 <span class="header-badge">Admin</span>
+                <span class="failed-counter hidden" id="failed-call-counter" title="Failed registrations needing call">0</span>
             </div>
             <div class="header-right">
                 <span class="last-updated" id="last-updated">Last updated: --</span>
@@ -119,7 +127,17 @@
 
             <!-- Seat Inventory -->
             <section class="seats-section">
-                <h2 class="section-title">Seat Inventory</h2>
+                <div class="section-header">
+                    <h2 class="section-title">Seat Inventory</h2>
+                    <div class="section-actions">
+                        <button class="btn-resync" id="btn-resync-seats" title="Fix any mismatch between registrations and seat counts">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                            </svg>
+                            Resync Counts
+                        </button>
+                    </div>
+                </div>
                 <div class="seats-grid">
                     <div class="seat-card vip">
                         <div class="seat-header">
@@ -177,6 +195,13 @@
                 <div class="section-header">
                     <h2 class="section-title">Registrations</h2>
                     <div class="section-actions">
+                        <button class="btn-add" id="btn-add-registration" onclick="showAddRegistrationModal()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Add Registration
+                        </button>
                         <button class="btn-export" id="btn-export">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
@@ -238,6 +263,7 @@
                                 <th>Amount</th>
                                 <th>Status</th>
                                 <th>Date</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="registrations-tbody">
@@ -271,6 +297,248 @@
                 </div>
             </section>
 
+            <!-- Pending Registrations Section (Held Seats) -->
+            <section class="pending-section">
+                <div class="section-header">
+                    <h2 class="section-title">Pending Payments (Held Seats)</h2>
+                    <div class="section-actions">
+                        <button class="btn-cleanup" id="btn-cleanup-expired">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                                <line x1="10" y1="11" x2="10" y2="17"/>
+                                <line x1="14" y1="11" x2="14" y2="17"/>
+                            </svg>
+                            Cleanup Expired
+                        </button>
+                    </div>
+                </div>
+
+                <p class="section-desc">Users who started checkout but haven't completed payment. Seats are held for 1 hour.</p>
+
+                <!-- Pending Table -->
+                <div class="table-container">
+                    <table class="registrations-table pending-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Contact</th>
+                                <th>Business</th>
+                                <th>Tier</th>
+                                <th>Amount</th>
+                                <th>Time Left</th>
+                                <th>Started</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pending-registrations-tbody">
+                            <tr class="loading-row">
+                                <td colspan="8">Loading pending registrations...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Payment Abandonments Section -->
+            <section class="abandonments-section">
+                <div class="section-header">
+                    <h2 class="section-title">Payment Abandonments</h2>
+                    <div class="section-actions">
+                        <button class="btn-export" id="btn-export-abandonments">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            Export CSV
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Abandonment Stats -->
+                <div class="abandonment-stats">
+                    <div class="mini-stat abandoned">
+                        <span class="mini-stat-value" id="stat-abandoned-total">0</span>
+                        <span class="mini-stat-label">TOTAL ABANDONED</span>
+                    </div>
+                    <div class="mini-stat pending-followup">
+                        <span class="mini-stat-value" id="stat-abandoned-pending">0</span>
+                        <span class="mini-stat-label">PENDING FOLLOW-UP</span>
+                    </div>
+                    <div class="mini-stat converted">
+                        <span class="mini-stat-value" id="stat-abandoned-converted">0</span>
+                        <span class="mini-stat-label">RECOVERED</span>
+                    </div>
+                    <div class="mini-stat lost-revenue">
+                        <span class="mini-stat-value" id="stat-abandoned-revenue">&#8377;0</span>
+                        <span class="mini-stat-label">LOST REVENUE</span>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters-bar">
+                    <div class="filter-group">
+                        <label for="filter-abandonment-search" class="filter-label">Search</label>
+                        <input type="text" id="filter-abandonment-search" class="filter-input" placeholder="Name, Email, Phone...">
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-abandonment-type" class="filter-label">Type</label>
+                        <select id="filter-abandonment-type" class="filter-select">
+                            <option value="">All Types</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="failed">Failed</option>
+                            <option value="timeout">Timeout</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-followup-status" class="filter-label">Status</label>
+                        <select id="filter-followup-status" class="filter-select">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="email_sent">Email Sent</option>
+                            <option value="contacted">Contacted</option>
+                            <option value="converted">Converted</option>
+                            <option value="declined">Declined</option>
+                            <option value="unresponsive">Unresponsive</option>
+                        </select>
+                    </div>
+                    <button class="btn-clear-filters" id="btn-clear-abandonment-filters">Clear</button>
+                </div>
+
+                <!-- Table -->
+                <div class="table-container">
+                    <table class="registrations-table abandonments-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Contact</th>
+                                <th>Business</th>
+                                <th>Tier</th>
+                                <th>Amount</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="abandonments-tbody">
+                            <tr class="loading-row">
+                                <td colspan="9">Loading abandonments...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination">
+                    <div class="pagination-info">
+                        Showing <span id="abandonment-page-start">0</span> - <span id="abandonment-page-end">0</span> of <span id="abandonment-page-total">0</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <button class="btn-page" id="btn-abandonment-prev" disabled>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15 18 9 12 15 6"/>
+                            </svg>
+                            Previous
+                        </button>
+                        <span class="page-number">Page <span id="abandonment-current-page">1</span></span>
+                        <button class="btn-page" id="btn-abandonment-next">
+                            Next
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Abandonment Detail Modal -->
+            <div id="abandonment-modal" class="modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Abandonment Details</h3>
+                        <button class="modal-close" id="close-abandonment-modal">&times;</button>
+                    </div>
+                    <div class="modal-body" id="abandonment-modal-body">
+                        <!-- Content filled dynamically -->
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" id="btn-close-modal">Close</button>
+                        <button class="btn btn-primary" id="btn-send-recovery-email">Send Recovery Email</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Registration Modal -->
+            <div id="add-registration-modal" class="modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Add Manual Registration</h3>
+                        <button class="modal-close" onclick="hideAddRegistrationModal()">&times;</button>
+                    </div>
+                    <form id="add-registration-form" onsubmit="createManualRegistration(event)">
+                        <div class="modal-body">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label" for="reg-name">Full Name *</label>
+                                    <input type="text" id="reg-name" name="name" class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="reg-email">Email *</label>
+                                    <input type="email" id="reg-email" name="email" class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="reg-phone">Phone *</label>
+                                    <input type="tel" id="reg-phone" name="phone" class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="reg-business">Business Name</label>
+                                    <input type="text" id="reg-business" name="business_name" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="reg-industry">Industry</label>
+                                    <select id="reg-industry" name="industry" class="form-input">
+                                        <option value="">Select Industry</option>
+                                        <option value="manufacturing">Manufacturing</option>
+                                        <option value="it_services">IT Services</option>
+                                        <option value="retail">Retail/Trade</option>
+                                        <option value="food">Food & Beverage</option>
+                                        <option value="healthcare">Healthcare</option>
+                                        <option value="education">Education</option>
+                                        <option value="finance">Finance</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="reg-tier">Tier *</label>
+                                    <select id="reg-tier" name="tier" class="form-input" required>
+                                        <option value="vip">Executive Experience (VIP)</option>
+                                        <option value="standard">Business Builder (Standard)</option>
+                                        <option value="basic">Growth Starter (Basic)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="reg-amount">Amount Paid (INR)</label>
+                                    <input type="number" id="reg-amount" name="amount_paid" class="form-input" value="0" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="reg-status">Payment Status</label>
+                                    <select id="reg-status" name="payment_status" class="form-input">
+                                        <option value="confirmed">Confirmed</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="failed">Failed</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="hideAddRegistrationModal()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Create Registration</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <!-- Settings Section -->
             <section class="settings-section">
                 <div class="section-header">
@@ -293,6 +561,7 @@
                     <button class="settings-tab active" data-tab="offer">Offer Settings</button>
                     <button class="settings-tab" data-tab="pricing">Tier Pricing</button>
                     <button class="settings-tab" data-tab="event">Event Details</button>
+                    <button class="settings-tab" data-tab="support">Support Info</button>
                     <button class="settings-tab" data-tab="registration">Registration</button>
                 </div>
 
@@ -325,11 +594,40 @@
                                 <input type="number" id="setting-offer-duration" class="setting-input" min="1" max="30" value="3">
                                 <span class="setting-hint">How many days the offer runs</span>
                             </div>
+                        </div>
 
-                            <div class="setting-item">
-                                <label class="setting-label" for="setting-offer-discount">Discount Amount (INR)</label>
-                                <input type="number" id="setting-offer-discount" class="setting-input" min="0" step="100" value="1000">
-                                <span class="setting-hint">Discount applied to all tiers</span>
+                        <!-- Tier-Specific Discounts -->
+                        <div class="tier-discounts-section" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--gray-200);">
+                            <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--gray-700); margin-bottom: 1rem;">Tier-Specific Discounts</h4>
+                            <p style="font-size: 0.8125rem; color: var(--gray-500); margin-bottom: 1rem;">Set different discount amounts for each tier during the offer period.</p>
+
+                            <div class="settings-grid" style="grid-template-columns: repeat(3, 1fr);">
+                                <div class="setting-item">
+                                    <label class="setting-label" for="setting-offer-discount-vip">VIP Discount (INR)</label>
+                                    <div class="input-prefix">
+                                        <span>&#8377;</span>
+                                        <input type="number" id="setting-offer-discount-vip" class="setting-input" min="0" step="100" value="1000">
+                                    </div>
+                                    <span class="setting-hint">Executive Experience discount</span>
+                                </div>
+
+                                <div class="setting-item">
+                                    <label class="setting-label" for="setting-offer-discount-standard">Standard Discount (INR)</label>
+                                    <div class="input-prefix">
+                                        <span>&#8377;</span>
+                                        <input type="number" id="setting-offer-discount-standard" class="setting-input" min="0" step="100" value="1000">
+                                    </div>
+                                    <span class="setting-hint">Business Builder discount</span>
+                                </div>
+
+                                <div class="setting-item">
+                                    <label class="setting-label" for="setting-offer-discount-basic">Basic Discount (INR)</label>
+                                    <div class="input-prefix">
+                                        <span>&#8377;</span>
+                                        <input type="number" id="setting-offer-discount-basic" class="setting-input" min="0" step="100" value="1000">
+                                    </div>
+                                    <span class="setting-hint">Growth Starter discount</span>
+                                </div>
                             </div>
                         </div>
 
@@ -434,7 +732,7 @@
                 <div class="settings-panel" id="panel-event">
                     <div class="settings-card">
                         <h3 class="settings-card-title">Event Details</h3>
-                        <p class="settings-card-desc">Update event information displayed to users.</p>
+                        <p class="settings-card-desc">Update event information displayed to users and in emails.</p>
 
                         <div class="settings-grid">
                             <div class="setting-item full-width">
@@ -444,17 +742,48 @@
 
                             <div class="setting-item">
                                 <label class="setting-label" for="setting-event-date">Event Date</label>
-                                <input type="text" id="setting-event-date" class="setting-input" placeholder="e.g., 7th Feb 2026">
+                                <input type="text" id="setting-event-date" class="setting-input" placeholder="e.g., 21st February 2026">
+                                <span class="setting-hint">Displayed on frontend and in confirmation emails</span>
                             </div>
 
                             <div class="setting-item">
                                 <label class="setting-label" for="setting-event-time">Event Time</label>
-                                <input type="text" id="setting-event-time" class="setting-input" placeholder="e.g., 10:00 AM - 5:00 PM IST">
+                                <input type="text" id="setting-event-time" class="setting-input" placeholder="e.g., 9:00 AM - 5:00 PM IST">
+                                <span class="setting-hint">Include timezone for clarity</span>
                             </div>
 
                             <div class="setting-item full-width">
                                 <label class="setting-label" for="setting-event-venue">Venue</label>
-                                <textarea id="setting-event-venue" class="setting-input setting-textarea" rows="2"></textarea>
+                                <textarea id="setting-event-venue" class="setting-input setting-textarea" rows="2" placeholder="e.g., TBD soon or full address"></textarea>
+                                <span class="setting-hint">Full venue address or "TBD soon" if not finalized</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Support Settings -->
+                <div class="settings-panel" id="panel-support">
+                    <div class="settings-card">
+                        <h3 class="settings-card-title">Support Contact Information</h3>
+                        <p class="settings-card-desc">Contact details shown in emails and on the website for customer support.</p>
+
+                        <div class="settings-grid">
+                            <div class="setting-item">
+                                <label class="setting-label" for="setting-support-email">Support Email</label>
+                                <input type="email" id="setting-support-email" class="setting-input" placeholder="e.g., support@bizflowai.in">
+                                <span class="setting-hint">Email address for customer inquiries</span>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="setting-support-phone">Support Phone</label>
+                                <input type="text" id="setting-support-phone" class="setting-input" placeholder="e.g., +91 8188050895">
+                                <span class="setting-hint">Phone number with country code</span>
+                            </div>
+
+                            <div class="setting-item full-width">
+                                <label class="setting-label" for="setting-support-whatsapp">WhatsApp Number</label>
+                                <input type="text" id="setting-support-whatsapp" class="setting-input" placeholder="e.g., 918188050895">
+                                <span class="setting-hint">Digits only (country code + number, no spaces or +)</span>
                             </div>
                         </div>
                     </div>
@@ -553,8 +882,41 @@
 
         <!-- Footer -->
         <footer class="dashboard-footer">
-            <p>&copy; 2026 AI for MSME Summit. Admin Dashboard v1.0</p>
+            <p>&copy; 2026 AI Summit for MSME Business Owners | BRTNeura Technology LLP. Admin Dashboard v1.0</p>
         </footer>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="modal hidden">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3 id="confirm-modal-title">Confirm Action</h3>
+                <button class="modal-close" onclick="closeConfirmModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-modal-message">Are you sure you want to proceed?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+                <button class="btn btn-primary" id="confirm-modal-ok">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div id="alert-modal" class="modal hidden">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3 id="alert-modal-title">Notice</h3>
+                <button class="modal-close" onclick="closeAlertModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="alert-modal-message"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeAlertModal()">OK</button>
+            </div>
+        </div>
     </div>
 
     <!-- Loading Overlay -->
@@ -566,7 +928,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="../js/config.js"></script>
-    <script src="js/admin.js"></script>
+    <script src="/js/config.js"></script>
+    <script src="/admin/js/admin.js"></script>
 </body>
 </html>

@@ -257,14 +257,24 @@ export class SettingsService {
     startDate: string;
     durationDays: number;
     discountAmount: number;
+    discountVip: number;
+    discountStandard: number;
+    discountBasic: number;
     isActive: boolean;
   }> {
     const settings = await this.getPublicSettings();
 
+    // Default discount amount for backward compatibility
+    const defaultDiscount = settings.offer_discount_amount as number || 1000;
+
     return {
       startDate: settings.offer_start_date as string || '2026-01-26T00:00:00+05:30',
       durationDays: settings.offer_duration_days as number || 3,
-      discountAmount: settings.offer_discount_amount as number || 1000,
+      discountAmount: defaultDiscount,
+      // Tier-specific discounts (fall back to default if not set)
+      discountVip: settings.offer_discount_vip as number || defaultDiscount,
+      discountStandard: settings.offer_discount_standard as number || defaultDiscount,
+      discountBasic: settings.offer_discount_basic as number || defaultDiscount,
       isActive: settings.offer_is_active as boolean ?? true,
     };
   }

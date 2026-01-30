@@ -2,8 +2,9 @@ import { Request, Response } from 'express';
 import { registrationService } from '../services/registration.service.js';
 import { seatService } from '../services/seat.service.js';
 import { waitlistService } from '../services/waitlist.service.js';
+import { emailService } from '../services/email.service.js';
 import { logger } from '../utils/logger.js';
-import type { AdminRegistrationFilters } from '../types/index.js';
+import type { AdminRegistrationFilters, TierType } from '../types/index.js';
 import { AppError } from '../types/index.js';
 
 /**
@@ -368,12 +369,243 @@ export async function resendConfirmation(req: Request, res: Response): Promise<v
 }
 
 /**
- * Format currency for display
+ * Delete a registration
+ * DELETE /api/admin/registrations/:bookingId
  */
-function formatCurrency(amountInPaise: number): string {
+export async function deleteRegistration(req: Request, res: Response): Promise<void> {
+  try {
+    const { bookingId } = req.params;
+
+    const registration = await registrationService.getByBookingId(bookingId);
+
+    if (!registration) {
+      res.status(404).json({
+        success: false,
+        error: {
+          message: 'Registration not found',
+          code: 'NOT_FOUND',
+        },
+      });
+      return;
+    }
+
+    // If payment was confirmed, release the seat
+    if (registration.payment_status === 'confirmed') {
+      await seatService.releaseSoldSeat(registration.tier);
+    } else if (registration.payment_status === 'pending') {
+      await seatService.releaseHeldSeat(registration.tier);
+    }
+
+    // Delete the registration
+    await registrationService.deleteRegistration(bookingId);
+
+    logger.info('Admin deleted registration', {
+      bookingId,
+      tier: registration.tier,
+      admin: req.headers['x-api-key']?.toString().slice(0, 8),
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Registration deleted successfully',
+    });
+  } catch (error) {
+    logger.error('Error deleting registration', {
+      bookingId: req.params.bookingId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+
+    res.status(500).json({
+      success: false,
+      error: {
+        message: 'Failed to delete registration',
+        code: 'DELETE_ERROR',
+      },
+    });
+  }
+}
+
+/**
+ * Create a manual registration (admin bypass)
+ * POST /api/admin/registrations
+ */
+export async function createManualRegistration(req: Request, res: Response): Promise<void> {
+  try {
+    const { name, email, phone, business_name, industry, tier, amount_paid, payment_status } = req.body;
+
+    // Validate required fields
+    if (!name || !email || !phone || !tier) {
+      res.status(400).json({
+        success: false,
+        error: {
+          message: 'Name, email, phone, and tier are required',
+          code: 'VALIDATION_ERROR',
+        },
+      });
+      return;
+    }
+
+    // Create the registration
+    // Note: Database stores amounts in RUPEES (INR) directly
+    const registration = await registrationService.createManualRegistration({
+      name,
+      email: email.toLowerCase(),
+      phone,
+      business_name,
+      industry,
+      tier,
+      amount_paid: amount_paid || 0,
+      payment_status: payment_status || 'confirmed',
+    });
+
+    // Update seat count if confirmed
+    if (payment_status === 'confirmed' || !payment_status) {
+      await seatService.incrementSoldSeat(tier);
+    }
+
+    logger.info('Admin created manual registration', {
+      bookingId: registration.booking_id,
+      tier,
+      admin: req.headers['x-api-key']?.toString().slice(0, 8),
+    });
+
+    res.status(201).json({
+      success: true,
+      data: registration,
+      message: 'Registration created successfully',
+    });
+  } catch (error) {
+    logger.error('Error creating manual registration', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+
+    res.status(500).json({
+      success: false,
+      error: {
+        message: 'Failed to create registration',
+        code: 'CREATE_ERROR',
+      },
+    });
+  }
+}
+
+/**
+ * Resync seat counts from registrations table
+ * POST /api/admin/seats/resync
+ * This fixes any discrepancy between seat_inventory and registrations tables
+ */
+export async function resyncSeatCounts(req: Request, res: Response): Promise<void> {
+  try {
+    const result = await seatService.resyncFromRegistrations();
+
+    logger.info('Admin resynced seat counts', {
+      admin: req.headers['x-api-key']?.toString().slice(0, 8),
+      changes: result.changes,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: result,
+      message: result.changes.length > 0
+        ? `Resynced ${result.changes.length} tier(s) successfully`
+        : 'Seat counts are already in sync',
+    });
+  } catch (error) {
+    logger.error('Error resyncing seat counts', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+
+    res.status(500).json({
+      success: false,
+      error: {
+        message: 'Failed to resync seat counts',
+        code: 'RESYNC_ERROR',
+      },
+    });
+  }
+}
+
+/**
+ * Send payment reminder email
+ * POST /api/admin/registrations/:registrationId/remind
+ */
+export async function sendPaymentReminder(req: Request, res: Response): Promise<void> {
+  try {
+    const { registrationId } = req.params;
+    const { email, name, tier } = req.body;
+
+    if (!email || !name || !tier) {
+      res.status(400).json({
+        success: false,
+        error: {
+          message: 'Email, name, and tier are required',
+          code: 'VALIDATION_ERROR',
+        },
+      });
+      return;
+    }
+
+    // Get registration to find order ID
+    const registration = await registrationService.getById(registrationId);
+    if (!registration) {
+      res.status(404).json({
+        success: false,
+        error: {
+          message: 'Registration not found',
+          code: 'NOT_FOUND',
+        },
+      });
+      return;
+    }
+
+    const orderId = registration.razorpay_order_id || registrationId;
+    const success = await emailService.sendPaymentReminder(email, name, orderId, tier as TierType);
+
+    if (success) {
+      logger.info('Admin sent payment reminder', {
+        registrationId,
+        email,
+        tier,
+        admin: req.headers['x-api-key']?.toString().slice(0, 8),
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'Payment reminder sent successfully',
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: {
+          message: 'Failed to send reminder. Email service may not be configured.',
+          code: 'EMAIL_SEND_ERROR',
+        },
+      });
+    }
+  } catch (error) {
+    logger.error('Error sending payment reminder', {
+      registrationId: req.params.registrationId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+
+    res.status(500).json({
+      success: false,
+      error: {
+        message: 'Failed to send payment reminder',
+        code: 'REMINDER_ERROR',
+      },
+    });
+  }
+}
+
+/**
+ * Format currency for display
+ * Note: Database stores amounts in RUPEES (INR) directly
+ */
+function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
     minimumFractionDigits: 0,
-  }).format(amountInPaise / 100);
+  }).format(amount);
 }

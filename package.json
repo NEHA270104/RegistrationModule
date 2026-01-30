@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "concurrently -k -n \"backend,frontend\" -c \"blue,green\" \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
-    "dev:frontend": "npx serve frontend -l 5173 --no-clipboard",
+    "dev:frontend": "npx serve frontend -l 5173 --no-clipboard -c frontend/serve.json",
     "install:all": "cd backend && npm install",
     "build": "cd backend && npm run build",
     "start": "cd backend && npm run start"
@@ -22,5 +22,9 @@
     "supabase"
   ],
   "author": "BRTNeura",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "razorpay": "^2.9.6"
+  }
 }

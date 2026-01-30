@@ -157,6 +157,19 @@ class RegistrationApi {
   }
 
   /**
+   * Check if email or phone is already registered
+   */
+  async checkDuplicates(email, phone) {
+    try {
+      const response = await this.client.post('/registration/check', { email, phone });
+      return response;
+    } catch (error) {
+      console.error('Error checking duplicates:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Join waitlist
    */
   async joinWaitlist(data) {
@@ -166,6 +179,50 @@ class RegistrationApi {
     } catch (error) {
       console.error('Error joining waitlist:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Track payment abandonment
+   */
+  async trackAbandonment(orderId, reason) {
+    try {
+      const response = await this.client.post('/track-abandonment', {
+        razorpay_order_id: orderId,
+        reason: reason,
+      });
+      return response;
+    } catch (error) {
+      // Don't throw - this is a best-effort tracking call
+      console.error('Error tracking abandonment:', error);
+      return { success: false };
+    }
+  }
+
+  /**
+   * Validate recovery token
+   */
+  async validateRecoveryToken(token) {
+    try {
+      const response = await this.client.get(`/recover/${token}`);
+      return response;
+    } catch (error) {
+      console.error('Error validating recovery token:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check for pending registration by email
+   * Returns pending registration data if user has an incomplete payment
+   */
+  async checkPendingRegistration(email) {
+    try {
+      const response = await this.client.post('/registration/pending', { email });
+      return response;
+    } catch (error) {
+      console.error('Error checking pending registration:', error);
+      return { success: false, data: { has_pending: false } };
     }
   }
 }

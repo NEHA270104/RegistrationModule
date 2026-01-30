@@ -171,6 +171,32 @@ export class RegistrationService {
   }
 
   /**
+   * Get registration by UUID ID
+   */
+  async getById(id: string): Promise<Registration | null> {
+    try {
+      const { data, error } = await supabase
+        .from('registrations')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null;
+        }
+        logger.error('Error fetching registration by ID', { id, error: error.message });
+        throw new AppError('Failed to fetch registration', 500, 'FETCH_ERROR');
+      }
+
+      return data as Registration;
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError('Internal server error', 500, 'INTERNAL_ERROR');
+    }
+  }
+
+  /**
    * Get registration by Razorpay order ID
    */
   async getByRazorpayOrderId(orderId: string): Promise<Registration | null> {
@@ -376,6 +402,78 @@ export class RegistrationService {
   }
 
   /**
+   * Delete a registration by booking ID (Admin)
+   */
+  async deleteRegistration(bookingId: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('registrations')
+        .delete()
+        .eq('booking_id', bookingId);
+
+      if (error) {
+        logger.error('Error deleting registration', { bookingId, error: error.message });
+        throw new AppError('Failed to delete registration', 500, 'DELETE_ERROR');
+      }
+
+      logger.info('Registration deleted', { bookingId });
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError('Internal server error', 500, 'INTERNAL_ERROR');
+    }
+  }
+
+  /**
+   * Create a manual registration (Admin bypass)
+   */
+  async createManualRegistration(data: {
+    name: string;
+    email: string;
+    phone: string;
+    business_name?: string;
+    industry?: string;
+    tier: TierType;
+    amount_paid: number;
+    payment_status: PaymentStatus;
+  }): Promise<Registration> {
+    try {
+      const registrationData = {
+        name: data.name,
+        email: data.email.toLowerCase(),
+        phone: data.phone,
+        business_name: data.business_name || null,
+        industry: data.industry || null,
+        tier: data.tier,
+        amount_paid: data.amount_paid,
+        payment_status: data.payment_status,
+        registration_status: data.payment_status === 'confirmed' ? 'confirmed' : 'pending',
+        payment_confirmed_at: data.payment_status === 'confirmed' ? new Date().toISOString() : null,
+      };
+
+      const { data: registration, error } = await supabase
+        .from('registrations')
+        .insert(registrationData)
+        .select()
+        .single();
+
+      if (error) {
+        logger.error('Error creating manual registration', { error: error.message });
+        throw new AppError('Failed to create registration', 500, 'CREATE_ERROR');
+      }
+
+      logger.info('Manual registration created', {
+        bookingId: registration.booking_id,
+        tier: data.tier,
+      });
+
+      return registration as Registration;
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError('Internal server error', 500, 'INTERNAL_ERROR');
+    }
+  }
+
+  /**
    * Get all registrations with filters (Admin)
    */
   async getAll(filters: AdminRegistrationFilters): Promise<{
@@ -533,7 +631,7 @@ export class RegistrationService {
         r.industry || '',
         r.revenue_range || '',
         r.tier,
-        (r.amount_paid / 100).toFixed(2),
+        r.amount_paid.toFixed(2), // Amount stored in RUPEES (INR)
         r.payment_status,
         r.registration_status,
         new Date(r.created_at).toISOString(),

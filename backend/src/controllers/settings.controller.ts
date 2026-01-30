@@ -10,11 +10,18 @@ export async function getPublicSettings(req: Request, res: Response): Promise<vo
   const settings = await settingsService.getPublicSettings();
 
   // Transform into frontend-friendly format
+  // Default discount for backward compatibility
+  const defaultDiscount = settings.offer_discount_amount || 1000;
+
   const config = {
     offer: {
       startDate: settings.offer_start_date,
       durationDays: settings.offer_duration_days,
-      discountAmount: settings.offer_discount_amount,
+      discountAmount: defaultDiscount,
+      // Tier-specific discounts
+      discountVip: settings.offer_discount_vip || defaultDiscount,
+      discountStandard: settings.offer_discount_standard || defaultDiscount,
+      discountBasic: settings.offer_discount_basic || defaultDiscount,
       isActive: settings.offer_is_active,
     },
     event: {
@@ -22,6 +29,11 @@ export async function getPublicSettings(req: Request, res: Response): Promise<vo
       date: settings.event_date,
       time: settings.event_time,
       venue: settings.event_venue,
+    },
+    support: {
+      email: settings.support_email,
+      phone: settings.support_phone,
+      whatsapp: settings.support_whatsapp,
     },
     registration: {
       isOpen: settings.registration_open,

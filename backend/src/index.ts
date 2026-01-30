@@ -12,8 +12,9 @@ import {
   handleUnhandledRejection,
   handleUncaughtException,
 } from './middleware/errorHandler.js';
-import { standardLimiter } from './middleware/rateLimiter.js';
+import { standardLimiter, adminLimiter } from './middleware/rateLimiter.js';
 import routes from './routes/index.js';
+import { abandonmentService } from './services/abandonment.service.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -96,8 +97,20 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// Apply standard rate limiting to all routes
-app.use('/api', standardLimiter);
+// Apply rate limiting to API routes
+// Admin routes with API key skip rate limiting, others use standard limiter
+app.use('/api', (req: Request, res: Response, next: NextFunction) => {
+  // Skip global rate limit for admin routes when API key is present
+  const isAdminRoute = req.path.startsWith('/admin') || req.path.startsWith('/settings/admin');
+  const hasApiKey = !!req.headers['x-api-key'];
+
+  if (isAdminRoute && hasApiKey) {
+    return next(); // Skip rate limiting for authenticated admin requests
+  }
+
+  // Apply standard rate limiting for all other requests
+  return standardLimiter(req, res, next);
+});
 
 // API routes
 app.use('/api', routes);
@@ -153,6 +166,9 @@ async function startServer(): Promise<void> {
         seats: `http://localhost:${config.port}/api/seats`,
         createOrder: `http://localhost:${config.port}/api/create-order`,
       });
+
+      // Start automatic cleanup of expired pending registrations
+      startAutomaticCleanup();
     });
   } catch (error) {
     logger.error('Failed to start server', {
@@ -162,14 +178,49 @@ async function startServer(): Promise<void> {
   }
 }
 
+// Automatic cleanup of expired pending registrations
+const CLEANUP_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+let cleanupIntervalId: NodeJS.Timeout | null = null;
+
+function startAutomaticCleanup(): void {
+  // Run immediately on startup
+  runCleanup();
+
+  // Then run every 5 minutes
+  cleanupIntervalId = setInterval(runCleanup, CLEANUP_INTERVAL_MS);
+
+  logger.info('Automatic cleanup started', {
+    intervalMinutes: CLEANUP_INTERVAL_MS / 60000,
+  });
+}
+
+async function runCleanup(): Promise<void> {
+  try {
+    const result = await abandonmentService.releaseExpiredRegistrations();
+
+    if (result.released > 0) {
+      logger.info('Auto-cleanup completed', {
+        released: result.released,
+        registrations: result.releasedRegistrations.map((r) => r.email),
+      });
+    }
+  } catch (error) {
+    logger.error('Auto-cleanup error', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+}
+
 // Graceful shutdown
 process.on('SIGTERM', () => {
   logger.info('SIGTERM received. Shutting down gracefully...');
+  if (cleanupIntervalId) clearInterval(cleanupIntervalId);
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
   logger.info('SIGINT received. Shutting down gracefully...');
+  if (cleanupIntervalId) clearInterval(cleanupIntervalId);
   process.exit(0);
 });
 

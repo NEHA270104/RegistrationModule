@@ -29,6 +29,8 @@ export function adminAuth(req: Request, res: Response, next: NextFunction): void
     logger.warn('Admin access attempted with invalid API key', {
       ip: req.ip,
       path: req.path,
+      providedKeyLength: typeof apiKey === 'string' ? apiKey.length : 0,
+      expectedKeyLength: config.adminApiKey.length,
     });
 
     res.status(403).json({

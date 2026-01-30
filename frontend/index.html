@@ -3,13 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Register for AI for MSME Business Summit 2026 - Transform your business with AI insights from industry experts">
-    <meta name="keywords" content="AI, MSME, Business Summit, 2026, Registration, India">
-    <meta property="og:title" content="AI for MSME Business Summit 2026">
+    <meta name="description" content="Register for AI Summit for MSME Business Owners 2026 - From Survival to Scale. Transform your business with AI insights from industry experts">
+    <meta name="keywords" content="AI, MSME, Business Owners, Summit, 2026, Registration, India, BizFlowAI, BRTNeura">
+    <meta property="og:title" content="AI Summit for MSME Business Owners 2026 | From Survival to Scale">
     <meta property="og:description" content="Join 120 business leaders for a transformational one-day summit">
     <meta property="og:type" content="website">
 
-    <title>AI for MSME Business Summit 2026 | Registration</title>
+    <title>AI Summit for MSME Business Owners 2026 | From Survival to Scale</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="images/BizflowLogo.png">
+    <link rel="apple-touch-icon" href="images/BizflowLogo.png">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,19 +43,23 @@
             <!-- Modal Header with Event Banner -->
             <div class="modal-banner">
                 <div class="modal-banner-content">
-                    <div class="modal-logo">
-                        <span class="logo-ai">AI for</span>
-                        <span class="logo-msme">MSME</span>
-                        <span class="logo-summit">SUMMIT</span>
+                    <div class="modal-logo-container">
+                        <img src="images/BizflowLogo.png" alt="BizFlowAI" class="bizflow-logo">
+                        <span class="modal-by-text">by BRTNeura</span>
                     </div>
+                    <div class="modal-logo">
+                        <span class="logo-text">AI Summit for</span>
+                        <span class="logo-msme">MSME Business Owners</span>
+                    </div>
+                    <p class="modal-tagline">"From Survival to Scale"</p>
                     <div class="modal-event-info">
                         <div class="modal-event-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                            <span>7th Feb, 2026</span>
+                            <span>21st Feb, 2026</span>
                         </div>
                         <div class="modal-event-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                            <span>10:00 AM to 5:00 PM</span>
+                            <span>9:00 AM to 5:00 PM</span>
                         </div>
                         <div class="modal-event-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l5 5-5 5"/><path d="M4 4v7a4 4 0 004 4h12"/></svg>
@@ -243,11 +251,10 @@
         <div class="modal-content success-modal">
             <button class="modal-close" onclick="closeSuccessModal()">&times;</button>
             <div class="modal-logo success-logo">
-                <span class="logo-ai">AI for</span>
-                <span class="logo-msme">MSME</span>
-                <span class="logo-summit">SUMMIT</span>
+                <span class="logo-text">AI Summit for</span>
+                <span class="logo-msme">MSME Business Owners</span>
             </div>
-            <h2>Thank You for Joining the<br><span class="text-primary">AI for MSME Summit</span></h2>
+            <h2>Thank You for Joining the<br><span class="text-primary">AI Summit for MSME Business Owners</span></h2>
             <div class="success-emoji">Woohoo! You're in!</div>
             <p class="success-subtitle">Your seat is officially booked!</p>
             <p class="success-message">To make sure you don't miss any important updates, resources, or announcements, we've created an official <span class="text-primary">WhatsApp group</span> for all participants.</p>
@@ -258,6 +265,16 @@
             <p class="success-footer">All essential information and real-time updates will be shared there, so please join the group to stay fully informed.</p>
             <p class="success-closing">We can't wait to see you at the summit!</p>
             <div class="booking-details" id="booking-details"></div>
+
+            <!-- Countdown Timer for Redirect -->
+            <div class="redirect-countdown" id="redirect-countdown">
+                <p class="countdown-message">
+                    Returning to registration page in <span class="countdown-timer" id="countdown-seconds">60</span> seconds...
+                </p>
+                <button class="btn btn-secondary btn-cancel-redirect" id="cancel-redirect-btn" onclick="cancelRedirect()">
+                    Stay on this page
+                </button>
+            </div>
         </div>
     </div>
 
@@ -308,11 +325,12 @@
             <p class="legal-updated">Last Updated: January 2026</p>
             <div class="legal-content">
                 <h3>1. Event Details</h3>
-                <p>AI for MSME Business Summit 2026 | Date: 7th February 2026 | Time: 10:00 AM - 5:00 PM IST | Platform: Live on Zoom</p>
+                <p>AI Summit for MSME Business Owners 2026 | Date: 21st February 2026 | Time: 9:00 AM - 5:00 PM IST | Platform: Live on Zoom</p>
                 <h3>2. Registration & Payment</h3>
                 <p>All registrations are subject to availability. Payment must be completed at registration. Prices are in INR and include applicable taxes. Special offer prices are valid only during the promotional period.</p>
                 <h3>3. Refund Policy</h3>
-                <p>7+ days before event: Full refund minus processing fees. 3-7 days before: 50% refund. Less than 3 days: No refund. No-shows are not eligible for refunds.</p>
+                <p><strong>Cancellation by Attendee:</strong> 7+ days before event: Full refund minus processing fees. 3-7 days before: 50% refund. Less than 3 days: No refund. No-shows are not eligible for refunds.</p>
+                <p><strong>Our Guarantee:</strong> 100% refund if the event is cancelled by us, or if you are unable to access the event due to technical issues on our end (verified via our support logs).</p>
                 <h3>4. Event Access</h3>
                 <p>Zoom link will be shared via email and WhatsApp. Access is non-transferable. Recording access is based on ticket tier.</p>
                 <h3>5. Code of Conduct</h3>
@@ -487,10 +505,16 @@
         <!-- Header -->
         <header class="header">
             <div class="header-content">
-                <div class="logo">
-                    <span class="logo-ai">AI for</span>
-                    <span class="logo-msme">MSME</span>
-                    <span class="logo-summit">SUMMIT</span>
+                <div class="header-brand">
+                    <img src="images/BizflowLogo.png" alt="BizFlowAI" class="header-bizflow-logo">
+                    <span class="brand-by">by BRTNeura</span>
+                </div>
+                <div class="logo-group">
+                    <div class="logo">
+                        <span class="logo-text">AI Summit for</span>
+                        <span class="logo-msme">MSME Business Owners</span>
+                    </div>
+                    <p class="logo-tagline">"From Survival to Scale"</p>
                 </div>
             </div>
         </header>
@@ -520,7 +544,7 @@
                             </div>
                             <div class="event-detail-content">
                                 <span class="event-detail-label">Date</span>
-                                <span class="event-detail-value">7th Feb 2026</span>
+                                <span class="event-detail-value">21st Feb 2026</span>
                             </div>
                         </div>
                         <div class="event-detail-item">
@@ -529,7 +553,7 @@
                             </div>
                             <div class="event-detail-content">
                                 <span class="event-detail-label">Time</span>
-                                <span class="event-detail-value">10 AM - 5 PM IST</span>
+                                <span class="event-detail-value">9 AM - 5 PM IST</span>
                             </div>
                         </div>
                         <div class="event-detail-item">
@@ -554,10 +578,65 @@
                 </div>
 
                 <button class="btn btn-cta hero-cta" onclick="openRegistrationModal()">
-                    <span>REGISTER NOW - SAVE UP TO &#8377;2,500</span>
+                    <span>CLAIM YOUR SEAT NOW - SAVE UP TO &#8377;2,500</span>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </button>
-                <p class="enrollment-close">Enrollment closes on <strong>6th FEB</strong></p>
+                <p class="enrollment-close">🚨 Offer ends <strong id="offer-end-date">30th JAN</strong> — Don't miss your chance!</p>
+                <p class="registration-close-info">📅 Registration closes on <strong id="registration-close-date">6th Feb 2026</strong></p>
+            </div>
+        </section>
+
+        <!-- FOMO Urgency Bar -->
+        <section class="fomo-bar">
+            <div class="fomo-content">
+                <div class="fomo-item fomo-viewers">
+                    <span class="fomo-icon">👀</span>
+                    <span class="fomo-text"><strong id="live-viewers">47</strong> people viewing this page right now</span>
+                </div>
+                <div class="fomo-item fomo-seats">
+                    <span class="fomo-icon">⚡</span>
+                    <span class="fomo-text">Only <strong id="fomo-seats">120</strong> seats — <span class="text-warning" id="fomo-sold">0</span> already gone!</span>
+                </div>
+                <div class="fomo-item fomo-recent">
+                    <span class="fomo-icon">🎯</span>
+                    <span class="fomo-text">Last registration: <strong id="last-registration-time">2 mins ago</strong></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Why Now Section -->
+        <section class="why-now-section">
+            <div class="why-now-card">
+                <h3 class="why-now-title">🔥 Why You Can't Afford to Wait</h3>
+                <div class="why-now-reasons">
+                    <div class="why-now-reason">
+                        <span class="reason-number">1</span>
+                        <div class="reason-content">
+                            <strong>AI is Reshaping Business — With or Without You</strong>
+                            <p>While you're thinking, your competitors are already automating. Every week you delay = another business getting ahead.</p>
+                        </div>
+                    </div>
+                    <div class="why-now-reason">
+                        <span class="reason-number">2</span>
+                        <div class="reason-content">
+                            <strong>This Pricing Won't Last</strong>
+                            <p>₹999-₹2,499 for 8+ hours of mentorship from industry leaders? This is a one-time launch price. Next summit = 3X the cost.</p>
+                        </div>
+                    </div>
+                    <div class="why-now-reason">
+                        <span class="reason-number">3</span>
+                        <div class="reason-content">
+                            <strong>120 Seats. 1000+ Businesses Watching.</strong>
+                            <p>We've already had 500+ page visits this week. When these seats are gone, they're gone. No extensions.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="why-now-cta">
+                    <button class="btn btn-cta" onclick="openRegistrationModal()">
+                        I'm Ready to Transform My Business →
+                    </button>
+                    <p class="guarantee-text">💯 100% Money-Back Guarantee if event is cancelled or you face technical issues from our end</p>
+                </div>
             </div>
         </section>
 
@@ -567,7 +646,7 @@
             <div class="section-divider"></div>
             <p class="section-intro">
                 <span class="text-primary">2026</span> can be your <span class="text-primary">breakthrough</span> year but only if you start with clarity.
-                At the <span class="text-primary">AI for MSME Summit</span>, we are bringing 6 of India's Greatest Mentors to guide you with
+                At the <span class="text-primary">AI Summit for MSME Business Owners</span>, we are bringing 6 of India's Greatest Mentors to guide you with
             </p>
 
             <div class="topics-grid">
@@ -642,7 +721,7 @@
         <!-- Speakers Section -->
         <section class="speakers-section">
             <div class="speakers-header">
-                <h2>Your Mentors for the<br><span class="text-white">AI for MSME Summit</span></h2>
+                <h2>Your Mentors for the<br><span class="text-white">AI Summit for MSME Business Owners</span></h2>
                 <p>A curated lineup of <strong>powerful, high-impact speakers</strong> who will cover the six pillars of business transformation.</p>
             </div>
 
@@ -810,7 +889,8 @@
                 <span>REGISTER NOW - SAVE UP TO &#8377;2,500</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </button>
-            <p class="enrollment-close">Enrollment closes on <strong>6th FEB</strong></p>
+            <p class="enrollment-close">Offer ends on <strong id="offer-end-date-2">30th JAN</strong></p>
+            <p class="registration-close-info">Registration closes on <strong id="registration-close-date-2">6th Feb 2026</strong></p>
         </section>
 
         <!-- FAQ Section -->
@@ -887,18 +967,25 @@
 
         <!-- Footer -->
         <footer class="footer">
-            <div class="footer-logo">
-                <span class="logo-ai">AI for</span>
-                <span class="logo-msme">MSME</span>
-                <span class="logo-summit">SUMMIT</span>
+            <div class="footer-brand">
+                <img src="images/BizflowLogo.png" alt="BizFlowAI" class="footer-bizflow-logo">
+                <div class="footer-logo-group">
+                    <div class="footer-logo">
+                        <span class="logo-text">AI Summit for</span>
+                        <span class="logo-msme">MSME Business Owners</span>
+                    </div>
+                    <p class="footer-tagline">"From Survival to Scale"</p>
+                </div>
             </div>
+            <p class="footer-organizer">An initiative by <strong>BRTNeura Technology LLP</strong></p>
+            <div class="footer-divider"></div>
             <p class="footer-disclaimer">
                 Disclaimer: This site is not a part of Meta Inc. Additionally, this site is not endorsed by Meta in any way.
                 All content provided on this page is for informational and promotional purposes only. Results may vary and are not guaranteed.
                 Please review our <a href="javascript:void(0)" onclick="openPrivacyModal()">Privacy Policy</a> and <a href="javascript:void(0)" onclick="openTermsModal()">Terms of Service</a> before proceeding.
             </p>
             <div class="footer-divider"></div>
-            <p class="footer-copyright">Copyright 2026, BizFlow AI. All rights reserved.</p>
+            <p class="footer-copyright">Copyright 2026, BizFlow AI | BRTNeura Technology LLP. All rights reserved.</p>
         </footer>
     </div>
 
@@ -914,9 +1001,20 @@
                 <span class="timer-label">ends in</span>
                 <span class="timer" id="countdown-timer">3d 0h</span>
             </div>
+            <div class="sticky-fomo">
+                <span class="sticky-fomo-icon">👀</span>
+                <span><strong id="sticky-viewers">47</strong> viewing now</span>
+            </div>
         </div>
         <button class="btn btn-reserve" onclick="openRegistrationModal()">SECURE MY SEAT</button>
     </div>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="back-to-top" onclick="scrollToTop()" title="Back to top">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="18 15 12 9 6 15"/>
+        </svg>
+    </button>
 
     <!-- Scripts -->
     <script src="js/config.js"></script>

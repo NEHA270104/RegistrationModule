@@ -12,7 +12,7 @@ export const createOrderSchema = z.object({
     .string()
     .min(2, 'Name must be at least 2 characters')
     .max(100, 'Name must be less than 100 characters')
-    .regex(/^[a-zA-Z\s.'-]+$/, 'Name contains invalid characters'),
+    .regex(/^[a-zA-Z0-9\s.'-]+$/, 'Name contains invalid characters'),
   email: z.string().email('Invalid email address').max(255),
   phone: z
     .string()

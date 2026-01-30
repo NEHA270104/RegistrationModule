@@ -1,6 +1,19 @@
 import { config } from '../config/index.js';
 import { logger } from '../utils/logger.js';
+import { settingsService } from './settings.service.js';
 import type { EmailConfirmationData, TierType } from '../types/index.js';
+
+/**
+ * Dynamic settings cache for email templates
+ */
+interface EmailSettings {
+  eventDate: string;
+  eventTime: string;
+  eventVenue: string;
+  supportEmail: string;
+  supportPhone: string;
+  supportWhatsapp: string;
+}
 
 /**
  * MSG91 Email Service
@@ -10,9 +23,54 @@ import type { EmailConfirmationData, TierType } from '../types/index.js';
 export class EmailService {
   private authKey: string;
   private baseUrl = 'https://control.msg91.com/api/v5/email/send';
+  private settingsCache: EmailSettings | null = null;
+  private settingsCacheTime: number = 0;
+  private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes cache
 
   constructor() {
     this.authKey = config.msg91.authKey;
+  }
+
+  /**
+   * Get dynamic email settings from database (cached)
+   */
+  private async getEmailSettings(): Promise<EmailSettings> {
+    const now = Date.now();
+
+    // Return cached settings if still valid
+    if (this.settingsCache && (now - this.settingsCacheTime) < this.CACHE_TTL_MS) {
+      return this.settingsCache;
+    }
+
+    try {
+      const settings = await settingsService.getPublicSettings();
+
+      this.settingsCache = {
+        eventDate: (settings.event_date as string) || config.event.date,
+        eventTime: (settings.event_time as string) || config.event.time,
+        eventVenue: (settings.event_venue as string) || config.event.venue,
+        supportEmail: (settings.support_email as string) || config.event.supportEmail,
+        supportPhone: (settings.support_phone as string) || config.event.supportPhone,
+        supportWhatsapp: (settings.support_whatsapp as string) || '918188050895',
+      };
+      this.settingsCacheTime = now;
+
+      return this.settingsCache;
+    } catch (error) {
+      logger.warn('Failed to fetch email settings from database, using defaults', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+
+      // Return defaults from config
+      return {
+        eventDate: config.event.date,
+        eventTime: config.event.time,
+        eventVenue: config.event.venue,
+        supportEmail: config.event.supportEmail,
+        supportPhone: config.event.supportPhone,
+        supportWhatsapp: '918188050895',
+      };
+    }
   }
 
   /**
@@ -120,6 +178,9 @@ export class EmailService {
       return false;
     }
 
+    // Get dynamic settings from database
+    const emailSettings = await this.getEmailSettings();
+
     // Variables to replace in MSG91 template
     // Template placeholders: {{name}}, {{booking_id}}, {{tier}}, etc.
     const variables = {
@@ -127,12 +188,12 @@ export class EmailService {
       booking_id: data.booking_id,
       tier: data.tier_display,
       amount: this.formatPrice(data.amount),
-      event_date: data.event_date,
-      event_time: data.event_time,
-      venue: data.venue,
+      event_date: data.event_date || emailSettings.eventDate,
+      event_time: data.event_time || emailSettings.eventTime,
+      venue: data.venue || emailSettings.eventVenue,
       company_name: 'AI for MSME Summit',
-      support_email: config.event.supportEmail,
-      support_phone: config.event.supportPhone,
+      support_email: emailSettings.supportEmail,
+      support_phone: emailSettings.supportPhone,
     };
 
     return this.sendEmail(data.to, data.name, templateId, variables);
@@ -218,14 +279,58 @@ export class EmailService {
   }
 
   /**
-   * Format price for display
+   * Send payment recovery email with QR code
    */
-  private formatPrice(amountInPaise: number): string {
+  async sendRecoveryEmail(
+    to: string,
+    name: string,
+    tier: string,
+    amountInPaise: number,
+    recoveryLink: string,
+    qrCodeDataUrl: string
+  ): Promise<boolean> {
+    const templateId = config.msg91.templates.paymentRecovery;
+
+    if (!templateId) {
+      logger.warn('Payment recovery template ID not configured');
+      logger.info('Recovery email not sent (template not configured)', {
+        to,
+        tier,
+      });
+      return false;
+    }
+
+    // Get dynamic settings from database
+    const emailSettings = await this.getEmailSettings();
+
+    const variables = {
+      name: name,
+      tier: tier,
+      amount: this.formatPrice(amountInPaise),
+      recovery_link: recoveryLink,
+      qr_code_url: qrCodeDataUrl,
+      event_date: emailSettings.eventDate,
+      event_time: emailSettings.eventTime,
+      venue: emailSettings.eventVenue,
+      company_name: 'AI for MSME Summit',
+      support_email: emailSettings.supportEmail,
+      support_phone: emailSettings.supportPhone,
+      whatsapp_link: `https://wa.me/${emailSettings.supportWhatsapp}?text=Hi,%20I%20need%20help%20completing%20my%20registration`,
+    };
+
+    return this.sendEmail(to, name, templateId, variables);
+  }
+
+  /**
+   * Format price for display
+   * Note: Database stores amounts in RUPEES (INR) directly
+   */
+  private formatPrice(amount: number): string {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       minimumFractionDigits: 0,
-    }).format(amountInPaise / 100);
+    }).format(amount);
   }
 }
 

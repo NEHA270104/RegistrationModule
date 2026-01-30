@@ -17,6 +17,11 @@ let seatAvailability = null;
 // Current selected tier
 let selectedTier = 'vip'; // Default to VIP (will be adjusted based on availability)
 
+// Redirect countdown for success modal
+let redirectCountdownInterval = null;
+let redirectCountdownSeconds = 60;
+let redirectCancelled = false;
+
 /**
  * Fetch dynamic settings from API and merge with static config
  * Falls back to static config if API fails
@@ -37,28 +42,39 @@ async function loadDynamicSettings() {
         ...CONFIG.OFFER,
         startDate: dynamicConfig.offer.startDate || CONFIG.OFFER.startDate,
         durationDays: dynamicConfig.offer.durationDays || CONFIG.OFFER.durationDays,
-        discountAmount: dynamicConfig.offer.discountAmount || CONFIG.OFFER.discountAmount,
         isActive: dynamicConfig.offer.isActive ?? CONFIG.OFFER.isActive,
+        // Tier-specific discounts
+        discountVip: dynamicConfig.offer.discountVip || dynamicConfig.offer.discountAmount || CONFIG.OFFER.discountAmount,
+        discountStandard: dynamicConfig.offer.discountStandard || dynamicConfig.offer.discountAmount || CONFIG.OFFER.discountAmount,
+        discountBasic: dynamicConfig.offer.discountBasic || dynamicConfig.offer.discountAmount || CONFIG.OFFER.discountAmount,
       };
     }
 
-    // Merge pricing settings
+    // Merge pricing settings and apply tier-specific discounts
     if (dynamicConfig.pricing) {
       if (dynamicConfig.pricing.vip) {
-        CONFIG.TIERS.vip.offerPrice = dynamicConfig.pricing.vip.offerPrice || CONFIG.TIERS.vip.offerPrice;
         CONFIG.TIERS.vip.originalPrice = dynamicConfig.pricing.vip.originalPrice || CONFIG.TIERS.vip.originalPrice;
+        // Use tier-specific offer price or calculate from discount
+        CONFIG.TIERS.vip.offerPrice = dynamicConfig.pricing.vip.offerPrice ||
+          (CONFIG.TIERS.vip.originalPrice - (CONFIG.OFFER.discountVip || CONFIG.OFFER.discountAmount));
+        CONFIG.TIERS.vip.discount = CONFIG.TIERS.vip.originalPrice - CONFIG.TIERS.vip.offerPrice;
       }
       if (dynamicConfig.pricing.standard) {
-        CONFIG.TIERS.standard.offerPrice = dynamicConfig.pricing.standard.offerPrice || CONFIG.TIERS.standard.offerPrice;
         CONFIG.TIERS.standard.originalPrice = dynamicConfig.pricing.standard.originalPrice || CONFIG.TIERS.standard.originalPrice;
+        CONFIG.TIERS.standard.offerPrice = dynamicConfig.pricing.standard.offerPrice ||
+          (CONFIG.TIERS.standard.originalPrice - (CONFIG.OFFER.discountStandard || CONFIG.OFFER.discountAmount));
+        CONFIG.TIERS.standard.discount = CONFIG.TIERS.standard.originalPrice - CONFIG.TIERS.standard.offerPrice;
       }
       if (dynamicConfig.pricing.basic) {
-        CONFIG.TIERS.basic.offerPrice = dynamicConfig.pricing.basic.offerPrice || CONFIG.TIERS.basic.offerPrice;
         CONFIG.TIERS.basic.originalPrice = dynamicConfig.pricing.basic.originalPrice || CONFIG.TIERS.basic.originalPrice;
+        CONFIG.TIERS.basic.offerPrice = dynamicConfig.pricing.basic.offerPrice ||
+          (CONFIG.TIERS.basic.originalPrice - (CONFIG.OFFER.discountBasic || CONFIG.OFFER.discountAmount));
+        CONFIG.TIERS.basic.discount = CONFIG.TIERS.basic.originalPrice - CONFIG.TIERS.basic.offerPrice;
       }
       if (dynamicConfig.pricing.waitlist) {
         CONFIG.TIERS.waitlist.offerPrice = dynamicConfig.pricing.waitlist.price || CONFIG.TIERS.waitlist.offerPrice;
         CONFIG.TIERS.waitlist.originalPrice = dynamicConfig.pricing.waitlist.price || CONFIG.TIERS.waitlist.originalPrice;
+        CONFIG.TIERS.waitlist.discount = 0;
       }
     }
 
@@ -71,6 +87,48 @@ async function loadDynamicSettings() {
         time: dynamicConfig.event.time || CONFIG.EVENT.time,
         venue: dynamicConfig.event.venue || CONFIG.EVENT.venue,
       };
+    }
+
+    // Update offer end date on the page (all instances)
+    // Calculate offer end date from offer_start_date + offer_duration_days
+    if (dynamicConfig.offer && dynamicConfig.offer.startDate && dynamicConfig.offer.durationDays) {
+      const startDate = new Date(dynamicConfig.offer.startDate);
+      const offerEndDate = new Date(startDate.getTime() + (dynamicConfig.offer.durationDays * 24 * 60 * 60 * 1000));
+
+      const formattedDate = offerEndDate.toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short'
+      }).toUpperCase();
+
+      // Update all offer end date elements
+      const offerEndDateElements = [
+        document.getElementById('offer-end-date'),
+        document.getElementById('offer-end-date-2')
+      ];
+
+      offerEndDateElements.forEach(el => {
+        if (el) el.textContent = formattedDate;
+      });
+    }
+
+    // Update registration close date on the page
+    if (dynamicConfig.registration && dynamicConfig.registration.closeDate) {
+      const closeDate = new Date(dynamicConfig.registration.closeDate);
+      const formattedRegCloseDate = closeDate.toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+
+      // Update all registration close date elements
+      const regCloseDateElements = [
+        document.getElementById('registration-close-date'),
+        document.getElementById('registration-close-date-2')
+      ];
+
+      regCloseDateElements.forEach(el => {
+        if (el) el.textContent = formattedRegCloseDate;
+      });
     }
 
     console.log('Dynamic settings loaded successfully');
@@ -105,6 +163,9 @@ function initOfferCountdown() {
   // Start countdown
   updateOfferCountdown();
   offerCountdownInterval = setInterval(updateOfferCountdown, 1000);
+
+  // Update pricing display with dynamic values from API
+  updatePricingDisplay(false);
 }
 
 /**
@@ -364,6 +425,9 @@ function updateLiveSeatCounter() {
       }
     }
   });
+
+  // Also update FOMO seat counters
+  updateFomoSeats();
 }
 
 /**
@@ -397,6 +461,95 @@ function closeRegistrationModal() {
 function closeSuccessModal() {
   document.getElementById('success-modal').classList.add('hidden');
   document.body.style.overflow = '';
+
+  // Clear redirect countdown when modal is closed
+  if (redirectCountdownInterval) {
+    clearInterval(redirectCountdownInterval);
+    redirectCountdownInterval = null;
+  }
+}
+
+/**
+ * Cancel the automatic redirect
+ */
+function cancelRedirect() {
+  redirectCancelled = true;
+
+  // Clear the countdown interval
+  if (redirectCountdownInterval) {
+    clearInterval(redirectCountdownInterval);
+    redirectCountdownInterval = null;
+  }
+
+  // Update UI to show cancelled state
+  const countdownContainer = document.getElementById('redirect-countdown');
+  const countdownMessage = countdownContainer?.querySelector('.countdown-message');
+  const cancelBtn = document.getElementById('cancel-redirect-btn');
+
+  if (countdownContainer) {
+    countdownContainer.classList.add('redirect-cancelled');
+  }
+
+  if (countdownMessage) {
+    countdownMessage.innerHTML = 'Auto-redirect cancelled. Take your time to join the WhatsApp group!';
+  }
+
+  if (cancelBtn) {
+    cancelBtn.style.display = 'none';
+  }
+}
+
+/**
+ * Start the redirect countdown timer
+ */
+function startRedirectCountdown() {
+  // Reset state
+  redirectCountdownSeconds = 60;
+  redirectCancelled = false;
+
+  const countdownContainer = document.getElementById('redirect-countdown');
+  const countdownSecondsEl = document.getElementById('countdown-seconds');
+  const cancelBtn = document.getElementById('cancel-redirect-btn');
+
+  // Reset UI
+  if (countdownContainer) {
+    countdownContainer.classList.remove('redirect-cancelled');
+    countdownContainer.style.display = 'block';
+  }
+
+  if (cancelBtn) {
+    cancelBtn.style.display = 'inline-block';
+  }
+
+  // Update countdown display
+  const updateCountdown = () => {
+    if (countdownSecondsEl) {
+      countdownSecondsEl.textContent = redirectCountdownSeconds;
+    }
+
+    if (redirectCountdownSeconds <= 0 && !redirectCancelled) {
+      // Time's up - redirect to registration page
+      clearInterval(redirectCountdownInterval);
+      redirectCountdownInterval = null;
+
+      // Close the modal and redirect
+      closeSuccessModal();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Show a brief message that we're redirecting
+      setTimeout(() => {
+        openRegistrationModal();
+      }, 300);
+    }
+
+    redirectCountdownSeconds--;
+  };
+
+  // Initial update
+  updateCountdown();
+
+  // Start interval
+  redirectCountdownInterval = setInterval(updateCountdown, 1000);
 }
 
 // BizFlow modal functions
@@ -531,12 +684,19 @@ class RegistrationApp {
       input.addEventListener('input', () => this.clearFieldError(input));
     });
 
-    // Phone number formatting
+    // Proactive duplicate checking for email
+    const emailInput = document.getElementById('email');
+    if (emailInput) {
+      emailInput.addEventListener('blur', () => this.checkDuplicateEmail(emailInput));
+    }
+
+    // Proactive duplicate checking for phone
     const phoneInput = document.getElementById('phone');
     if (phoneInput) {
       phoneInput.addEventListener('input', (e) => {
         e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
       });
+      phoneInput.addEventListener('blur', () => this.checkDuplicatePhone(phoneInput));
     }
 
     // Close modal on outside click
@@ -661,6 +821,9 @@ class RegistrationApp {
   }
 
   openRazorpayCheckout(orderData, formData) {
+    // Store the current order ID for abandonment tracking
+    this.currentOrderId = orderData.order_id;
+
     const options = {
       key: orderData.key_id || CONFIG.RAZORPAY_KEY_ID,
       amount: orderData.amount,
@@ -678,11 +841,31 @@ class RegistrationApp {
         color: '#059669',
       },
       handler: async (response) => {
-        await this.handlePaymentSuccess(response);
+        console.log('Razorpay handler called with response:', response);
+        // Clear the order ID as payment was successful
+        this.currentOrderId = null;
+        try {
+          await this.handlePaymentSuccess(response);
+        } catch (error) {
+          console.error('Error in payment handler:', error);
+          this.hideLoading();
+          this.showError('Payment verification failed. Please contact support with your payment ID: ' + response.razorpay_payment_id);
+        }
       },
       modal: {
-        ondismiss: () => {
+        ondismiss: async () => {
           closeRegistrationModal();
+
+          // Track the abandonment
+          if (this.currentOrderId) {
+            try {
+              await api.trackAbandonment(this.currentOrderId, 'user_cancelled_modal');
+            } catch (err) {
+              console.error('Failed to track abandonment:', err);
+            }
+            this.currentOrderId = null;
+          }
+
           this.showError(
             'Payment was cancelled. Your registration is not complete. Please try again to secure your seat.',
             'warning',
@@ -700,14 +883,17 @@ class RegistrationApp {
   }
 
   async handlePaymentSuccess(response) {
+    console.log('handlePaymentSuccess called');
     this.showLoading('Verifying payment...');
 
     try {
+      console.log('Calling verify-payment API...');
       const verifyResponse = await api.verifyPayment({
         razorpay_order_id: response.razorpay_order_id,
         razorpay_payment_id: response.razorpay_payment_id,
         razorpay_signature: response.razorpay_signature,
       });
+      console.log('verify-payment response:', verifyResponse);
 
       this.hideLoading();
 
@@ -726,6 +912,16 @@ class RegistrationApp {
 
   handlePaymentFailure(response) {
     console.error('Payment failed:', response.error);
+
+    // Track the abandonment
+    if (this.currentOrderId) {
+      api.trackAbandonment(
+        this.currentOrderId,
+        response.error?.description || 'payment_failed'
+      ).catch(err => console.error('Failed to track abandonment:', err));
+      this.currentOrderId = null;
+    }
+
     this.showError(`Payment failed: ${response.error.description}`);
   }
 
@@ -748,6 +944,9 @@ class RegistrationApp {
 
     this.elements.successModal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+
+    // Start 60-second countdown for auto-redirect
+    startRedirectCountdown();
   }
 
   validateForm() {
@@ -833,6 +1032,112 @@ class RegistrationApp {
     input.classList.remove('error');
   }
 
+  /**
+   * Check for duplicate email registration
+   */
+  async checkDuplicateEmail(input) {
+    const email = input.value.trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return; // Skip if empty or invalid
+    }
+
+    try {
+      // First check for pending registrations
+      const pendingResponse = await api.checkPendingRegistration(email);
+      if (pendingResponse.success && pendingResponse.data?.has_pending) {
+        // Only show message for ACTIVE (non-expired) pending registrations
+        if (!pendingResponse.data.is_expired) {
+          this.showPendingRegistrationMessage(pendingResponse.data);
+          return;
+        }
+        // For expired sessions, just continue silently
+      }
+
+      // Then check for confirmed duplicates
+      const response = await api.checkDuplicates(email, null);
+      if (response.data?.is_duplicate) {
+        const emailDuplicate = response.data.duplicates?.find(d => d.field === 'email');
+        if (emailDuplicate) {
+          this.setFieldError(input, emailDuplicate.message);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking duplicate email:', error);
+    }
+  }
+
+  /**
+   * Show friendly message for pending registration
+   */
+  showPendingRegistrationMessage(data) {
+    const { is_expired, time_remaining_minutes, registration, message } = data;
+
+    if (is_expired) {
+      // Expired - silently let them continue with fresh registration
+      // No need to show any modal - just proceed normally
+      console.log('Previous session expired, allowing fresh registration');
+      return;
+    }
+
+    // Only show message for ACTIVE pending registrations (not expired)
+    // Pre-fill the form with their data to help them continue
+    const form = this.elements.registrationForm;
+    if (form && registration) {
+      form.name.value = registration.name || '';
+      form.email.value = registration.email || '';
+      form.phone.value = registration.phone || '';
+      if (form.business_name) form.business_name.value = registration.business_name || '';
+      if (form.industry) form.industry.value = registration.industry || '';
+
+      // Select their tier
+      if (registration.tier) {
+        selectTier(registration.tier);
+      }
+    }
+
+    // Show friendly message only for active pending registrations
+    showMessageModal(
+      `Your payment didn't go through. Your seat for ${this.getTierDisplayName(registration?.tier)} is being held for the next ${time_remaining_minutes} minutes. Click "OK" to complete your payment.`,
+      'warning',
+      'Continue Your Registration'
+    );
+  }
+
+  /**
+   * Get tier display name
+   */
+  getTierDisplayName(tier) {
+    const names = {
+      vip: 'Executive Experience',
+      standard: 'Business Builder',
+      basic: 'Growth Starter',
+      waitlist: 'Livestream Access'
+    };
+    return names[tier] || tier;
+  }
+
+  /**
+   * Check for duplicate phone registration
+   */
+  async checkDuplicatePhone(input) {
+    const phone = input.value.trim().replace(/\D/g, '');
+    if (!phone || phone.length !== 10 || !/^[6-9]\d{9}$/.test(phone)) {
+      return; // Skip if empty or invalid
+    }
+
+    try {
+      const response = await api.checkDuplicates(null, phone);
+      if (response.data?.is_duplicate) {
+        const phoneDuplicate = response.data.duplicates?.find(d => d.field === 'phone');
+        if (phoneDuplicate) {
+          this.setFieldError(input, phoneDuplicate.message);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking duplicate phone:', error);
+    }
+  }
+
   getFormData() {
     const form = this.elements.registrationForm;
     return {
@@ -881,7 +1186,415 @@ class RegistrationApp {
   }
 }
 
+// ===== FOMO ELEMENTS ANIMATION =====
+// ============================================================
+// IMPORTANT: ALL FOMO ANIMATIONS ARE DISPLAY-ONLY
+// ============================================================
+// These functions create visual urgency effects but do NOT:
+// - Affect actual seat availability
+// - Modify any database records
+// - Impact registration or booking logic
+// - Change backend seat inventory
+//
+// Actual bookings are handled by:
+// - Backend API validation
+// - Database seat_inventory table
+// - Server-side availability checks
+// ============================================================
+
+/**
+ * FOMO (Fear Of Missing Out) System
+ * Creates urgency through dynamic social proof elements
+ * DISPLAY ONLY - No impact on actual bookings
+ */
+let fomoInterval;
+let lastRegistrationTime = new Date();
+let baseSeatsGone = 0; // Base value from actual seat data (for reference only)
+let displayedSeatsGone = 0; // Currently displayed value (cosmetic only)
+
+/**
+ * Initialize FOMO elements with dynamic content
+ */
+function initFomoElements() {
+  // Initialize live viewers simulation
+  updateLiveViewers();
+
+  // Update live viewers every 3-8 seconds (random interval for realism)
+  scheduleLiveViewersUpdate();
+
+  // Initialize last registration time
+  updateLastRegistrationTime();
+
+  // Update "last registration" every 30 seconds
+  setInterval(updateLastRegistrationTime, 30000);
+
+  // Sync FOMO seats with actual availability when seats are fetched
+  updateFomoSeats();
+
+  // Start the "seats gone" animation after initial data is loaded
+  setTimeout(startSeatsGoneAnimation, 5000);
+}
+
+/**
+ * ============================================================
+ * FOMO DISPLAY ANIMATION - COSMETIC ONLY
+ * ============================================================
+ * IMPORTANT: These functions ONLY update the visual display.
+ * They do NOT affect actual bookings, seat availability, or any backend data.
+ *
+ * Actual seat availability is:
+ * - Fetched from backend API (/api/seats)
+ * - Validated server-side during registration
+ * - Stored in the database (seat_inventory table)
+ *
+ * This animation is purely for creating urgency/FOMO on the frontend.
+ * ============================================================
+ */
+
+/**
+ * Start the dynamic "seats gone" counter animation
+ * DISPLAY ONLY - Does not affect actual bookings
+ */
+function startSeatsGoneAnimation() {
+  scheduleNextSeatsIncrement();
+}
+
+/**
+ * Schedule the next seats increment with random timing
+ * DISPLAY ONLY - Does not affect actual bookings
+ */
+function scheduleNextSeatsIncrement() {
+  // Random delay between 10-20 seconds
+  const delay = 10000 + Math.random() * 10000;
+
+  setTimeout(() => {
+    incrementSeatsGone();
+    scheduleNextSeatsIncrement();
+  }, delay);
+}
+
+/**
+ * Increment the "seats gone" counter with animation
+ * DISPLAY ONLY - This only updates the DOM text content for visual effect.
+ * It does NOT call any API or modify actual seat availability.
+ * Real bookings are validated against actual database values on the backend.
+ */
+function incrementSeatsGone() {
+  const fomoSoldEl = document.getElementById('fomo-sold');
+  if (!fomoSoldEl) return;
+
+  // Get current displayed value (this is just the DOM text, not real data)
+  const currentValue = parseInt(fomoSoldEl.textContent) || 0;
+
+  // Don't exceed total seats display (keep some "availability" shown)
+  const totalSeats = parseInt(document.getElementById('fomo-seats')?.textContent) || 120;
+  if (currentValue >= totalSeats - 5) return; // Keep at least 5 seats shown as available
+
+  // Random increment: 1-3 seats (DISPLAY ONLY)
+  const increment = Math.floor(Math.random() * 3) + 1;
+  const newValue = Math.min(currentValue + increment, totalSeats - 5);
+
+  // Animate the number change with flash effect (VISUAL ONLY)
+  fomoSoldEl.classList.add('seats-flash');
+  animateNumber(fomoSoldEl, currentValue, newValue, 800);
+
+  // Remove flash class after animation
+  setTimeout(() => {
+    fomoSoldEl.classList.remove('seats-flash');
+  }, 500);
+
+  // Update urgency styling (VISUAL ONLY)
+  if (newValue > totalSeats * 0.7) {
+    fomoSoldEl.classList.add('text-danger');
+    fomoSoldEl.classList.remove('text-warning');
+  } else if (newValue > totalSeats * 0.5) {
+    fomoSoldEl.classList.add('text-warning');
+  }
+
+  // Update the "last registration" time display (VISUAL ONLY)
+  const timeEl = document.getElementById('last-registration-time');
+  if (timeEl) {
+    timeEl.textContent = 'just now';
+    timeEl.closest('.fomo-item')?.classList.add('fomo-pulse');
+    setTimeout(() => {
+      timeEl.closest('.fomo-item')?.classList.remove('fomo-pulse');
+    }, 1000);
+  }
+}
+
+/**
+ * Simulate live viewers count (creates social proof)
+ * DISPLAY ONLY - This is a simulated value for visual effect.
+ * Range: 23-89 viewers with natural fluctuation
+ */
+function updateLiveViewers() {
+  const viewersEl = document.getElementById('live-viewers');
+  if (!viewersEl) return;
+
+  const currentViewers = parseInt(viewersEl.textContent) || 47;
+
+  // Natural fluctuation: -5 to +7 viewers (SIMULATED)
+  const change = Math.floor(Math.random() * 13) - 5;
+  let newViewers = currentViewers + change;
+
+  // Keep within realistic bounds (23-89)
+  newViewers = Math.max(23, Math.min(89, newViewers));
+
+  // Animate the number change (VISUAL ONLY)
+  animateNumber(viewersEl, currentViewers, newViewers, 800);
+}
+
+/**
+ * Schedule next live viewers update with random delay for natural feel
+ */
+function scheduleLiveViewersUpdate() {
+  const delay = 3000 + Math.random() * 5000; // 3-8 seconds
+  setTimeout(() => {
+    updateLiveViewers();
+    scheduleLiveViewersUpdate();
+  }, delay);
+}
+
+/**
+ * Update "Last registration" time with realistic intervals
+ * DISPLAY ONLY - This is simulated for visual urgency effect.
+ * Does not reflect actual registration times.
+ */
+function updateLastRegistrationTime() {
+  const timeEl = document.getElementById('last-registration-time');
+  if (!timeEl) return;
+
+  // Simulated registration intervals (DISPLAY ONLY - not real data)
+  const intervals = [
+    { text: 'just now', weight: 5 },
+    { text: '1 min ago', weight: 15 },
+    { text: '2 mins ago', weight: 20 },
+    { text: '3 mins ago', weight: 20 },
+    { text: '5 mins ago', weight: 15 },
+    { text: '8 mins ago', weight: 10 },
+    { text: '12 mins ago', weight: 8 },
+    { text: '15 mins ago', weight: 5 },
+    { text: '20 mins ago', weight: 2 },
+  ];
+
+  // Weighted random selection
+  const totalWeight = intervals.reduce((sum, i) => sum + i.weight, 0);
+  let random = Math.random() * totalWeight;
+
+  for (const interval of intervals) {
+    random -= interval.weight;
+    if (random <= 0) {
+      timeEl.textContent = interval.text;
+      break;
+    }
+  }
+
+  // Add pulse animation
+  timeEl.closest('.fomo-item')?.classList.add('fomo-pulse');
+  setTimeout(() => {
+    timeEl.closest('.fomo-item')?.classList.remove('fomo-pulse');
+  }, 1000);
+}
+
+/**
+ * Sync FOMO seats counter with actual seat availability
+ */
+function updateFomoSeats() {
+  if (!seatAvailability || !seatAvailability.seats) return;
+
+  const seats = seatAvailability.seats;
+  let totalSeats = 0;
+  let totalSold = 0;
+  let totalAvailable = 0;
+
+  seats.forEach(seat => {
+    if (seat.tier_name !== 'waitlist') {
+      // Calculate total from available + sold + held, or use total_seats if available
+      const seatTotal = seat.total_seats || (seat.available_seats + (seat.sold_seats || 0) + (seat.held_seats || 0));
+      totalSeats += seatTotal;
+      totalSold += seat.sold_seats || 0;
+      totalAvailable += seat.available_seats || 0;
+    }
+  });
+
+  // Store base value for animation
+  baseSeatsGone = totalSold;
+
+  const fomoSeatsEl = document.getElementById('fomo-seats');
+  const fomoSoldEl = document.getElementById('fomo-sold');
+
+  if (fomoSeatsEl) {
+    fomoSeatsEl.textContent = totalSeats;
+  }
+
+  if (fomoSoldEl) {
+    const currentDisplayed = parseInt(fomoSoldEl.textContent) || 0;
+    // Only update if real data is higher than what's displayed (don't go backwards)
+    if (totalSold > currentDisplayed) {
+      animateNumber(fomoSoldEl, currentDisplayed, totalSold, 1000);
+    }
+
+    // Add urgency styling based on how many seats are left
+    if (totalAvailable <= 20) {
+      fomoSoldEl.classList.add('text-danger');
+    } else if (totalSold > totalSeats * 0.5) {
+      fomoSoldEl.classList.add('text-warning');
+    }
+  }
+}
+
+/**
+ * Animate number change for smooth transitions
+ */
+function animateNumber(element, from, to, duration) {
+  if (from === to) return;
+
+  const start = performance.now();
+  const diff = to - from;
+
+  function update(currentTime) {
+    const elapsed = currentTime - start;
+    const progress = Math.min(elapsed / duration, 1);
+
+    // Easing function for smooth animation
+    const easeOutQuad = progress * (2 - progress);
+    const current = Math.round(from + diff * easeOutQuad);
+
+    element.textContent = current;
+
+    if (progress < 1) {
+      requestAnimationFrame(update);
+    }
+  }
+
+  requestAnimationFrame(update);
+}
+
+/**
+ * Show occasional "Someone just registered!" toast notification
+ * DISPLAY ONLY - This is a simulated notification for FOMO effect.
+ * Does not represent actual registrations.
+ */
+function showRegistrationToast() {
+  // Create toast element (SIMULATED - not real registration data)
+  const toast = document.createElement('div');
+  toast.className = 'fomo-toast';
+
+  const cities = ['Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Chennai', 'Pune', 'Ahmedabad', 'Kolkata', 'Jaipur', 'Surat'];
+  const tiers = ['Executive Experience', 'Business Builder', 'Growth Starter'];
+
+  const city = cities[Math.floor(Math.random() * cities.length)];
+  const tier = tiers[Math.floor(Math.random() * tiers.length)];
+
+  toast.innerHTML = `
+    <div class="toast-icon">🎉</div>
+    <div class="toast-content">
+      <strong>New Registration!</strong>
+      <span>Someone from ${city} just booked ${tier}</span>
+    </div>
+  `;
+
+  document.body.appendChild(toast);
+
+  // Animate in
+  setTimeout(() => toast.classList.add('show'), 100);
+
+  // Remove after 4 seconds
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
+
+/**
+ * Schedule random toast notifications (every 45-90 seconds)
+ */
+function scheduleRegistrationToasts() {
+  const delay = 45000 + Math.random() * 45000; // 45-90 seconds
+  setTimeout(() => {
+    showRegistrationToast();
+    scheduleRegistrationToasts();
+  }, delay);
+}
+
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   window.app = new RegistrationApp();
+
+  // Initialize FOMO elements after a short delay
+  setTimeout(() => {
+    initFomoElements();
+    // Start showing toast notifications after 30 seconds
+    setTimeout(scheduleRegistrationToasts, 30000);
+  }, 2000);
+
+  // Initialize scroll handlers for sticky elements
+  initScrollHandlers();
 });
+
+/**
+ * Initialize scroll handlers for sticky CTA bar and back-to-top button
+ */
+function initScrollHandlers() {
+  const stickyCta = document.getElementById('sticky-cta');
+  const backToTop = document.getElementById('back-to-top');
+  const stickyViewers = document.getElementById('sticky-viewers');
+  const liveViewers = document.getElementById('live-viewers');
+  let lastScrollY = 0;
+  let ticking = false;
+
+  function handleScroll() {
+    const scrollY = window.scrollY;
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
+
+    // Show sticky CTA bar after scrolling 400px
+    if (stickyCta) {
+      if (scrollY > 400) {
+        stickyCta.classList.add('visible');
+      } else {
+        stickyCta.classList.remove('visible');
+      }
+    }
+
+    // Show back-to-top button after scrolling 600px
+    if (backToTop) {
+      if (scrollY > 600) {
+        backToTop.classList.add('visible');
+      } else {
+        backToTop.classList.remove('visible');
+      }
+    }
+
+    // Sync sticky viewers count with main live-viewers
+    if (stickyViewers && liveViewers) {
+      stickyViewers.textContent = liveViewers.textContent;
+    }
+
+    lastScrollY = scrollY;
+    ticking = false;
+  }
+
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      window.requestAnimationFrame(() => {
+        handleScroll();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }, { passive: true });
+
+  // Initial check
+  handleScroll();
+}
+
+/**
+ * Scroll to top of the page smoothly
+ */
+function scrollToTop() {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+}

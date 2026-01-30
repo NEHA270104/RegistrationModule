@@ -137,3 +137,47 @@ export const readOnlyLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+// Admin-specific rate limiter (very permissive for authenticated admin users)
+// Admin dashboard makes many API calls on load and auto-refreshes frequently
+// Since admin routes are already protected by authentication, we can be generous
+export const adminLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute window
+  max: 1000, // 1000 requests per minute (effectively no limit for normal usage)
+  message: {
+    success: false,
+    error: {
+      message: 'Too many admin requests, please slow down',
+      code: 'ADMIN_RATE_LIMIT_EXCEEDED',
+    },
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: Request) => {
+    // Use API key + IP as identifier for admin requests
+    const apiKey = req.headers['x-api-key'] || '';
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    return `admin:${apiKey}:${ip}`;
+  },
+  skip: (req: Request) => {
+    // Skip rate limiting entirely if valid API key is present
+    // Admin routes are already protected by adminAuth middleware
+    const apiKey = req.headers['x-api-key'];
+    return !!apiKey;
+  },
+  handler: (req: Request, res: Response) => {
+    logger.warn('Admin rate limit exceeded', {
+      ip: req.ip,
+      path: req.path,
+    });
+
+    res.status(429).json({
+      success: false,
+      error: {
+        message: 'Too many requests. Please wait a moment before refreshing.',
+        code: 'ADMIN_RATE_LIMIT_EXCEEDED',
+        retryAfter: 60,
+      },
+    });
+  },
+});

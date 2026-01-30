@@ -32,7 +32,7 @@ steps:
       - '--set-secrets'
       - 'SUPABASE_URL=SUPABASE_URL:latest,SUPABASE_SERVICE_KEY=SUPABASE_SERVICE_KEY:latest,RAZORPAY_KEY_ID=RAZORPAY_KEY_ID:latest,RAZORPAY_KEY_SECRET=RAZORPAY_KEY_SECRET:latest,ADMIN_API_KEY=ADMIN_API_KEY:latest,RAZORPAY_WEBHOOK_SECRET=RAZORPAY_WEBHOOK_SECRET:latest,MSG91_AUTH_KEY=MSG91_AUTH_KEY:latest'
       - '--set-env-vars'
-      - 'NODE_ENV=production,MSG91_DOMAIN=registration.bizflowai.in,MSG91_FROM_EMAIL=noreply@registration.bizflowai.in,MSG91_TEMPLATE_REGISTRATION=registration_confirmation_14,MSG91_TEMPLATE_REMINDER=payment_recovery_email,MSG91_TEMPLATE_RECOVERY=payment_recovery_email,MSG91_TEMPLATE_Waitlist=bizflow_template_waitlist'
+      - 'NODE_ENV=production,MSG91_DOMAIN=registration.bizflowai.in,MSG91_FROM_EMAIL=noreply@registration.bizflowai.in,MSG91_TEMPLATE_REGISTRATION=registration_confirmation_14,MSG91_TEMPLATE_REMINDER=payment_recovery_email,MSG91_TEMPLATE_RECOVERY=payment_recovery_email,MSG91_TEMPLATE_WAITLIST=bizflow_template_waitlist'
       - '--timeout'
       - '60'
 

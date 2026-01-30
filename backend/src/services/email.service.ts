@@ -232,7 +232,9 @@ export class EmailService {
     to: string,
     name: string,
     orderId: string,
-    tier: TierType
+    tier: TierType,
+    recoveryLink?: string,
+    amount?: number
   ): Promise<boolean> {
     const templateId = config.msg91.templates.paymentReminder;
 
@@ -248,12 +250,20 @@ export class EmailService {
       waitlist: 'Waitlist - Live Stream',
     };
 
-    const variables = {
+    const variables: Record<string, string> = {
       name: name,
       order_id: orderId,
       tier: tierNames[tier] || tier,
       company_name: 'AI for MSME Summit',
     };
+
+    if (recoveryLink) {
+      variables.recovery_link = recoveryLink;
+    }
+
+    if (amount) {
+      variables.amount = this.formatPrice(amount);
+    }
 
     return this.sendEmail(to, name, templateId, variables);
   }

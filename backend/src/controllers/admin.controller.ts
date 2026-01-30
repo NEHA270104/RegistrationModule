@@ -3,6 +3,7 @@ import { registrationService } from '../services/registration.service.js';
 import { seatService } from '../services/seat.service.js';
 import { waitlistService } from '../services/waitlist.service.js';
 import { emailService } from '../services/email.service.js';
+import { abandonmentService } from '../services/abandonment.service.js';
 import { logger } from '../utils/logger.js';
 import type { AdminRegistrationFilters, TierType } from '../types/index.js';
 import { AppError } from '../types/index.js';
@@ -559,19 +560,59 @@ export async function sendPaymentReminder(req: Request, res: Response): Promise<
     }
 
     const orderId = registration.razorpay_order_id || registrationId;
-    const success = await emailService.sendPaymentReminder(email, name, orderId, tier as TierType);
+
+    // Find or create abandonment record to get recovery link
+    let abandonment = registration.razorpay_order_id
+      ? await abandonmentService.getByOrderId(registration.razorpay_order_id)
+      : null;
+
+    if (!abandonment) {
+      // Create abandonment record for this pending registration
+      abandonment = await abandonmentService.recordAbandonment(
+        {
+          registration_id: registrationId,
+          razorpay_order_id: registration.razorpay_order_id || undefined,
+          name: registration.name,
+          email: registration.email,
+          phone: registration.phone,
+          business_name: registration.business_name || undefined,
+          tier: registration.tier as TierType,
+          amount: registration.amount_paid,
+          abandonment_type: 'cancelled',
+          abandonment_reason: 'Admin-triggered payment reminder',
+        },
+        {}
+      );
+    }
+
+    // Generate recovery link
+    const recovery = await abandonmentService.generateRecoveryLink(abandonment.id);
+
+    // Send reminder with recovery link
+    const success = await emailService.sendPaymentReminder(
+      email,
+      name,
+      orderId,
+      tier as TierType,
+      recovery.link,
+      registration.amount_paid
+    );
 
     if (success) {
       logger.info('Admin sent payment reminder', {
         registrationId,
         email,
         tier,
+        recoveryLink: recovery.link,
         admin: req.headers['x-api-key']?.toString().slice(0, 8),
       });
 
       res.status(200).json({
         success: true,
         message: 'Payment reminder sent successfully',
+        data: {
+          recovery_link: recovery.link,
+        },
       });
     } else {
       res.status(500).json({

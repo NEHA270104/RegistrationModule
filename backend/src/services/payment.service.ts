@@ -133,11 +133,16 @@ export class PaymentService {
       };
     } catch (error) {
       // Release the reserved seat if order creation failed
-      if (error instanceof AppError && error.code !== 'TIER_SOLD_OUT') {
+      // Only skip release if error is specifically TIER_SOLD_OUT (seat was never reserved)
+      const isAppError = error instanceof AppError;
+      const isTierSoldOut = isAppError && error.code === 'TIER_SOLD_OUT';
+
+      if (!isTierSoldOut) {
+        logger.info('Releasing held seat due to order creation failure', { tier });
         await seatService.releaseHeldSeat(tier);
       }
 
-      if (error instanceof AppError) throw error;
+      if (isAppError) throw error;
 
       // Log detailed error information for debugging
       const errorDetails = {

@@ -397,6 +397,23 @@ export async function deleteRegistration(req: Request, res: Response): Promise<v
       await seatService.releaseHeldSeat(registration.tier);
     }
 
+    // Clean up pending_orders if razorpay_order_id exists
+    if (registration.razorpay_order_id) {
+      try {
+        const { supabase } = await import('../config/supabase.js');
+        await supabase
+          .from('pending_orders')
+          .delete()
+          .eq('razorpay_order_id', registration.razorpay_order_id);
+        logger.info('Cleaned up pending_order', { orderId: registration.razorpay_order_id });
+      } catch (cleanupError) {
+        logger.warn('Failed to cleanup pending_order', {
+          orderId: registration.razorpay_order_id,
+          error: cleanupError instanceof Error ? cleanupError.message : 'Unknown error',
+        });
+      }
+    }
+
     // Delete the registration
     await registrationService.deleteRegistration(bookingId);
 

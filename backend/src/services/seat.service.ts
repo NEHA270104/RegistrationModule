@@ -323,6 +323,39 @@ export class SeatService {
   }
 
   /**
+   * Update tier price in seat_inventory
+   * This is the actual price that gets charged via Razorpay
+   */
+  async updateTierPrice(tier: TierType, priceInr: number): Promise<boolean> {
+    try {
+      if (priceInr < 0) {
+        throw new AppError('Price cannot be negative', 400, 'INVALID_PRICE');
+      }
+
+      const { error } = await supabase
+        .from('seat_inventory')
+        .update({ price_inr: priceInr })
+        .eq('tier_name', tier);
+
+      if (error) {
+        logger.error('Error updating tier price', { tier, priceInr, error: error.message });
+        throw new AppError('Failed to update tier price', 500, 'PRICE_UPDATE_ERROR');
+      }
+
+      logger.info('Tier price updated', { tier, priceInr });
+      return true;
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      logger.error('Unexpected error in updateTierPrice', {
+        tier,
+        priceInr,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw new AppError('Internal server error', 500, 'INTERNAL_ERROR');
+    }
+  }
+
+  /**
    * Resync seat counts from registrations table
    * This fixes any discrepancy between seat_inventory and registrations tables
    */

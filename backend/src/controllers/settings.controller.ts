@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { settingsService } from '../services/settings.service.js';
+import { seatService } from '../services/seat.service.js';
 import { logger } from '../utils/logger.js';
+import type { TierType } from '../types/index.js';
 
 /**
  * Get public settings (for frontend dynamic config)
@@ -150,6 +152,30 @@ export async function updateSettings(req: Request, res: Response): Promise<void>
 
   const results = await settingsService.updateSettings(updates, adminIdentifier, ipAddress);
 
+  // Sync tier pricing to seat_inventory when offer prices are updated
+  // This ensures the actual payment price matches the display price
+  const pricingKeys: Record<string, TierType> = {
+    'tier_vip_offer_price': 'vip',
+    'tier_standard_offer_price': 'standard',
+    'tier_basic_offer_price': 'basic',
+    'tier_waitlist_price': 'waitlist',
+  };
+
+  const pricingSyncErrors: string[] = [];
+  for (const update of updates) {
+    const tier = pricingKeys[update.key];
+    if (tier && typeof update.value === 'number') {
+      try {
+        await seatService.updateTierPrice(tier, update.value);
+        logger.info('Seat inventory price synced via batch update', { tier, priceInr: update.value });
+      } catch (error) {
+        const errorMsg = `Failed to sync ${tier} price to seat_inventory`;
+        logger.error(errorMsg, { error: error instanceof Error ? error.message : 'Unknown error' });
+        pricingSyncErrors.push(errorMsg);
+      }
+    }
+  }
+
   logger.info('Multiple settings updated via API', {
     count: updates.length,
     keys: updates.map((u: { key: string }) => u.key),
@@ -160,6 +186,7 @@ export async function updateSettings(req: Request, res: Response): Promise<void>
     success: true,
     updated: results.length,
     settings: results,
+    ...(pricingSyncErrors.length > 0 && { warnings: pricingSyncErrors }),
   });
 }
 
@@ -209,6 +236,7 @@ export async function updateOfferConfig(req: Request, res: Response): Promise<vo
 
 /**
  * Update tier pricing (admin only)
+ * This updates both display settings AND the actual payment price in seat_inventory
  */
 export async function updateTierPricing(req: Request, res: Response): Promise<void> {
   const { tier } = req.params;
@@ -243,7 +271,31 @@ export async function updateTierPricing(req: Request, res: Response): Promise<vo
   const adminIdentifier = req.headers['x-api-key'] as string || 'unknown';
   const ipAddress = req.ip || req.socket.remoteAddress;
 
+  // Update display settings in site_settings table
   const results = await settingsService.updateSettings(updates, adminIdentifier, ipAddress);
+
+  // IMPORTANT: Also update the actual payment price in seat_inventory
+  // This ensures the price charged via Razorpay matches the displayed offer price
+  if (offerPrice !== undefined) {
+    try {
+      await seatService.updateTierPrice(tier as TierType, offerPrice);
+      logger.info('Seat inventory price synced with tier pricing', { tier, priceInr: offerPrice });
+    } catch (error) {
+      logger.error('Failed to sync seat inventory price', {
+        tier,
+        offerPrice,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      // Still return success for settings update, but warn about sync failure
+      res.json({
+        success: true,
+        message: `${tier} pricing updated (warning: seat inventory sync failed)`,
+        settings: results,
+        warning: 'Display price updated but payment price sync failed. Please check seat_inventory table.',
+      });
+      return;
+    }
+  }
 
   logger.info('Tier pricing updated', { tier, adminIdentifier });
 

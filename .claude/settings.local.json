@@ -50,7 +50,9 @@
       "Bash(gcloud logging read:*)",
       "Bash(node -e \"\nconst Razorpay = require\\(''razorpay''\\);\nconst rz = new Razorpay\\({\n  key_id: ''rzp_live_SBXVkYjOsVLrl2'',\n  key_secret: ''IDMLoTXQcm4TACZXBA56mPck''\n}\\);\n\nrz.orders.create\\({\n  amount: 100, // 1 rupee in paise\n  currency: ''INR'',\n  receipt: ''test_'' + Date.now\\(\\)\n}\\).then\\(order => {\n  console.log\\(''SUCCESS: Order created'', order.id\\);\n}\\).catch\\(err => {\n  console.log\\(''ERROR:'', err.error ? err.error.description : err.message\\);\n  console.log\\(''Full error:'', JSON.stringify\\(err, null, 2\\)\\);\n}\\);\n\")",
       "Bash(cmd //c \"del /f /q \"\"\\\\?\\\\D:\\\\Data\\\\BRTNeura\\\\Products\\\\Registration Form\\\\backend\\\\nul\"\"\")",
-      "Bash(cmd //c \"del /f /q \"\"\\\\?\\\\D:\\\\Data\\\\BRTNeura\\\\Products\\\\Registration Form\\\\nul\"\"\")"
+      "Bash(cmd //c \"del /f /q \"\"\\\\?\\\\D:\\\\Data\\\\BRTNeura\\\\Products\\\\Registration Form\\\\nul\"\"\")",
+      "Bash(node -e:*)",
+      "Bash(node:*)"
     ]
   }
 }

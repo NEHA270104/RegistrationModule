@@ -826,7 +826,7 @@ class RegistrationApp {
 
     const options = {
       key: orderData.key_id || CONFIG.RAZORPAY_KEY_ID,
-      amount: orderData.amount,
+      amount: orderData.amount * 100, // Convert rupees to paise for Razorpay
       currency: orderData.currency || 'INR',
       name: CONFIG.EVENT.name,
       description: 'Summit Registration',

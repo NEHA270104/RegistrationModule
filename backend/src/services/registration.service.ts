@@ -12,6 +12,31 @@ import { config } from '../config/index.js';
 
 export class RegistrationService {
   /**
+   * Sanitize IP address for PostgreSQL INET column.
+   * Returns null if the value is not a valid IP address.
+   */
+  private sanitizeIpAddress(ip: string | undefined | null): string | null {
+    if (!ip) return null;
+    // Take only the first IP if comma-separated (multiple proxies)
+    let cleaned = ip.split(',')[0].trim();
+    // Remove IPv6-mapped IPv4 prefix (e.g., "::ffff:192.168.1.1" → "192.168.1.1")
+    cleaned = cleaned.replace(/^::ffff:/, '');
+    // Strip port from IPv4 only (e.g., "1.2.3.4:8080" → "1.2.3.4")
+    // Must NOT strip from IPv6 like "::1"
+    if (cleaned.includes('.') && cleaned.includes(':')) {
+      cleaned = cleaned.replace(/:\d+$/, '');
+    }
+    // Validate IPv4
+    const ipv4 = /^(\d{1,3}\.){3}\d{1,3}$/;
+    // Validate IPv6 (e.g., "::1", "fe80::1", "2001:db8::1")
+    const ipv6 = /^[0-9a-fA-F:]{2,}$/;
+    if (ipv4.test(cleaned) || ipv6.test(cleaned)) {
+      return cleaned;
+    }
+    return null;
+  }
+
+  /**
    * Create a new registration (pending payment)
    */
   async createRegistration(
@@ -35,7 +60,7 @@ export class RegistrationService {
         registration_status: 'pending',
         razorpay_order_id: razorpayOrderId,
         payment_initiated_at: new Date().toISOString(),
-        ip_address: metadata?.ip_address || null,
+        ip_address: this.sanitizeIpAddress(metadata?.ip_address),
         user_agent: metadata?.user_agent || null,
         referrer: metadata?.referrer || null,
         utm_source: data.utm_source || null,
@@ -50,7 +75,19 @@ export class RegistrationService {
         .single();
 
       if (error) {
-        logger.error('Error creating registration', { error: error.message });
+        logger.error('Error creating registration', {
+          error: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          registrationData: {
+            email: registrationData.email,
+            phone: registrationData.phone,
+            tier: registrationData.tier,
+            amount_paid: registrationData.amount_paid,
+            ip_address: registrationData.ip_address,
+          },
+        });
         throw new AppError('Failed to create registration', 500, 'REGISTRATION_CREATE_ERROR');
       }
 

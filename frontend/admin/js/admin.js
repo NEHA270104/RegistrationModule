@@ -80,6 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-export').addEventListener('click', exportRegistrations);
     document.getElementById('btn-export-waitlist').addEventListener('click', exportWaitlist);
     document.getElementById('btn-clear-filters').addEventListener('click', clearFilters);
+    document.getElementById('btn-delete-all-registrations')?.addEventListener('click', deleteAllRegistrations);
     document.getElementById('btn-resync-seats')?.addEventListener('click', resyncSeatCounts);
     document.getElementById('btn-prev').addEventListener('click', () => changePage(-1));
     document.getElementById('btn-next').addEventListener('click', () => changePage(1));
@@ -355,6 +356,14 @@ async function loadSeats() {
                 document.getElementById(`available-${tier}`).textContent = availableSeats;
                 document.getElementById(`total-${tier}`).textContent = totalSeats;
                 document.getElementById(`progress-${tier}`).style.width = `${percentage}%`;
+
+                // Populate seat capacity settings inputs
+                const seatsInput = document.getElementById(`setting-seats-${tier}`);
+                if (seatsInput) {
+                    seatsInput.value = totalSeats;
+                    // Store original value for change detection
+                    seatsInput.dataset.originalValue = totalSeats;
+                }
             }
         });
 
@@ -459,8 +468,23 @@ function getFilters() {
 
     if (search) filters.search = search;
     if (tier) filters.tier = tier;
-    if (status) filters.status = status;
-    if (dateRange) filters.date_range = dateRange;
+    if (status) filters.payment_status = status;
+
+    if (dateRange) {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        if (dateRange === 'today') {
+            filters.date_from = today.toISOString();
+        } else if (dateRange === 'week') {
+            const weekAgo = new Date(today);
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            filters.date_from = weekAgo.toISOString();
+        } else if (dateRange === 'month') {
+            const monthAgo = new Date(today);
+            monthAgo.setDate(monthAgo.getDate() - 30);
+            filters.date_from = monthAgo.toISOString();
+        }
+    }
 
     return filters;
 }
@@ -621,6 +645,36 @@ async function deleteRegistration(bookingId) {
                 loadDashboardData();
             } catch (error) {
                 console.error('Error deleting registration:', error);
+                showAlertModal('Error', error.message, false);
+            } finally {
+                hideLoading();
+            }
+        }
+    );
+}
+
+async function deleteAllRegistrations() {
+    showConfirmModal(
+        'Delete All Registrations',
+        'Are you sure you want to delete ALL registrations? This will release all seats and cannot be undone.',
+        async () => {
+            try {
+                showLoading();
+                const response = await fetch(`${CONFIG.API_BASE_URL}/admin/registrations/all`, {
+                    method: 'DELETE',
+                    headers: { 'X-API-Key': apiKey }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error?.message || 'Failed to delete all registrations');
+                }
+
+                showAlertModal('Success', result.message || 'All registrations deleted successfully', true);
+                loadDashboardData();
+            } catch (error) {
+                console.error('Error deleting all registrations:', error);
                 showAlertModal('Error', error.message, false);
             } finally {
                 hideLoading();
@@ -915,6 +969,7 @@ function populateSettingsForm() {
     setInput('setting-event-date', currentSettings.event_date);
     setInput('setting-event-time', currentSettings.event_time);
     setInput('setting-event-venue', currentSettings.event_venue);
+    setInput('setting-event-venue-map-link', currentSettings.event_venue_map_link);
 
     // Support settings
     setInput('setting-support-email', currentSettings.support_email);
@@ -925,6 +980,9 @@ function populateSettingsForm() {
     setCheckbox('setting-reg-open', currentSettings.registration_open);
     setCheckbox('setting-waitlist-enabled', currentSettings.waitlist_enabled);
     setDateTimeInput('setting-reg-close', currentSettings.registration_close_date);
+
+    // Guest settings
+    setInput('setting-guest-session-heading', currentSettings.guest_session_heading);
 }
 
 function setInput(id, value) {
@@ -1080,6 +1138,7 @@ function collectSettingsUpdates() {
     addUpdate('event_date', document.getElementById('setting-event-date')?.value || '');
     addUpdate('event_time', document.getElementById('setting-event-time')?.value || '');
     addUpdate('event_venue', document.getElementById('setting-event-venue')?.value || '');
+    addUpdate('event_venue_map_link', document.getElementById('setting-event-venue-map-link')?.value || '');
 
     // Support settings
     addUpdate('support_email', document.getElementById('setting-support-email')?.value || '');
@@ -1094,6 +1153,23 @@ function collectSettingsUpdates() {
         const isoDate = new Date(regClose).toISOString();
         addUpdate('registration_close_date', isoDate);
     }
+
+    // Seat capacity settings (synced to seat_inventory table)
+    const seatsVip = document.getElementById('setting-seats-vip');
+    if (seatsVip && seatsVip.value !== seatsVip.dataset.originalValue) {
+        updates.push({ key: 'total_seats_vip', value: parseInt(seatsVip.value) || 0 });
+    }
+    const seatsStandard = document.getElementById('setting-seats-standard');
+    if (seatsStandard && seatsStandard.value !== seatsStandard.dataset.originalValue) {
+        updates.push({ key: 'total_seats_standard', value: parseInt(seatsStandard.value) || 0 });
+    }
+    const seatsBasic = document.getElementById('setting-seats-basic');
+    if (seatsBasic && seatsBasic.value !== seatsBasic.dataset.originalValue) {
+        updates.push({ key: 'total_seats_basic', value: parseInt(seatsBasic.value) || 0 });
+    }
+
+    // Guest settings
+    addUpdate('guest_session_heading', document.getElementById('setting-guest-session-heading')?.value || "In this session, you'll learn:");
 
     return updates;
 }
@@ -1219,6 +1295,11 @@ function initAbandonmentsUI() {
     const clearFiltersBtn = document.getElementById('btn-clear-abandonment-filters');
     if (clearFiltersBtn) {
         clearFiltersBtn.addEventListener('click', clearAbandonmentFilters);
+    }
+
+    const deleteAllBtn = document.getElementById('btn-delete-all-abandonments');
+    if (deleteAllBtn) {
+        deleteAllBtn.addEventListener('click', deleteAllAbandonments);
     }
 
     const cleanupBtn = document.getElementById('btn-cleanup-expired');
@@ -1729,6 +1810,37 @@ async function deleteAbandonment(id, name) {
     );
 }
 
+async function deleteAllAbandonments() {
+    showConfirmModal(
+        'Delete All Abandonments',
+        'Are you sure you want to delete ALL abandonment records? This action cannot be undone.',
+        async () => {
+            try {
+                showLoading();
+                const response = await fetch(`${CONFIG.API_BASE_URL}/admin/abandonments/all`, {
+                    method: 'DELETE',
+                    headers: { 'X-API-Key': apiKey }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error?.message || 'Failed to delete all abandonments');
+                }
+
+                showAlertModal('Success', result.message || 'All abandonment records deleted successfully', true);
+                await loadAbandonments();
+                await loadAbandonmentStats();
+            } catch (error) {
+                console.error('Error deleting all abandonments:', error);
+                showAlertModal('Error', error.message, false);
+            } finally {
+                hideLoading();
+            }
+        }
+    );
+}
+
 // Export Abandonments
 async function exportAbandonments() {
     showLoading();
@@ -1930,13 +2042,711 @@ async function releaseExpiredRegistration(registrationId) {
     );
 }
 
-// Update loadDashboardData to include abandonments
+// Update loadDashboardData to include abandonments and guests
 const originalLoadDashboardDataWithSettings = loadDashboardData;
 loadDashboardData = async function() {
     await originalLoadDashboardDataWithSettings();
     await Promise.all([
         loadAbandonments(),
         loadAbandonmentStats(),
-        loadPendingRegistrations()
+        loadPendingRegistrations(),
+        loadGuests(),
+        loadBenefits()
     ]);
 };
+
+// ============================================
+// Guest Management
+// ============================================
+
+let guestsData = [];
+let editingGuestId = null;
+
+async function loadGuests() {
+    try {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/guests/admin?_t=${Date.now()}`, {
+            headers: { 'X-API-Key': apiKey },
+            cache: 'no-store'
+        });
+        if (!response.ok) throw new Error('Failed to load guests');
+        const result = await response.json();
+        guestsData = result.data?.guests || [];
+        renderGuestsList();
+    } catch (error) {
+        console.error('Error loading guests:', error);
+        const container = document.getElementById('guests-list-container');
+        if (container) {
+            container.innerHTML = '<p class="history-empty">Failed to load guests.</p>';
+        }
+    }
+}
+
+function renderGuestsList() {
+    const container = document.getElementById('guests-list-container');
+    if (!container) return;
+
+    if (guestsData.length === 0) {
+        container.innerHTML = '<p class="history-empty">No guests added yet. Click "Add Guest" to get started.</p>';
+        return;
+    }
+
+    container.innerHTML = guestsData.map(guest => `
+        <div class="guest-admin-card ${!guest.is_active ? 'guest-inactive' : ''}" data-guest-id="${guest.id}">
+            <div class="guest-admin-photo">
+                ${guest.photo_url
+                    ? `<img src="${guest.photo_url}" alt="${escapeHtml(guest.name)}">`
+                    : `<svg viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" stroke-width="1.5" width="30" height="30">
+                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>`
+                }
+            </div>
+            <div class="guest-admin-info">
+                <strong>${escapeHtml(guest.name)}</strong>
+                <span class="text-muted">${escapeHtml(guest.title)}</span>
+                <span class="text-muted" style="font-size: 0.6875rem;">${guest.session_points?.length || 0} session points${!guest.photo_url ? ' | No photo uploaded' : ''}</span>
+            </div>
+            <div class="guest-admin-meta">
+                <span class="sort-order-badge" title="Sort Order">#${guest.sort_order}</span>
+                <span class="status-badge ${guest.is_active ? 'confirmed' : 'failed'}">${guest.is_active ? 'Active' : 'Hidden'}</span>
+            </div>
+            <div class="guest-admin-actions">
+                <button class="btn-icon" onclick="editGuest('${guest.id}')" title="Edit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                </button>
+                <button class="btn-icon btn-icon-danger" onclick="confirmDeleteGuest('${guest.id}', '${escapeHtml(guest.name)}')" title="Delete">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function showAddGuestForm() {
+    editingGuestId = null;
+    document.getElementById('guest-modal-title').textContent = 'Add Guest';
+    document.getElementById('guest-edit-id').value = '';
+    document.getElementById('guest-form').reset();
+    document.getElementById('guest-is-active').checked = true;
+    document.getElementById('guest-sort-order').value = guestsData.length;
+    resetGuestPhotoPreview();
+    initSessionPointInputs(4);
+    document.getElementById('guest-modal').classList.remove('hidden');
+}
+
+function editGuest(id) {
+    const guest = guestsData.find(g => g.id === id);
+    if (!guest) return;
+
+    editingGuestId = id;
+    document.getElementById('guest-modal-title').textContent = 'Edit Guest';
+    document.getElementById('guest-edit-id').value = id;
+    document.getElementById('guest-name').value = guest.name;
+    document.getElementById('guest-title').value = guest.title;
+    document.getElementById('guest-bio').value = guest.bio;
+    document.getElementById('guest-sort-order').value = guest.sort_order;
+    document.getElementById('guest-is-active').checked = guest.is_active;
+
+    // Set photo preview
+    const preview = document.getElementById('guest-photo-preview');
+    if (guest.photo_url) {
+        preview.innerHTML = `<img src="${guest.photo_url}" style="width:100%;height:100%;object-fit:cover;">`;
+    } else {
+        resetGuestPhotoPreview();
+    }
+
+    // Set session points
+    initSessionPointInputs(Math.max(4, guest.session_points?.length || 4), guest.session_points);
+
+    // Clear file input
+    document.getElementById('guest-photo-input').value = '';
+
+    document.getElementById('guest-modal').classList.remove('hidden');
+}
+
+function closeGuestModal() {
+    document.getElementById('guest-modal').classList.add('hidden');
+    editingGuestId = null;
+}
+
+function initSessionPointInputs(count, values = []) {
+    const container = document.getElementById('guest-session-points-container');
+    container.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+        addSessionPointInput(values[i] || '');
+    }
+}
+
+function addSessionPointInput(value = '') {
+    const container = document.getElementById('guest-session-points-container');
+    const index = container.children.length;
+    const div = document.createElement('div');
+    div.className = 'session-point-row';
+    div.innerHTML = `
+        <span class="session-point-number">${index + 1}.</span>
+        <input type="text" class="guest-form-input session-point-input" value="${escapeHtml(value)}" placeholder="Session point ${index + 1}">
+        <button type="button" class="btn-remove-point" onclick="removeSessionPoint(this)" title="Remove">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+        </button>
+    `;
+    container.appendChild(div);
+}
+
+function removeSessionPoint(btn) {
+    const container = document.getElementById('guest-session-points-container');
+    if (container.children.length <= 1) return;
+    btn.closest('.session-point-row').remove();
+    // Renumber
+    Array.from(container.children).forEach((row, i) => {
+        row.querySelector('.session-point-number').textContent = `${i + 1}.`;
+    });
+}
+
+function previewGuestPhoto(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        if (file.size > 2 * 1024 * 1024) {
+            showAlertModal('File Too Large', 'Photo must be under 2MB.', false);
+            input.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('guest-photo-preview').innerHTML =
+                `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function resetGuestPhotoPreview() {
+    document.getElementById('guest-photo-preview').innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" stroke-width="1.5" width="36" height="36">
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+        </svg>
+    `;
+}
+
+async function saveGuest(event) {
+    event.preventDefault();
+
+    const sessionPointInputs = document.querySelectorAll('.session-point-input');
+    const sessionPoints = Array.from(sessionPointInputs)
+        .map(input => input.value.trim())
+        .filter(val => val.length > 0);
+
+    if (sessionPoints.length < 1) {
+        showAlertModal('Validation Error', 'Please add at least one session point.', false);
+        return;
+    }
+
+    const guestData = {
+        name: document.getElementById('guest-name').value.trim(),
+        title: document.getElementById('guest-title').value.trim(),
+        bio: document.getElementById('guest-bio').value.trim(),
+        session_points: sessionPoints,
+        sort_order: parseInt(document.getElementById('guest-sort-order').value) || 0,
+        is_active: document.getElementById('guest-is-active').checked,
+    };
+
+    if (!guestData.name || !guestData.title || !guestData.bio) {
+        showAlertModal('Validation Error', 'Name, title, and bio are required.', false);
+        return;
+    }
+
+    showLoading();
+    const guestId = document.getElementById('guest-edit-id').value;
+
+    try {
+        let savedGuest;
+
+        if (guestId) {
+            const response = await fetch(`${CONFIG.API_BASE_URL}/guests/admin/${guestId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+                body: JSON.stringify(guestData)
+            });
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error?.message || 'Failed to update guest');
+            }
+            savedGuest = (await response.json()).data?.guest || { id: guestId };
+        } else {
+            const response = await fetch(`${CONFIG.API_BASE_URL}/guests/admin`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+                body: JSON.stringify(guestData)
+            });
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error?.message || 'Failed to create guest');
+            }
+            savedGuest = (await response.json()).data?.guest;
+        }
+
+        // Upload photo if a new file was selected
+        const photoInput = document.getElementById('guest-photo-input');
+        let photoError = null;
+        let photoUploaded = false;
+        if (photoInput.files && photoInput.files[0]) {
+            const targetId = savedGuest?.id || guestId;
+            console.log('[Guest] Photo file selected, uploading to guest:', targetId, 'file:', photoInput.files[0].name, 'size:', photoInput.files[0].size);
+            if (targetId) {
+                try {
+                    const photoResult = await uploadGuestPhotoFile(targetId, photoInput.files[0]);
+                    console.log('[Guest] Photo upload response:', photoResult);
+                    photoUploaded = true;
+                } catch (photoErr) {
+                    console.error('[Guest] Photo upload failed:', photoErr);
+                    photoError = photoErr.message || 'Photo upload failed';
+                }
+            } else {
+                photoError = 'Could not determine guest ID for photo upload';
+            }
+        } else {
+            console.log('[Guest] No photo file selected, skipping photo upload');
+        }
+
+        if (photoError) {
+            showAlertModal('Partial Success', `Guest saved, but photo upload failed: ${photoError}`, false);
+        } else if (photoUploaded) {
+            showAlertModal('Success', guestId ? 'Guest updated with photo.' : 'Guest created with photo.', true);
+        } else {
+            showAlertModal('Success', guestId ? 'Guest updated successfully.' : 'Guest created successfully.', true);
+        }
+        closeGuestModal();
+        await loadGuests();
+
+    } catch (error) {
+        console.error('Error saving guest:', error);
+        showAlertModal('Error', error.message || 'Failed to save guest.', false);
+    } finally {
+        hideLoading();
+    }
+}
+
+async function uploadGuestPhotoFile(guestId, file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/guests/admin/${guestId}/photo`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+                    body: JSON.stringify({
+                        photo: e.target.result,
+                        filename: file.name
+                    })
+                });
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.error?.message || `Upload failed (${response.status})`);
+                }
+                resolve(await response.json());
+            } catch (error) {
+                reject(error);
+            }
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(file);
+    });
+}
+
+function confirmDeleteGuest(id, name) {
+    showConfirmModal('Delete Guest', `Are you sure you want to delete "${name}"? This cannot be undone.`, async () => {
+        showLoading();
+        try {
+            const response = await fetch(`${CONFIG.API_BASE_URL}/guests/admin/${id}`, {
+                method: 'DELETE',
+                headers: { 'X-API-Key': apiKey }
+            });
+            if (!response.ok) throw new Error('Failed to delete guest');
+            showAlertModal('Success', 'Guest deleted successfully.', true);
+            await loadGuests();
+        } catch (error) {
+            showAlertModal('Error', error.message || 'Failed to delete guest.', false);
+        } finally {
+            hideLoading();
+        }
+    });
+}
+
+// ============================================
+// MSME Benefits Management
+// ============================================
+
+let benefitsData = [];
+let editingBenefitId = null;
+let csvParsedItems = [];
+
+async function loadBenefits() {
+    try {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/msme-benefits/admin?_t=${Date.now()}`, {
+            headers: { 'X-API-Key': apiKey },
+            cache: 'no-store'
+        });
+        if (!response.ok) throw new Error('Failed to load benefits');
+        const result = await response.json();
+        benefitsData = result.data?.benefits || [];
+        renderBenefitsList();
+    } catch (error) {
+        console.error('Error loading benefits:', error);
+        const container = document.getElementById('benefits-list-container');
+        if (container) {
+            container.innerHTML = '<p class="history-empty">Failed to load benefits.</p>';
+        }
+    }
+}
+
+function renderBenefitsList() {
+    const container = document.getElementById('benefits-list-container');
+    if (!container) return;
+
+    if (benefitsData.length === 0) {
+        container.innerHTML = '<p class="history-empty">No benefits added yet. Use the buttons above to add items.</p>';
+        return;
+    }
+
+    container.innerHTML = benefitsData.map(benefit => `
+        <div class="guest-admin-card ${!benefit.is_active ? 'guest-inactive' : ''}" data-benefit-id="${benefit.id}">
+            <div class="guest-admin-photo" style="font-size: 1.5rem; display: flex; align-items: center; justify-content: center;">
+                ${benefit.icon ? escapeHtml(benefit.icon) : '&#x1F4CC;'}
+            </div>
+            <div class="guest-admin-info">
+                <strong>${escapeHtml(benefit.title)}</strong>
+                <span class="text-muted">${escapeHtml((benefit.description || '').substring(0, 80))}${(benefit.description || '').length > 80 ? '...' : ''}</span>
+            </div>
+            <div class="guest-admin-meta">
+                <span class="sort-order-badge" title="Sort Order">#${benefit.sort_order}</span>
+                <span class="status-badge ${benefit.is_active ? 'confirmed' : 'failed'}">${benefit.is_active ? 'Active' : 'Hidden'}</span>
+            </div>
+            <div class="guest-admin-actions">
+                <button class="btn-icon" onclick="editBenefit('${benefit.id}')" title="Edit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                </button>
+                <button class="btn-icon btn-icon-danger" onclick="confirmDeleteBenefit('${benefit.id}', '${escapeHtml(benefit.title)}')" title="Delete">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// ---- Manual CRUD ----
+
+function showAddBenefitForm() {
+    editingBenefitId = null;
+    document.getElementById('benefit-modal-title').textContent = 'Add Benefit';
+    document.getElementById('benefit-edit-id').value = '';
+    document.getElementById('benefit-form').reset();
+    document.getElementById('benefit-is-active').checked = true;
+    document.getElementById('benefit-sort-order').value = benefitsData.length;
+    document.getElementById('benefit-modal').classList.remove('hidden');
+}
+
+function editBenefit(id) {
+    const benefit = benefitsData.find(b => b.id === id);
+    if (!benefit) return;
+    editingBenefitId = id;
+    document.getElementById('benefit-modal-title').textContent = 'Edit Benefit';
+    document.getElementById('benefit-edit-id').value = id;
+    document.getElementById('benefit-icon').value = benefit.icon || '';
+    document.getElementById('benefit-title').value = benefit.title;
+    document.getElementById('benefit-description').value = benefit.description || '';
+    document.getElementById('benefit-sort-order').value = benefit.sort_order;
+    document.getElementById('benefit-is-active').checked = benefit.is_active;
+    document.getElementById('benefit-modal').classList.remove('hidden');
+}
+
+function closeBenefitModal() {
+    document.getElementById('benefit-modal').classList.add('hidden');
+    editingBenefitId = null;
+}
+
+async function saveBenefit(event) {
+    event.preventDefault();
+    const benefitData = {
+        title: document.getElementById('benefit-title').value.trim(),
+        description: document.getElementById('benefit-description').value.trim(),
+        icon: document.getElementById('benefit-icon').value.trim() || null,
+        sort_order: parseInt(document.getElementById('benefit-sort-order').value) || 0,
+        is_active: document.getElementById('benefit-is-active').checked,
+    };
+    if (!benefitData.title) {
+        showAlertModal('Validation Error', 'Title is required.', false);
+        return;
+    }
+    showLoading();
+    const benefitId = document.getElementById('benefit-edit-id').value;
+    try {
+        if (benefitId) {
+            const response = await fetch(`${CONFIG.API_BASE_URL}/msme-benefits/admin/${benefitId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+                body: JSON.stringify(benefitData)
+            });
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error?.message || 'Failed to update benefit');
+            }
+        } else {
+            const response = await fetch(`${CONFIG.API_BASE_URL}/msme-benefits/admin`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+                body: JSON.stringify(benefitData)
+            });
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error?.message || 'Failed to create benefit');
+            }
+        }
+        showAlertModal('Success', benefitId ? 'Benefit updated.' : 'Benefit created.', true);
+        closeBenefitModal();
+        await loadBenefits();
+    } catch (error) {
+        showAlertModal('Error', error.message || 'Failed to save benefit.', false);
+    } finally {
+        hideLoading();
+    }
+}
+
+function confirmDeleteBenefit(id, title) {
+    showConfirmModal('Delete Benefit', `Delete "${title}"? This cannot be undone.`, async () => {
+        showLoading();
+        try {
+            const response = await fetch(`${CONFIG.API_BASE_URL}/msme-benefits/admin/${id}`, {
+                method: 'DELETE',
+                headers: { 'X-API-Key': apiKey }
+            });
+            if (!response.ok) throw new Error('Failed to delete benefit');
+            showAlertModal('Success', 'Benefit deleted.', true);
+            await loadBenefits();
+        } catch (error) {
+            showAlertModal('Error', error.message || 'Failed to delete benefit.', false);
+        } finally {
+            hideLoading();
+        }
+    });
+}
+
+// ---- CSV/Excel Upload ----
+
+function showCsvUploadModal() {
+    csvParsedItems = [];
+    document.getElementById('csv-file-input').value = '';
+    document.getElementById('csv-preview-container').classList.add('hidden');
+    document.getElementById('csv-import-btn').classList.add('hidden');
+    document.getElementById('csv-upload-modal').classList.remove('hidden');
+}
+
+function closeCsvUploadModal() {
+    document.getElementById('csv-upload-modal').classList.add('hidden');
+    csvParsedItems = [];
+}
+
+function previewCsvFile(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
+
+            if (rows.length === 0) {
+                showAlertModal('Empty File', 'The file contains no data rows.', false);
+                return;
+            }
+
+            csvParsedItems = rows.map((row, i) => {
+                const keys = Object.keys(row);
+                const findCol = (names) => {
+                    for (const name of names) {
+                        const key = keys.find(k => k.toLowerCase().trim() === name);
+                        if (key) return String(row[key]).trim();
+                    }
+                    return '';
+                };
+                return {
+                    title: findCol(['title', 'benefit', 'name', 'heading']),
+                    description: findCol(['description', 'desc', 'detail', 'details', 'text']),
+                    icon: findCol(['icon', 'emoji']),
+                    sort_order: i,
+                    is_active: true,
+                };
+            }).filter(item => item.title.length > 0);
+
+            if (csvParsedItems.length === 0) {
+                showAlertModal('No Valid Rows', 'No rows with a title column found. Ensure your file has a "title" column header.', false);
+                return;
+            }
+
+            const container = document.getElementById('csv-preview-container');
+            container.innerHTML = `
+                <table class="registrations-table" style="font-size: 0.8125rem;">
+                    <thead><tr><th>Icon</th><th>Title</th><th>Description</th></tr></thead>
+                    <tbody>
+                        ${csvParsedItems.map(item => `
+                            <tr>
+                                <td>${escapeHtml(item.icon)}</td>
+                                <td>${escapeHtml(item.title)}</td>
+                                <td>${escapeHtml((item.description || '').substring(0, 80))}${(item.description || '').length > 80 ? '...' : ''}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <p style="margin-top: 0.5rem; font-size: 0.8125rem; color: var(--gray-500);">${csvParsedItems.length} item(s) found</p>
+            `;
+            container.classList.remove('hidden');
+            document.getElementById('csv-import-btn').classList.remove('hidden');
+        } catch (err) {
+            console.error('CSV parse error:', err);
+            showAlertModal('Parse Error', 'Failed to parse file. Ensure it is a valid CSV or Excel file.', false);
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+async function importCsvBenefits() {
+    if (csvParsedItems.length === 0) return;
+    showLoading();
+    try {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/msme-benefits/admin/bulk`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+            body: JSON.stringify({ items: csvParsedItems })
+        });
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.error?.message || 'Import failed');
+        }
+        const result = await response.json();
+        showAlertModal('Success', `${result.data?.count || csvParsedItems.length} benefit(s) imported.`, true);
+        closeCsvUploadModal();
+        await loadBenefits();
+    } catch (error) {
+        showAlertModal('Error', error.message || 'Import failed.', false);
+    } finally {
+        hideLoading();
+    }
+}
+
+// ---- AI Generation ----
+
+let _aiSuggestions = [];
+
+function showAiGenerateModal() {
+    document.getElementById('ai-theme').value = '';
+    document.getElementById('ai-count').value = '6';
+    document.getElementById('ai-suggestions-container').classList.add('hidden');
+    document.getElementById('ai-save-btn').classList.add('hidden');
+    document.getElementById('ai-generate-btn').disabled = false;
+    document.getElementById('ai-generate-btn').textContent = 'Generate Suggestions';
+    document.getElementById('ai-generate-modal').classList.remove('hidden');
+}
+
+function closeAiGenerateModal() {
+    document.getElementById('ai-generate-modal').classList.add('hidden');
+    _aiSuggestions = [];
+}
+
+async function generateAiBenefits() {
+    const theme = document.getElementById('ai-theme').value.trim();
+    const count = parseInt(document.getElementById('ai-count').value) || 6;
+    if (!theme) {
+        showAlertModal('Required', 'Please enter a theme or topic.', false);
+        return;
+    }
+
+    const btn = document.getElementById('ai-generate-btn');
+    btn.disabled = true;
+    btn.textContent = 'Generating...';
+
+    try {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/msme-benefits/admin/ai-generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+            body: JSON.stringify({ theme, count })
+        });
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.error?.message || 'AI generation failed');
+        }
+        const result = await response.json();
+        const suggestions = result.data?.suggestions || [];
+
+        if (suggestions.length === 0) {
+            showAlertModal('No Suggestions', 'AI returned no suggestions. Try a different theme.', false);
+            return;
+        }
+
+        _aiSuggestions = suggestions;
+
+        const listEl = document.getElementById('ai-suggestions-list');
+        listEl.innerHTML = suggestions.map((s, i) => `
+            <div style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem; border: 1px solid var(--gray-200); border-radius: 8px; margin-bottom: 0.5rem;">
+                <input type="checkbox" id="ai-item-${i}" checked style="margin-top: 0.25rem;">
+                <div style="flex: 1;">
+                    <strong style="font-size: 0.875rem;">${s.icon ? escapeHtml(s.icon) + ' ' : ''}${escapeHtml(s.title)}</strong>
+                    <p style="font-size: 0.8125rem; color: var(--gray-600); margin-top: 0.25rem;">${escapeHtml(s.description || '')}</p>
+                </div>
+            </div>
+        `).join('');
+
+        document.getElementById('ai-suggestions-container').classList.remove('hidden');
+        document.getElementById('ai-save-btn').classList.remove('hidden');
+    } catch (error) {
+        showAlertModal('Error', error.message || 'AI generation failed.', false);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Generate Suggestions';
+    }
+}
+
+async function saveAiSuggestions() {
+    const selectedItems = _aiSuggestions.filter((_, i) => {
+        const checkbox = document.getElementById(`ai-item-${i}`);
+        return checkbox && checkbox.checked;
+    });
+
+    if (selectedItems.length === 0) {
+        showAlertModal('None Selected', 'Please select at least one suggestion to save.', false);
+        return;
+    }
+
+    showLoading();
+    try {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/msme-benefits/admin/bulk`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+            body: JSON.stringify({ items: selectedItems })
+        });
+        if (!response.ok) throw new Error('Failed to save suggestions');
+        const result = await response.json();
+        showAlertModal('Success', `${result.data?.count || selectedItems.length} benefit(s) saved from AI suggestions.`, true);
+        closeAiGenerateModal();
+        await loadBenefits();
+    } catch (error) {
+        showAlertModal('Error', error.message || 'Failed to save suggestions.', false);
+    } finally {
+        hideLoading();
+    }
+}

@@ -411,6 +411,44 @@ export class RegistrationService {
   }
 
   /**
+   * Reset a failed/cancelled registration for recovery payment.
+   * Updates the Razorpay order ID and resets status back to pending.
+   */
+  async updateForRecovery(registrationId: string, newRazorpayOrderId: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('registrations')
+        .update({
+          razorpay_order_id: newRazorpayOrderId,
+          payment_status: 'pending' as PaymentStatus,
+          registration_status: 'pending',
+          payment_initiated_at: new Date().toISOString(),
+          utm_source: 'recovery',
+          utm_medium: 'email',
+          utm_campaign: 'abandonment_recovery',
+        })
+        .eq('id', registrationId);
+
+      if (error) {
+        logger.error('Error updating registration for recovery', {
+          registrationId,
+          newOrderId: newRazorpayOrderId,
+          error: error.message,
+        });
+        throw new AppError('Failed to update registration for recovery', 500, 'RECOVERY_UPDATE_ERROR');
+      }
+
+      logger.info('Registration updated for recovery', {
+        registrationId,
+        newOrderId: newRazorpayOrderId,
+      });
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError('Internal server error', 500, 'INTERNAL_ERROR');
+    }
+  }
+
+  /**
    * Update confirmation email sent status
    */
   async markEmailSent(bookingId: string): Promise<void> {

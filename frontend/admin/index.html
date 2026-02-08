@@ -210,6 +210,13 @@
                             </svg>
                             Export CSV
                         </button>
+                        <button class="btn-delete-all" id="btn-delete-all-registrations">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            Delete All
+                        </button>
                     </div>
                 </div>
 
@@ -352,6 +359,13 @@
                             </svg>
                             Export CSV
                         </button>
+                        <button class="btn-delete-all" id="btn-delete-all-abandonments">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            Delete All
+                        </button>
                     </div>
                 </div>
 
@@ -388,6 +402,7 @@
                             <option value="cancelled">Cancelled</option>
                             <option value="failed">Failed</option>
                             <option value="timeout">Timeout</option>
+                            <option value="converted">Converted</option>
                         </select>
                     </div>
                     <div class="filter-group">
@@ -563,6 +578,8 @@
                     <button class="settings-tab" data-tab="event">Event Details</button>
                     <button class="settings-tab" data-tab="support">Support Info</button>
                     <button class="settings-tab" data-tab="registration">Registration</button>
+                    <button class="settings-tab" data-tab="guests">Guest Details</button>
+                    <button class="settings-tab" data-tab="msme-benefits">MSME Benefits</button>
                 </div>
 
                 <!-- Offer Settings -->
@@ -757,6 +774,12 @@
                                 <textarea id="setting-event-venue" class="setting-input setting-textarea" rows="2" placeholder="e.g., TBD soon or full address"></textarea>
                                 <span class="setting-hint">Full venue address or "TBD soon" if not finalized</span>
                             </div>
+
+                            <div class="setting-item full-width">
+                                <label class="setting-label" for="setting-event-venue-map-link">Google Maps Link (Optional Override)</label>
+                                <input type="url" id="setting-event-venue-map-link" class="setting-input" placeholder="Leave empty to auto-generate from address">
+                                <span class="setting-hint">Optional. If empty, a Google Maps link is auto-generated from the venue address. Used as {{venue_map_link}} in email templates.</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -824,6 +847,288 @@
                                 <span class="setting-hint">When registration automatically closes</span>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="settings-card" style="margin-top: 1.5rem;">
+                        <h3 class="settings-card-title">Seat Capacity</h3>
+                        <p class="settings-card-desc">Set the total number of seats available per tier.</p>
+
+                        <div class="settings-grid">
+                            <div class="setting-item">
+                                <label class="setting-label" for="setting-seats-vip">VIP (Executive Experience)</label>
+                                <input type="number" id="setting-seats-vip" class="setting-input" min="0" step="1" placeholder="e.g. 30">
+                                <span class="setting-hint">Total VIP seats available</span>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="setting-seats-standard">Standard (Business Builder)</label>
+                                <input type="number" id="setting-seats-standard" class="setting-input" min="0" step="1" placeholder="e.g. 50">
+                                <span class="setting-hint">Total Standard seats available</span>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="setting-seats-basic">Basic (Starter)</label>
+                                <input type="number" id="setting-seats-basic" class="setting-input" min="0" step="1" placeholder="e.g. 40">
+                                <span class="setting-hint">Total Basic seats available</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guest Details -->
+                <div class="settings-panel" id="panel-guests">
+                    <div class="settings-card">
+                        <h3 class="settings-card-title">Guest / Speaker Management</h3>
+                        <p class="settings-card-desc">Manage event speakers and guests. These appear in the "Your Mentors" section on the public site.</p>
+
+                        <div class="settings-grid" style="margin-bottom: 1.5rem;">
+                            <div class="setting-item" style="grid-column: 1 / -1;">
+                                <label class="setting-label" for="setting-guest-session-heading">Default Session Heading</label>
+                                <input type="text" id="setting-guest-session-heading" class="setting-input"
+                                    value="In this session, you'll learn:" placeholder="e.g., In this session, you'll learn:">
+                                <span class="setting-hint">Standard heading shown above session bullet points for all guests</span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--gray-700);">Guests</h4>
+                            <button class="btn-add-guest" id="btn-add-guest" onclick="showAddGuestForm()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <line x1="12" y1="5" x2="12" y2="19"/>
+                                    <line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                                Add Guest
+                            </button>
+                        </div>
+
+                        <div id="guests-list-container">
+                            <p class="history-empty" id="guests-empty-message">Loading guests...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MSME Benefits Panel -->
+                <div class="settings-panel" id="panel-msme-benefits">
+                    <div class="settings-card">
+                        <h3 class="settings-card-title">MSME Benefits Management</h3>
+                        <p class="settings-card-desc">Manage the "What MSME Owners Would Get" section on the public site.</p>
+
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+                            <button class="btn-add-guest" onclick="showAddBenefitForm()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                                Add Benefit
+                            </button>
+                            <button class="btn-add-guest" onclick="showCsvUploadModal()" style="background: var(--gray-100); color: var(--gray-700); border: 1px solid var(--gray-300);">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                                Upload CSV/Excel
+                            </button>
+                            <button class="btn-add-guest" onclick="showAiGenerateModal()" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                                </svg>
+                                AI Generate
+                            </button>
+                        </div>
+
+                        <div id="benefits-list-container">
+                            <p class="history-empty" id="benefits-empty-message">Loading benefits...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MSME Benefit Edit Modal -->
+                <div id="benefit-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="benefit-modal-title">Add Benefit</h3>
+                            <button class="modal-close" onclick="closeBenefitModal()">&times;</button>
+                        </div>
+                        <form id="benefit-form" onsubmit="saveBenefit(event)">
+                            <div class="modal-body">
+                                <div class="guest-form-group">
+                                    <label for="benefit-icon">Icon (emoji)</label>
+                                    <input type="text" id="benefit-icon" class="guest-form-input" maxlength="10" placeholder="e.g. &#x1F9F0;">
+                                </div>
+                                <div class="guest-form-group">
+                                    <label for="benefit-title">Title <span class="form-required">*</span></label>
+                                    <input type="text" id="benefit-title" class="guest-form-input" required maxlength="200" placeholder="e.g. AI Readiness Toolkit">
+                                </div>
+                                <div class="guest-form-group">
+                                    <label for="benefit-description">Description</label>
+                                    <textarea id="benefit-description" class="guest-form-input" rows="3" maxlength="500" placeholder="Brief description of this benefit..."></textarea>
+                                </div>
+                                <div class="guest-meta-row">
+                                    <div class="guest-form-group">
+                                        <label for="benefit-sort-order">Sort Order</label>
+                                        <input type="number" id="benefit-sort-order" class="guest-form-input" value="0" min="0">
+                                    </div>
+                                    <div class="guest-form-group">
+                                        <label>Status</label>
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" id="benefit-is-active" checked>
+                                            <label for="benefit-is-active">
+                                                <span class="toggle-on">Active</span>
+                                                <span class="toggle-off">Hidden</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="benefit-edit-id" value="">
+                            <div class="modal-footer">
+                                <button type="button" class="btn-secondary" onclick="closeBenefitModal()">Cancel</button>
+                                <button type="submit" class="btn-primary" id="benefit-save-btn">Save Benefit</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- CSV/Excel Upload Modal -->
+                <div id="csv-upload-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Upload CSV / Excel File</h3>
+                            <button class="modal-close" onclick="closeCsvUploadModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <p style="color: var(--gray-600); margin-bottom: 1rem; font-size: 0.875rem;">
+                                Upload a CSV or Excel file with columns: <strong>title</strong>, <strong>description</strong> (optional), <strong>icon</strong> (optional).
+                            </p>
+                            <div style="border: 2px dashed var(--gray-300); border-radius: 8px; padding: 2rem; text-align: center; margin-bottom: 1rem;">
+                                <label style="cursor: pointer; display: block;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" stroke-width="2" width="36" height="36" style="margin: 0 auto 0.5rem; display: block;">
+                                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                        <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                                    </svg>
+                                    <p style="color: var(--gray-500);">Click to select file or drag &amp; drop</p>
+                                    <input type="file" id="csv-file-input" accept=".csv,.xlsx,.xls" style="display: none;" onchange="previewCsvFile(this)">
+                                </label>
+                            </div>
+                            <div id="csv-preview-container" class="hidden" style="max-height: 300px; overflow-y: auto;">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn-secondary" onclick="closeCsvUploadModal()">Cancel</button>
+                            <button type="button" class="btn-primary hidden" id="csv-import-btn" onclick="importCsvBenefits()">Import Items</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Generate Modal -->
+                <div id="ai-generate-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>AI-Generate Benefits</h3>
+                            <button class="modal-close" onclick="closeAiGenerateModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="guest-form-group">
+                                <label for="ai-theme">Theme / Topic <span class="form-required">*</span></label>
+                                <input type="text" id="ai-theme" class="guest-form-input" placeholder="e.g. AI tools for manufacturing MSMEs" required>
+                                <span class="setting-hint">Describe what kind of benefits to generate for MSME owners</span>
+                            </div>
+                            <div class="guest-form-group">
+                                <label for="ai-count">Number of suggestions</label>
+                                <input type="number" id="ai-count" class="guest-form-input" value="6" min="1" max="12">
+                            </div>
+                            <button type="button" class="btn-primary" onclick="generateAiBenefits()" id="ai-generate-btn" style="margin-bottom: 1rem;">
+                                Generate Suggestions
+                            </button>
+                            <div id="ai-suggestions-container" class="hidden">
+                                <h4 style="margin-bottom: 0.5rem; font-size: 0.875rem; font-weight: 600; color: var(--gray-700);">Review Suggestions</h4>
+                                <p style="font-size: 0.8125rem; color: var(--gray-500); margin-bottom: 0.75rem;">Uncheck any you don't want, then click "Save Selected".</p>
+                                <div id="ai-suggestions-list"></div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn-secondary" onclick="closeAiGenerateModal()">Cancel</button>
+                            <button type="button" class="btn-primary hidden" id="ai-save-btn" onclick="saveAiSuggestions()">Save Selected</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guest Edit Modal -->
+                <div id="guest-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="guest-modal-title">Add Guest</h3>
+                            <button class="modal-close" onclick="closeGuestModal()">&times;</button>
+                        </div>
+                        <form id="guest-form" onsubmit="saveGuest(event)">
+                            <div class="modal-body">
+
+                                <!-- Photo Upload -->
+                                <div class="guest-photo-section">
+                                    <div id="guest-photo-preview" class="guest-photo-preview-circle">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" stroke-width="1.5" width="36" height="36">
+                                            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                                            <circle cx="12" cy="7" r="4"/>
+                                        </svg>
+                                    </div>
+                                    <label class="btn-upload-photo">
+                                        Choose Photo
+                                        <input type="file" id="guest-photo-input" accept="image/jpeg,image/png,image/webp" style="display: none;" onchange="previewGuestPhoto(this)">
+                                    </label>
+                                    <p class="guest-photo-hint">JPEG, PNG or WebP. Max 2MB. Displayed as circle.</p>
+                                </div>
+
+                                <!-- Name & Title -->
+                                <div class="guest-form-row">
+                                    <div class="guest-form-group">
+                                        <label for="guest-name">Name <span class="form-required">*</span></label>
+                                        <input type="text" id="guest-name" class="guest-form-input" required maxlength="200" placeholder="e.g., Rajesh Kumar">
+                                    </div>
+                                    <div class="guest-form-group">
+                                        <label for="guest-title">Title / Credentials <span class="form-required">*</span></label>
+                                        <input type="text" id="guest-title" class="guest-form-input" required maxlength="300" placeholder="e.g., AI & Digital Transformation Expert">
+                                    </div>
+                                </div>
+
+                                <!-- Bio -->
+                                <div class="guest-form-group">
+                                    <label for="guest-bio">Bio / Description <span class="form-required">*</span></label>
+                                    <textarea id="guest-bio" class="guest-form-input" required rows="3" maxlength="1000" placeholder="Brief description of the guest..."></textarea>
+                                </div>
+
+                                <!-- Session Points -->
+                                <div class="guest-form-group">
+                                    <label>Session Points <span class="form-required">*</span></label>
+                                    <p class="guest-form-hint">Bullet points about what attendees will learn</p>
+                                    <div id="guest-session-points-container"></div>
+                                    <button type="button" class="btn-add-point" onclick="addSessionPointInput()">+ Add Point</button>
+                                </div>
+
+                                <!-- Sort Order & Active Toggle -->
+                                <div class="guest-meta-row">
+                                    <div class="guest-form-group">
+                                        <label for="guest-sort-order">Sort Order</label>
+                                        <input type="number" id="guest-sort-order" class="guest-form-input" value="0" min="0">
+                                    </div>
+                                    <div class="guest-form-group">
+                                        <label>Status</label>
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" id="guest-is-active" checked>
+                                            <label for="guest-is-active">
+                                                <span class="toggle-on">Active</span>
+                                                <span class="toggle-off">Hidden</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <input type="hidden" id="guest-edit-id" value="">
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn-secondary" onclick="closeGuestModal()">Cancel</button>
+                                <button type="submit" class="btn-primary" id="guest-save-btn">Save Guest</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
 
@@ -928,6 +1233,7 @@
     </div>
 
     <!-- Scripts -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="/js/config.js"></script>
     <script src="/admin/js/admin.js"></script>
 </body>

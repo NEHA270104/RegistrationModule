@@ -287,7 +287,28 @@
                 </svg>
             </div>
             <h2>Payment Successful!</h2>
-            <p style="color: #6b7280; margin-bottom: 1.5rem;">Your registration is confirmed. Check your email for details.</p>
+            <p style="color: #6b7280; margin-bottom: 1rem;">Your registration is confirmed. A confirmation email has been sent to your inbox.</p>
+
+            <div class="details-card" id="success-details" style="display: none;">
+                <div class="detail-row">
+                    <span class="detail-label">Booking ID</span>
+                    <span class="detail-value" id="success-booking-id">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Name</span>
+                    <span class="detail-value" id="success-name">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Email</span>
+                    <span class="detail-value" id="success-email">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Tier</span>
+                    <span class="detail-value" id="success-tier">-</span>
+                </div>
+            </div>
+
+            <p id="redirect-countdown" style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;"></p>
             <a href="/" class="btn btn-primary">Go to Homepage</a>
         </div>
     </div>
@@ -297,13 +318,23 @@
     <script>
         let recoveryData = null;
         let recoveryToken = null;
+        let countdownInterval = null;
 
         // Get token from URL
         const pathParts = window.location.pathname.split('/');
         recoveryToken = pathParts[pathParts.length - 1];
 
-        // Validate token on page load
+        // Validate token on page load + check for pending recovery payment (redirect-based)
         document.addEventListener('DOMContentLoaded', async () => {
+            // First, check if we're returning from a redirect-based payment
+            const pendingRecovery = sessionStorage.getItem('recovery_pending_order');
+            if (pendingRecovery) {
+                const pending = JSON.parse(pendingRecovery);
+                document.getElementById('loading-state').querySelector('p').textContent = 'Checking payment status...';
+                await checkPendingPayment(pending.order_id, pending.recovery_data);
+                return;
+            }
+
             if (!recoveryToken || recoveryToken === 'recover') {
                 showError('No recovery token provided. Please use the link from your email.');
                 return;
@@ -326,6 +357,59 @@
             }
         });
 
+        // Check pending payment status (for redirect-based payment methods)
+        async function checkPendingPayment(orderId, savedRecoveryData, attempt = 1) {
+            const MAX_ATTEMPTS = 5;
+            try {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/payment-status/${orderId}`);
+                const data = await response.json();
+
+                if (data.success && data.data.payment_status === 'confirmed') {
+                    sessionStorage.removeItem('recovery_pending_order');
+                    showSuccess({
+                        booking_id: data.data.booking_id,
+                        registration: {
+                            name: savedRecoveryData.name,
+                            email: savedRecoveryData.email,
+                            tier: savedRecoveryData.tier,
+                        }
+                    });
+                    return;
+                }
+
+                // Still pending - retry up to MAX_ATTEMPTS
+                if (attempt < MAX_ATTEMPTS) {
+                    document.getElementById('loading-state').querySelector('p').textContent =
+                        `Checking payment status... (attempt ${attempt}/${MAX_ATTEMPTS})`;
+                    setTimeout(() => checkPendingPayment(orderId, savedRecoveryData, attempt + 1), 3000);
+                } else {
+                    // Max attempts reached - clear storage and show normal recovery page
+                    sessionStorage.removeItem('recovery_pending_order');
+                    if (recoveryToken && recoveryToken !== 'recover') {
+                        // Re-validate token and show details
+                        try {
+                            const tokenResponse = await fetch(`${CONFIG.API_BASE_URL}/recover/${recoveryToken}`);
+                            const tokenData = await tokenResponse.json();
+                            if (tokenResponse.ok && tokenData.success) {
+                                recoveryData = tokenData.data;
+                                showDetails(recoveryData);
+                                return;
+                            }
+                        } catch (e) { /* fall through */ }
+                    }
+                    showError('Payment status could not be confirmed. If money was deducted, please contact support.');
+                }
+            } catch (error) {
+                console.error('Error checking payment status:', error);
+                if (attempt < MAX_ATTEMPTS) {
+                    setTimeout(() => checkPendingPayment(orderId, savedRecoveryData, attempt + 1), 3000);
+                } else {
+                    sessionStorage.removeItem('recovery_pending_order');
+                    showError('Unable to verify payment status. If money was deducted, please contact support.');
+                }
+            }
+        }
+
         function showError(message) {
             document.getElementById('loading-state').classList.remove('active');
             document.getElementById('error-state').classList.add('active');
@@ -342,9 +426,50 @@
             document.getElementById('detail-amount').textContent = formatPrice(data.amount);
         }
 
-        function showSuccess() {
+        function showSuccess(data) {
+            document.getElementById('loading-state').classList.remove('active');
             document.getElementById('details-state').classList.remove('active');
             document.getElementById('success-state').classList.add('active');
+
+            // Populate booking details if available
+            if (data) {
+                const reg = data.registration || {};
+                const detailsEl = document.getElementById('success-details');
+
+                if (data.booking_id) {
+                    document.getElementById('success-booking-id').textContent = data.booking_id;
+                }
+                if (reg.name) {
+                    document.getElementById('success-name').textContent = reg.name;
+                }
+                if (reg.email) {
+                    document.getElementById('success-email').textContent = reg.email;
+                }
+                if (reg.tier) {
+                    document.getElementById('success-tier').textContent = getTierName(reg.tier);
+                }
+
+                detailsEl.style.display = 'block';
+            }
+
+            // Start countdown for auto-redirect
+            startRedirectCountdown();
+        }
+
+        function startRedirectCountdown() {
+            let seconds = 30;
+            const el = document.getElementById('redirect-countdown');
+            el.textContent = `Redirecting to homepage in ${seconds} seconds...`;
+
+            countdownInterval = setInterval(() => {
+                seconds--;
+                if (seconds <= 0) {
+                    clearInterval(countdownInterval);
+                    window.location.href = '/';
+                } else {
+                    el.textContent = `Redirecting to homepage in ${seconds} seconds...`;
+                }
+            }, 1000);
         }
 
         function getTierName(tier) {
@@ -386,6 +511,17 @@
                     return;
                 }
 
+                // Save to sessionStorage for redirect-based payment recovery
+                sessionStorage.setItem('recovery_pending_order', JSON.stringify({
+                    order_id: data.order_id,
+                    recovery_token: recoveryToken,
+                    recovery_data: {
+                        name: recoveryData.name,
+                        email: recoveryData.email,
+                        tier: recoveryData.tier,
+                    }
+                }));
+
                 // Open Razorpay checkout
                 const options = {
                     key: data.key_id || CONFIG.RAZORPAY_KEY_ID,
@@ -403,10 +539,13 @@
                         color: '#059669'
                     },
                     handler: async function(response) {
+                        // Clear sessionStorage on successful inline payment
+                        sessionStorage.removeItem('recovery_pending_order');
                         await verifyPayment(response);
                     },
                     modal: {
                         ondismiss: function() {
+                            // Don't clear sessionStorage here - user might return from redirect
                             btn.disabled = false;
                             btn.innerHTML = 'Complete Payment';
                         }
@@ -415,6 +554,7 @@
 
                 const rzp = new Razorpay(options);
                 rzp.on('payment.failed', function(response) {
+                    sessionStorage.removeItem('recovery_pending_order');
                     alert('Payment failed: ' + response.error.description);
                     btn.disabled = false;
                     btn.innerHTML = 'Complete Payment';
@@ -422,6 +562,7 @@
                 rzp.open();
             } catch (error) {
                 console.error('Payment error:', error);
+                sessionStorage.removeItem('recovery_pending_order');
                 alert('An error occurred. Please try again or contact support.');
                 btn.disabled = false;
                 btn.innerHTML = 'Complete Payment';
@@ -430,7 +571,7 @@
 
         async function verifyPayment(paymentResponse) {
             try {
-                const response = await fetch(`${CONFIG.API_BASE_URL}/payment/verify`, {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/verify-payment`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -444,7 +585,7 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    showSuccess();
+                    showSuccess(data);
                 } else {
                     alert(data.error?.message || 'Payment verification failed. Please contact support.');
                 }

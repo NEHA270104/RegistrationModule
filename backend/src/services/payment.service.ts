@@ -187,6 +187,13 @@ export class PaymentService {
 
       // Check if already processed (idempotency)
       if (registration.payment_status === 'confirmed') {
+        // Still handle recovery conversion even if webhook already confirmed the payment
+        if (data.recovery_token) {
+          this.handleRecoveryConversion(data.recovery_token, registration.id).catch((err) => {
+            logger.error('Error handling recovery conversion (idempotent path)', { error: err.message });
+          });
+        }
+
         return {
           success: true,
           booking_id: registration.booking_id,
@@ -220,6 +227,13 @@ export class PaymentService {
       this.sendConfirmationNotifications(confirmedRegistration).catch((err) => {
         logger.error('Error sending confirmation notifications', { error: err.message });
       });
+
+      // Handle recovery conversion tracking (async, don't block response)
+      if (data.recovery_token) {
+        this.handleRecoveryConversion(data.recovery_token, confirmedRegistration.id).catch((err) => {
+          logger.error('Error handling recovery conversion', { error: err.message });
+        });
+      }
 
       return {
         success: true,
@@ -536,9 +550,6 @@ export class PaymentService {
         tier: registration.tier,
         tier_display: this.getTierDisplayName(registration.tier),
         amount: registration.amount_paid,
-        event_date: config.event.date,
-        event_time: config.event.time,
-        venue: config.event.venue,
         benefits: await this.getTierBenefits(registration.tier),
       });
 
@@ -548,6 +559,38 @@ export class PaymentService {
       logger.error('Error sending confirmation email', {
         bookingId: registration.booking_id,
         error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  /**
+   * Handle recovery conversion: mark token used and abandonment as converted
+   */
+  private async handleRecoveryConversion(token: string, registrationId: string): Promise<void> {
+    try {
+      // Look up abandonment by token (without expiry/used check since payment just succeeded)
+      const abandonment = await abandonmentService.getByRecoveryToken(token);
+
+      if (!abandonment) {
+        logger.warn('Recovery token not found for conversion tracking', { token: token.substring(0, 8) + '...' });
+        return;
+      }
+
+      // Mark recovery link as used
+      await abandonmentService.markRecoveryLinkUsed(token);
+
+      // Mark abandonment as converted
+      await abandonmentService.markConverted(abandonment.id, registrationId);
+
+      logger.info('Recovery conversion tracked', {
+        abandonmentId: abandonment.id,
+        registrationId,
+        email: abandonment.email,
+      });
+    } catch (error) {
+      logger.error('Failed to track recovery conversion', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        token: token.substring(0, 8) + '...',
       });
     }
   }

@@ -169,7 +169,6 @@ export async function resendConfirmationEmail(req: Request, res: Response): Prom
     // Import and send email
     const { emailService } = await import('../services/email.service.js');
     const { seatService } = await import('../services/seat.service.js');
-    const { config } = await import('../config/index.js');
 
     const tierInventory = await seatService.getTierAvailability(registration.tier);
 
@@ -180,9 +179,6 @@ export async function resendConfirmationEmail(req: Request, res: Response): Prom
       tier: registration.tier,
       tier_display: tierInventory?.display_name || registration.tier,
       amount: registration.amount_paid,
-      event_date: config.event.date,
-      event_time: config.event.time,
-      venue: config.event.venue,
       benefits: tierInventory?.benefits || [],
     });
 

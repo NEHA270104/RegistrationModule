@@ -5,7 +5,7 @@
 export type TierType = 'vip' | 'standard' | 'basic' | 'waitlist';
 export type PaymentStatus = 'pending' | 'processing' | 'confirmed' | 'failed' | 'refunded' | 'expired';
 export type RegistrationStatus = 'pending' | 'confirmed' | 'cancelled' | 'waitlisted';
-export type AbandonmentType = 'cancelled' | 'failed' | 'timeout';
+export type AbandonmentType = 'cancelled' | 'failed' | 'timeout' | 'converted';
 export type FollowupStatus = 'pending' | 'email_sent' | 'contacted' | 'converted' | 'declined' | 'unresponsive';
 
 // ============================================
@@ -80,6 +80,72 @@ export interface Waitlist {
   updated_at: string;
   ip_address: string | null;
   utm_source: string | null;
+}
+
+export interface Guest {
+  id: string;
+  name: string;
+  title: string;
+  bio: string;
+  photo_url: string | null;
+  photo_storage_path: string | null;
+  session_heading: string;
+  session_points: string[];
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateGuestRequest {
+  name: string;
+  title: string;
+  bio: string;
+  session_heading?: string;
+  session_points: string[];
+  sort_order?: number;
+  is_active?: boolean;
+}
+
+export interface UpdateGuestRequest {
+  name?: string;
+  title?: string;
+  bio?: string;
+  session_heading?: string;
+  session_points?: string[];
+  sort_order?: number;
+  is_active?: boolean;
+}
+
+// ============================================
+// MSME Benefits
+// ============================================
+
+export interface MsmeBenefit {
+  id: string;
+  title: string;
+  description: string;
+  icon: string | null;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateMsmeBenefitRequest {
+  title: string;
+  description?: string;
+  icon?: string;
+  sort_order?: number;
+  is_active?: boolean;
+}
+
+export interface UpdateMsmeBenefitRequest {
+  title?: string;
+  description?: string;
+  icon?: string;
+  sort_order?: number;
+  is_active?: boolean;
 }
 
 export interface PendingOrder {
@@ -182,6 +248,7 @@ export interface VerifyPaymentRequest {
   razorpay_order_id: string;
   razorpay_payment_id: string;
   razorpay_signature: string;
+  recovery_token?: string;
 }
 
 export interface VerifyPaymentResponse {
@@ -396,9 +463,9 @@ export interface EmailConfirmationData {
   tier: TierType;
   tier_display: string;
   amount: number;
-  event_date: string;
-  event_time: string;
-  venue: string;
+  event_date?: string;
+  event_time?: string;
+  venue?: string;
   benefits: string[];
 }
 

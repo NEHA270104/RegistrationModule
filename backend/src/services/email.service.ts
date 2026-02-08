@@ -10,6 +10,7 @@ interface EmailSettings {
   eventDate: string;
   eventTime: string;
   eventVenue: string;
+  eventVenueMapLink: string;
   supportEmail: string;
   supportPhone: string;
   supportWhatsapp: string;
@@ -49,6 +50,7 @@ export class EmailService {
         eventDate: (settings.event_date as string) || config.event.date,
         eventTime: (settings.event_time as string) || config.event.time,
         eventVenue: (settings.event_venue as string) || config.event.venue,
+        eventVenueMapLink: (settings.event_venue_map_link as string) || '',
         supportEmail: (settings.support_email as string) || config.event.supportEmail,
         supportPhone: (settings.support_phone as string) || config.event.supportPhone,
         supportWhatsapp: (settings.support_whatsapp as string) || '918188050895',
@@ -66,6 +68,7 @@ export class EmailService {
         eventDate: config.event.date,
         eventTime: config.event.time,
         eventVenue: config.event.venue,
+        eventVenueMapLink: '',
         supportEmail: config.event.supportEmail,
         supportPhone: config.event.supportPhone,
         supportWhatsapp: '918188050895',
@@ -114,6 +117,7 @@ export class EmailService {
         ],
         from: {
           email: config.msg91.fromEmail,
+          name: config.msg91.fromName,
         },
         domain: config.msg91.domain,
         template_id: templateId,
@@ -183,18 +187,25 @@ export class EmailService {
 
     // Variables to replace in MSG91 template
     // Template placeholders: {{name}}, {{booking_id}}, {{tier}}, etc.
-    const variables = {
+    const venue = data.venue || emailSettings.eventVenue;
+    const venueMapLink = this.getVenueMapLink(venue, emailSettings.eventVenueMapLink || undefined);
+
+    const variables: Record<string, string> = {
       name: data.name,
       booking_id: data.booking_id,
       tier: data.tier_display,
       amount: this.formatPrice(data.amount),
       event_date: data.event_date || emailSettings.eventDate,
       event_time: data.event_time || emailSettings.eventTime,
-      venue: data.venue || emailSettings.eventVenue,
+      venue: venue,
       company_name: 'AI for MSME Summit',
       support_email: emailSettings.supportEmail,
       support_phone: emailSettings.supportPhone,
     };
+
+    if (venueMapLink) {
+      variables.venue_map_link = venueMapLink;
+    }
 
     return this.sendEmail(data.to, data.name, templateId, variables);
   }
@@ -313,7 +324,9 @@ export class EmailService {
     // Get dynamic settings from database
     const emailSettings = await this.getEmailSettings();
 
-    const variables = {
+    const venueMapLink = this.getVenueMapLink(emailSettings.eventVenue, emailSettings.eventVenueMapLink || undefined);
+
+    const variables: Record<string, string> = {
       name: name,
       tier: tier,
       amount: this.formatPrice(amountInPaise),
@@ -328,7 +341,25 @@ export class EmailService {
       whatsapp_link: `https://wa.me/${emailSettings.supportWhatsapp}?text=Hi,%20I%20need%20help%20completing%20my%20registration`,
     };
 
+    if (venueMapLink) {
+      variables.venue_map_link = venueMapLink;
+    }
+
     return this.sendEmail(to, name, templateId, variables);
+  }
+
+  /**
+   * Generate a Google Maps search URL from a venue address.
+   * If a manual override link is provided, use that instead.
+   */
+  private getVenueMapLink(venue: string, manualLink?: string): string {
+    if (manualLink) {
+      return manualLink;
+    }
+    if (!venue || venue.toLowerCase() === 'tbd soon') {
+      return '';
+    }
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue)}`;
   }
 
   /**

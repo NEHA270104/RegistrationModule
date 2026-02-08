@@ -640,9 +640,26 @@
             </div>
         </section>
 
+        <!-- What MSME Owners Would Get Section -->
+        <section class="msme-benefits-section" id="msme-benefits-section" style="display: none;">
+            <h2 class="section-title">What <strong>MSME Owners</strong> Would <span class="text-primary">Get</span></h2>
+            <div class="section-divider"></div>
+            <p class="section-intro">
+                Practical tools, knowledge, and connections that will
+                <span class="text-primary">transform your business</span> starting Day 1.
+            </p>
+            <div class="msme-benefits-grid" id="msme-benefits-grid">
+                <!-- Dynamically populated from API -->
+            </div>
+            <button class="btn btn-cta section-cta" onclick="openRegistrationModal()">
+                <span>REGISTER NOW - LIMITED SEATS</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+        </section>
+
         <!-- What You'll Get Section -->
         <section class="summit-benefits">
-            <h2 class="section-title">What This <strong>Summit</strong> Will <span class="text-primary">Give You?</span></h2>
+            <h2 class="section-title">What You Would <span class="text-primary">Learn</span></h2>
             <div class="section-divider"></div>
             <p class="section-intro">
                 <span class="text-primary">2026</span> can be your <span class="text-primary">breakthrough</span> year but only if you start with clarity.
@@ -677,8 +694,8 @@
                 </div>
                 <div class="topic-card">
                     <span class="topic-number">06</span>
-                    <h3>Networking & Collaboration</h3>
-                    <p>Connect with 120 ambitious MSME owners, share ideas, explore partnerships, and build relationships that support your growth journey.</p>
+                    <h3>BizFlow AI — Aapka 24/7 Business Partner</h3>
+                    <p>Imagine a tireless assistant who remembers every customer, chases every payment, and never takes a day off. Now stop imagining.</p>
                 </div>
             </div>
 
@@ -719,126 +736,14 @@
         </section>
 
         <!-- Speakers Section -->
-        <section class="speakers-section">
+        <section class="speakers-section" id="speakers-section">
             <div class="speakers-header">
                 <h2>Your Mentors for the<br><span class="text-white">AI Summit for MSME Business Owners</span></h2>
                 <p>A curated lineup of <strong>powerful, high-impact speakers</strong> who will cover the six pillars of business transformation.</p>
             </div>
 
-            <div class="speakers-grid">
-                <!-- Speaker 1 -->
-                <div class="speaker-card">
-                    <div class="speaker-image">
-                        <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop&crop=face" alt="AI & Business Expert">
-                    </div>
-                    <h3 class="speaker-name">Rajesh Kumar</h3>
-                    <p class="speaker-title">AI & Digital Transformation Expert</p>
-                    <p class="speaker-bio">With 20+ years in technology consulting, Rajesh has helped over 500 MSMEs implement AI solutions. He specializes in practical, low-cost AI implementations.</p>
-                    <div class="speaker-session">
-                        <h4>In this session, you'll learn:</h4>
-                        <ul>
-                            <li>The major AI tools that will transform MSME operations in 2026</li>
-                            <li>How AI can improve your productivity and problem-solving</li>
-                            <li>How to use AI tools to unlock new business opportunities</li>
-                            <li>How to build a strong digital presence with AI</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Speaker 2 -->
-                <div class="speaker-card">
-                    <div class="speaker-image">
-                        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop&crop=face" alt="Marketing Expert">
-                    </div>
-                    <h3 class="speaker-name">Priya Sharma</h3>
-                    <p class="speaker-title">Digital Marketing Strategist</p>
-                    <p class="speaker-bio">Priya is a certified marketing coach who has trained over 10,000 business owners. Her mission is to help MSMEs leverage AI for 10x marketing results.</p>
-                    <div class="speaker-session">
-                        <h4>Her session will give you:</h4>
-                        <ul>
-                            <li>AI-powered marketing strategies that work for small budgets</li>
-                            <li>Tools to automate social media and content creation</li>
-                            <li>Methods to reach more customers without increasing ad spend</li>
-                            <li>Practical templates you can use immediately</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Speaker 3 -->
-                <div class="speaker-card">
-                    <div class="speaker-image">
-                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face" alt="Finance Expert">
-                    </div>
-                    <h3 class="speaker-name">Dr. Amit Verma</h3>
-                    <p class="speaker-title">Financial Advisor | MSME Consultant</p>
-                    <p class="speaker-bio">Dr. Amit has advised over 1,000 MSMEs on financial planning and growth strategies. He specializes in helping businesses optimize costs using technology.</p>
-                    <div class="speaker-session">
-                        <h4>This session will help you understand:</h4>
-                        <ul>
-                            <li>The financial mindset required to scale your business</li>
-                            <li>How to identify cost-saving opportunities with AI</li>
-                            <li>Smart investment strategies for technology adoption</li>
-                            <li>How to measure ROI on AI implementations</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Speaker 4 -->
-                <div class="speaker-card">
-                    <div class="speaker-image">
-                        <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop&crop=face" alt="Operations Expert">
-                    </div>
-                    <h3 class="speaker-name">Sneha Patel</h3>
-                    <p class="speaker-title">Operations & Automation Specialist</p>
-                    <p class="speaker-bio">Sneha is an operations expert with 15+ years helping manufacturing and service MSMEs streamline their processes using AI and automation.</p>
-                    <div class="speaker-session">
-                        <h4>Her session will guide you to:</h4>
-                        <ul>
-                            <li>Identify processes that can be automated in your business</li>
-                            <li>Select the right tools for your specific industry</li>
-                            <li>Create a practical automation roadmap</li>
-                            <li>Build confidence to implement changes step-by-step</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Speaker 5 -->
-                <div class="speaker-card">
-                    <div class="speaker-image">
-                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face" alt="Business Coach">
-                    </div>
-                    <h3 class="speaker-name">Vikram Singh</h3>
-                    <p class="speaker-title">Business Growth Coach</p>
-                    <p class="speaker-bio">Vikram is a seasoned entrepreneur who has built and scaled 3 successful businesses. He now mentors MSME owners to achieve sustainable growth.</p>
-                    <div class="speaker-session">
-                        <h4>In this session, you'll discover:</h4>
-                        <ul>
-                            <li>Growth strategies that work for Indian MSMEs</li>
-                            <li>How to build systems that scale without burning out</li>
-                            <li>Networking techniques to find the right partners</li>
-                            <li>Leadership skills to manage growing teams</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Speaker 6 -->
-                <div class="speaker-card">
-                    <div class="speaker-image">
-                        <img src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=400&h=400&fit=crop&crop=face" alt="Technology Expert">
-                    </div>
-                    <h3 class="speaker-name">Ananya Reddy</h3>
-                    <p class="speaker-title">Tech Innovation Consultant</p>
-                    <p class="speaker-bio">Ananya bridges the gap between cutting-edge technology and practical business applications. She makes complex AI concepts simple and actionable.</p>
-                    <div class="speaker-session">
-                        <h4>Her session will equip you with:</h4>
-                        <ul>
-                            <li>A clear understanding of AI tools available today</li>
-                            <li>How to evaluate which tools are right for your business</li>
-                            <li>Step-by-step implementation guides</li>
-                            <li>Resources to continue learning after the summit</li>
-                        </ul>
-                    </div>
-                </div>
+            <div class="speakers-grid" id="speakers-grid">
+                <!-- Dynamically populated from API -->
             </div>
         </section>
 

@@ -77,12 +77,17 @@ export const config = {
   // CORS
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
 
+  // OpenAI (for AI content generation)
+  openai: {
+    apiKey: process.env.OPENAI_API_KEY || '',
+  },
+
   // Event Details (fallback values - actual values fetched from database)
   event: {
     name: 'AI for MSME Business Summit 2026',
     date: '21st February 2026',
     time: '9:00 AM - 5:00 PM IST',
-    venue: 'TBD soon',
+    venue: 'Centre For Police Research, (CPR) Pune, Pune University Chowk, Dr Homi Bhabha Rd, Chavan Nagar, Pashan, Pune, Maharashtra 411008',
     supportEmail: 'support@bizflowai.in',
     supportPhone: '+91 8188050895',
   },

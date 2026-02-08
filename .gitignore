@@ -8,6 +8,9 @@ dist/
 build/
 *.js.map
 
+# Firebase
+.firebase/
+
 # Environment files
 .env
 .env.local

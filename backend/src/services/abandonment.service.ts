@@ -604,13 +604,39 @@ export class AbandonmentService {
   }
 
   /**
+   * Get abandonment by recovery token (without checking expiry/used status)
+   * Used after payment succeeds to find the abandonment record for conversion tracking
+   */
+  async getByRecoveryToken(token: string): Promise<PaymentAbandonment | null> {
+    try {
+      const { data, error } = await supabase
+        .from('payment_abandonments')
+        .select('*')
+        .eq('recovery_token', token)
+        .single();
+
+      if (error || !data) {
+        return null;
+      }
+
+      return data as PaymentAbandonment;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Mark recovery link as used
    */
   async markRecoveryLinkUsed(token: string): Promise<void> {
-    await supabase
+    const { error } = await supabase
       .from('payment_abandonments')
       .update({ recovery_link_used: true })
       .eq('recovery_token', token);
+
+    if (error) {
+      logger.error('Error marking recovery link as used', { error: error.message });
+    }
   }
 
   /**
@@ -618,14 +644,25 @@ export class AbandonmentService {
    */
   async markConverted(id: string, registrationId: string): Promise<void> {
     try {
-      await supabase
+      const { error } = await supabase
         .from('payment_abandonments')
         .update({
+          abandonment_type: 'converted',
           followup_status: 'converted',
           converted_at: new Date().toISOString(),
           converted_registration_id: registrationId,
         })
         .eq('id', id);
+
+      if (error) {
+        logger.error('Supabase error marking abandonment as converted', {
+          id,
+          registrationId,
+          error: error.message,
+          code: error.code,
+        });
+        return;
+      }
 
       logger.info('Abandonment marked as converted', { id, registrationId });
     } catch (error) {

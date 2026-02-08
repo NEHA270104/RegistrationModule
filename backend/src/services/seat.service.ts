@@ -466,6 +466,51 @@ export class SeatService {
   }
 
   /**
+   * Update total seats for a tier
+   */
+  async updateTotalSeats(tier: TierType, totalSeats: number): Promise<boolean> {
+    try {
+      if (totalSeats < 0) {
+        throw new AppError('Total seats cannot be negative', 400, 'INVALID_SEATS');
+      }
+
+      // Verify new total isn't less than already sold + held
+      const inventory = await this.getTierAvailability(tier);
+      if (inventory) {
+        const occupied = inventory.sold_seats + inventory.held_seats;
+        if (totalSeats < occupied) {
+          throw new AppError(
+            `Cannot set total seats to ${totalSeats}. Already ${occupied} seats are sold/held for ${tier}.`,
+            400,
+            'SEATS_BELOW_OCCUPIED',
+          );
+        }
+      }
+
+      const { error } = await supabase
+        .from('seat_inventory')
+        .update({ total_seats: totalSeats })
+        .eq('tier_name', tier);
+
+      if (error) {
+        logger.error('Error updating total seats', { tier, totalSeats, error: error.message });
+        throw new AppError('Failed to update total seats', 500, 'SEATS_UPDATE_ERROR');
+      }
+
+      logger.info('Total seats updated', { tier, totalSeats });
+      return true;
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      logger.error('Unexpected error in updateTotalSeats', {
+        tier,
+        totalSeats,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw new AppError('Internal server error', 500, 'INTERNAL_ERROR');
+    }
+  }
+
+  /**
    * Format price for display
    * Note: Database stores prices in RUPEES (INR) directly
    */

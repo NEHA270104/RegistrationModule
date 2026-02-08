@@ -1,8 +1,12 @@
 import { Request, Response } from 'express';
 import { abandonmentService } from '../services/abandonment.service.js';
 import { registrationService } from '../services/registration.service.js';
-import { paymentService } from '../services/payment.service.js';
+import { seatService } from '../services/seat.service.js';
 import { logger } from '../utils/logger.js';
+import { createRazorpayOrder } from '../config/razorpay.js';
+import { config } from '../config/index.js';
+import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '../config/supabase.js';
 import type { AbandonmentFilters, TrackAbandonmentRequest, UpdateFollowupRequest } from '../types/index.js';
 
 /**
@@ -523,6 +527,9 @@ export async function validateRecoveryToken(req: Request, res: Response): Promis
 /**
  * Create order from recovery token (public endpoint)
  * POST /api/recover/:token/order
+ *
+ * Reuses the existing pending/failed registration instead of creating a new one.
+ * This prevents duplicate entries in the registrations table.
  */
 export async function createRecoveryOrder(req: Request, res: Response): Promise<void> {
   try {
@@ -541,50 +548,119 @@ export async function createRecoveryOrder(req: Request, res: Response): Promise<
       return;
     }
 
-    // Create a new registration with the recovered data
-    const registrationData = {
-      tier: abandonment.tier,
-      name: abandonment.name,
-      email: abandonment.email,
-      phone: abandonment.phone,
-      business_name: abandonment.business_name || undefined,
-      industry: undefined,
-      designation: undefined,
-      utm_source: 'recovery',
-      utm_medium: 'email',
-      utm_campaign: 'abandonment_recovery',
-    };
+    // Find the existing registration from the abandonment
+    let registration = null;
+    if (abandonment.registration_id) {
+      registration = await registrationService.getById(abandonment.registration_id);
+    }
+    // Fallback: look up by the original Razorpay order ID
+    if (!registration && abandonment.razorpay_order_id) {
+      registration = await registrationService.getByRazorpayOrderId(abandonment.razorpay_order_id);
+    }
 
-    // Create order using payment service
-    const orderResult = await paymentService.createOrder(registrationData);
-
-    if (!orderResult.success) {
+    if (!registration) {
       res.status(400).json({
         success: false,
         error: {
-          message: orderResult.error || 'Failed to create order',
-          code: 'ORDER_CREATE_FAILED',
+          message: 'Original registration not found. Please register fresh.',
+          code: 'REGISTRATION_NOT_FOUND',
         },
       });
       return;
     }
 
-    // Link this order to the abandonment for tracking conversion
-    logger.info('Recovery order created', {
+    // If already confirmed, don't allow re-payment
+    if (registration.payment_status === 'confirmed') {
+      res.status(400).json({
+        success: false,
+        error: {
+          message: 'This registration is already confirmed.',
+          code: 'ALREADY_CONFIRMED',
+        },
+      });
+      return;
+    }
+
+    // If the seat was released (failed/cancelled), re-reserve it
+    const needsSeatReservation = registration.payment_status === 'failed' ||
+                                  registration.registration_status === 'cancelled';
+
+    if (needsSeatReservation) {
+      const reserveResult = await seatService.reserveSeat(registration.tier);
+      if (!reserveResult.success) {
+        res.status(400).json({
+          success: false,
+          error: {
+            message: reserveResult.error || 'No seats available for this tier. Please register fresh.',
+            code: 'TIER_SOLD_OUT',
+          },
+        });
+        return;
+      }
+    }
+
+    // Get current tier price
+    const amount = await seatService.getTierPrice(registration.tier);
+
+    // Create a new Razorpay order
+    const receiptId = `rcpt_rec_${Date.now()}_${uuidv4().slice(0, 8)}`;
+    const razorpayOrder = await createRazorpayOrder(amount, receiptId, {
+      tier: registration.tier,
+      email: registration.email,
+      phone: registration.phone,
+    });
+
+    // Update the existing registration with the new order ID and reset to pending
+    await registrationService.updateForRecovery(registration.id, razorpayOrder.id);
+
+    // Create a pending order record for the new order
+    try {
+      const expiresAt = new Date();
+      expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+
+      await supabase.from('pending_orders').insert({
+        razorpay_order_id: razorpayOrder.id,
+        tier: registration.tier,
+        amount: amount,
+        email: registration.email,
+        phone: registration.phone,
+        name: registration.name,
+        status: 'pending',
+        expires_at: expiresAt.toISOString(),
+        metadata: {
+          recovery: true,
+          abandonment_id: abandonment.id,
+          business_name: registration.business_name,
+        },
+      });
+    } catch (err) {
+      logger.error('Error creating pending order for recovery', {
+        error: err instanceof Error ? err.message : 'Unknown error',
+      });
+    }
+
+    logger.info('Recovery order created (reusing existing registration)', {
       abandonmentId: abandonment.id,
-      orderId: orderResult.order_id,
+      registrationId: registration.id,
+      oldOrderId: registration.razorpay_order_id,
+      newOrderId: razorpayOrder.id,
       email: abandonment.email,
     });
 
     res.status(200).json({
       success: true,
-      order_id: orderResult.order_id,
-      amount: orderResult.amount,
-      currency: orderResult.currency,
-      key_id: orderResult.key_id,
-      prefill: orderResult.prefill,
+      order_id: razorpayOrder.id,
+      amount: amount,
+      currency: 'INR',
+      key_id: config.razorpay.keyId,
+      prefill: {
+        name: registration.name,
+        email: registration.email,
+        contact: registration.phone,
+      },
       notes: {
-        ...orderResult.notes,
+        tier: registration.tier,
+        registration_id: registration.id,
         recovery_token: token,
         abandonment_id: abandonment.id,
       },
@@ -600,6 +676,64 @@ export async function createRecoveryOrder(req: Request, res: Response): Promise<
         message: 'Failed to create order',
         code: 'ORDER_ERROR',
       },
+    });
+  }
+}
+
+/**
+ * Delete all abandonments (admin)
+ * DELETE /api/admin/abandonments
+ */
+export async function deleteAllAbandonments(req: Request, res: Response): Promise<void> {
+  try {
+    const { count, error: countError } = await supabase
+      .from('payment_abandonments')
+      .select('*', { count: 'exact', head: true });
+
+    if (countError) {
+      res.status(500).json({
+        success: false,
+        error: { message: 'Failed to count abandonments', code: 'FETCH_ERROR' },
+      });
+      return;
+    }
+
+    const total = count || 0;
+
+    if (total === 0) {
+      res.status(200).json({ success: true, message: 'No abandonments to delete', deleted: 0 });
+      return;
+    }
+
+    const { error: deleteError } = await supabase
+      .from('payment_abandonments')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000');
+
+    if (deleteError) {
+      logger.error('Error deleting all abandonments', { error: deleteError.message });
+      res.status(500).json({
+        success: false,
+        error: { message: 'Failed to delete abandonments', code: 'DELETE_ERROR' },
+      });
+      return;
+    }
+
+    logger.info('Admin deleted all abandonments', { count: total });
+
+    res.status(200).json({
+      success: true,
+      message: `Deleted ${total} abandonment(s)`,
+      deleted: total,
+    });
+  } catch (error) {
+    logger.error('Error deleting all abandonments', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+
+    res.status(500).json({
+      success: false,
+      error: { message: 'Failed to delete all abandonments', code: 'DELETE_ALL_ERROR' },
     });
   }
 }

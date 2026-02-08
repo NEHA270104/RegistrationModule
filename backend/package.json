@@ -34,6 +34,7 @@
     "express-rate-limit": "^7.1.5",
     "express-validator": "^7.0.1",
     "helmet": "^7.1.0",
+    "openai": "^6.18.0",
     "qrcode": "^1.5.4",
     "razorpay": "^2.9.2",
     "uuid": "^9.0.1",

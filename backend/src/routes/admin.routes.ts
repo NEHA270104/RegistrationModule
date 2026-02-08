@@ -9,6 +9,7 @@ import {
   adjustSeats,
   resendConfirmation,
   deleteRegistration,
+  deleteAllRegistrations,
   createManualRegistration,
   resyncSeatCounts,
   sendPaymentReminder,
@@ -18,6 +19,7 @@ import {
   getAbandonmentStats,
   getAbandonmentDetails,
   deleteAbandonment,
+  deleteAllAbandonments,
   updateFollowupStatus,
   generateRecoveryLink,
   sendFollowupEmail,
@@ -70,6 +72,13 @@ router.get('/registrations/:bookingId', adminLimiter, asyncHandler(getRegistrati
  * @access Admin
  */
 router.post('/registrations/:bookingId/resend', adminLimiter, asyncHandler(resendConfirmation));
+
+/**
+ * @route DELETE /api/admin/registrations/all
+ * @desc Delete all registrations
+ * @access Admin
+ */
+router.delete('/registrations/all', adminLimiter, asyncHandler(deleteAllRegistrations));
 
 /**
  * @route DELETE /api/admin/registrations/:bookingId
@@ -172,6 +181,13 @@ router.post('/abandonments/cleanup', adminLimiter, asyncHandler(cleanupExpiredRe
  * @access Admin
  */
 router.get('/abandonments/:id', adminLimiter, asyncHandler(getAbandonmentDetails));
+
+/**
+ * @route DELETE /api/admin/abandonments/all
+ * @desc Delete all abandonment records
+ * @access Admin
+ */
+router.delete('/abandonments/all', adminLimiter, asyncHandler(deleteAllAbandonments));
 
 /**
  * @route DELETE /api/admin/abandonments/:id

@@ -101,7 +101,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // Admin routes with API key skip rate limiting, others use standard limiter
 app.use('/api', (req: Request, res: Response, next: NextFunction) => {
   // Skip global rate limit for admin routes when API key is present
-  const isAdminRoute = req.path.startsWith('/admin') || req.path.startsWith('/settings/admin');
+  const isAdminRoute = req.path.includes('/admin');
   const hasApiKey = !!req.headers['x-api-key'];
 
   if (isAdminRoute && hasApiKey) {

@@ -681,6 +681,62 @@ body {
   margin: 0 auto 2rem;
 }
 
+/* MSME Benefits Section */
+.msme-benefits-section {
+  padding: 3rem 0;
+}
+
+.msme-benefits-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .msme-benefits-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .msme-benefits-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.msme-benefit-card {
+  background: linear-gradient(135deg, var(--primary-50), #fff);
+  border: 1px solid var(--primary-200);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.msme-benefit-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.msme-benefit-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+.msme-benefit-card h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 0.5rem;
+}
+
+.msme-benefit-card p {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+  line-height: 1.6;
+}
+
 /* Summit Benefits / Topics */
 .summit-benefits {
   padding: 3rem 0;

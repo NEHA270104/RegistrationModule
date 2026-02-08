@@ -131,11 +131,135 @@ async function loadDynamicSettings() {
       });
     }
 
+    // Render dynamic guests/speakers
+    if (dynamicConfig.guests && dynamicConfig.guests.length > 0) {
+      renderGuestSpeakers(dynamicConfig.guests);
+    } else {
+      // Fallback: fetch from dedicated endpoint
+      try {
+        const guestResponse = await fetch(`${CONFIG.API_BASE_URL}/guests`);
+        if (guestResponse.ok) {
+          const guestData = await guestResponse.json();
+          const guests = guestData.data?.guests || [];
+          if (guests.length > 0) {
+            renderGuestSpeakers(guests);
+          } else {
+            hideGuestSpeakersSection();
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load guests:', e);
+      }
+    }
+
+    // Render dynamic MSME benefits
+    if (dynamicConfig.msmeBenefits && dynamicConfig.msmeBenefits.length > 0) {
+      renderMsmeBenefits(dynamicConfig.msmeBenefits);
+    } else {
+      // Fallback: fetch from dedicated endpoint
+      try {
+        const benefitResponse = await fetch(`${CONFIG.API_BASE_URL}/msme-benefits`);
+        if (benefitResponse.ok) {
+          const benefitData = await benefitResponse.json();
+          const benefits = benefitData.data?.benefits || [];
+          if (benefits.length > 0) {
+            renderMsmeBenefits(benefits);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load MSME benefits:', e);
+      }
+    }
+
     console.log('Dynamic settings loaded successfully');
   } catch (error) {
     console.warn('Error loading dynamic settings:', error);
     // Continue with static config
   }
+}
+
+/**
+ * Render guest/speaker cards dynamically from API data
+ */
+function renderGuestSpeakers(guests) {
+  const grid = document.getElementById('speakers-grid');
+  if (!grid) return;
+
+  if (!guests || guests.length === 0) {
+    hideGuestSpeakersSection();
+    return;
+  }
+
+  grid.innerHTML = guests.map(guest => {
+    const photoHtml = guest.photo_url
+      ? `<img src="${escapeHtmlPublic(guest.photo_url)}" alt="${escapeHtmlPublic(guest.name)}">`
+      : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#d1fae5;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="1.5" width="40" height="40">
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>`;
+
+    const sessionPointsHtml = (guest.session_points || [])
+      .map(point => `<li>${escapeHtmlPublic(point)}</li>`)
+      .join('');
+
+    const heading = guest.session_heading || "In this session, you'll learn:";
+
+    return `
+      <div class="speaker-card">
+        <div class="speaker-image">${photoHtml}</div>
+        <h3 class="speaker-name">${escapeHtmlPublic(guest.name)}</h3>
+        <p class="speaker-title">${escapeHtmlPublic(guest.title)}</p>
+        <p class="speaker-bio">${escapeHtmlPublic(guest.bio)}</p>
+        <div class="speaker-session">
+          <h4>${escapeHtmlPublic(heading)}</h4>
+          <ul>${sessionPointsHtml}</ul>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function hideGuestSpeakersSection() {
+  const section = document.getElementById('speakers-section');
+  if (section) section.style.display = 'none';
+}
+
+/**
+ * Render MSME benefit cards dynamically from API data
+ */
+function renderMsmeBenefits(benefits) {
+  const grid = document.getElementById('msme-benefits-grid');
+  const section = document.getElementById('msme-benefits-section');
+  if (!grid || !section) return;
+
+  if (!benefits || benefits.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  grid.innerHTML = benefits.map(benefit => {
+    const iconHtml = benefit.icon
+      ? `<span class="msme-benefit-icon">${escapeHtmlPublic(benefit.icon)}</span>`
+      : '';
+    return `
+      <div class="msme-benefit-card">
+        ${iconHtml}
+        <h3>${escapeHtmlPublic(benefit.title)}</h3>
+        <p>${escapeHtmlPublic(benefit.description)}</p>
+      </div>
+    `;
+  }).join('');
+
+  section.style.display = '';
+}
+
+function escapeHtmlPublic(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 
 /**

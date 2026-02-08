@@ -5,6 +5,7 @@ import { waitlistService } from '../services/waitlist.service.js';
 import { emailService } from '../services/email.service.js';
 import { abandonmentService } from '../services/abandonment.service.js';
 import { logger } from '../utils/logger.js';
+import { supabase } from '../config/supabase.js';
 import type { AdminRegistrationFilters, TierType } from '../types/index.js';
 import { AppError } from '../types/index.js';
 
@@ -337,9 +338,6 @@ export async function resendConfirmation(req: Request, res: Response): Promise<v
         tier: registration.tier,
         tier_display: tierInventory?.display_name || registration.tier,
         amount: registration.amount_paid,
-        event_date: config.event.date,
-        event_time: config.event.time,
-        venue: config.event.venue,
         benefits: tierInventory?.benefits || [],
       });
 
@@ -652,6 +650,78 @@ export async function sendPaymentReminder(req: Request, res: Response): Promise<
         message: 'Failed to send payment reminder',
         code: 'REMINDER_ERROR',
       },
+    });
+  }
+}
+
+/**
+ * Delete all registrations
+ * DELETE /api/admin/registrations
+ */
+export async function deleteAllRegistrations(req: Request, res: Response): Promise<void> {
+  try {
+    // Get all registrations to release seats properly
+    const { data: allRegs, error: fetchError } = await supabase
+      .from('registrations')
+      .select('id, tier, payment_status, razorpay_order_id');
+
+    if (fetchError) {
+      throw new AppError('Failed to fetch registrations', 500, 'FETCH_ERROR');
+    }
+
+    const count = allRegs?.length || 0;
+
+    if (count === 0) {
+      res.status(200).json({ success: true, message: 'No registrations to delete', deleted: 0 });
+      return;
+    }
+
+    // Release seats for each registration
+    for (const reg of allRegs || []) {
+      try {
+        if (reg.payment_status === 'confirmed') {
+          await seatService.releaseSoldSeat(reg.tier);
+        } else if (reg.payment_status === 'pending') {
+          await seatService.releaseHeldSeat(reg.tier);
+        }
+      } catch (err) {
+        logger.warn('Failed to release seat during bulk delete', { id: reg.id, tier: reg.tier });
+      }
+    }
+
+    // Delete all pending_orders
+    await supabase.from('pending_orders').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+
+    // Delete all registrations
+    const { error: deleteError } = await supabase
+      .from('registrations')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000');
+
+    if (deleteError) {
+      throw new AppError('Failed to delete registrations', 500, 'DELETE_ERROR');
+    }
+
+    logger.info('Admin deleted all registrations', { count });
+
+    res.status(200).json({
+      success: true,
+      message: `Deleted ${count} registration(s)`,
+      deleted: count,
+    });
+  } catch (error) {
+    logger.error('Error deleting all registrations', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({ success: false, error: { message: error.message, code: error.code } });
+      return;
+    }
+
+    res.status(500).json({
+      success: false,
+      error: { message: 'Failed to delete all registrations', code: 'DELETE_ALL_ERROR' },
     });
   }
 }

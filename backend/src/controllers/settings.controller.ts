@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { settingsService } from '../services/settings.service.js';
 import { seatService } from '../services/seat.service.js';
+import { guestService } from '../services/guest.service.js';
+import { msmeBenefitService } from '../services/msmeBenefit.service.js';
 import { logger } from '../utils/logger.js';
 import type { TierType } from '../types/index.js';
 
@@ -65,6 +67,43 @@ export async function getPublicSettings(req: Request, res: Response): Promise<vo
       seatPollInterval: settings.seat_poll_interval,
     },
   };
+
+  // Fetch active guests for the speakers section
+  try {
+    const guests = await guestService.getActiveGuests();
+    (config as Record<string, unknown>).guests = guests.map(g => ({
+      id: g.id,
+      name: g.name,
+      title: g.title,
+      bio: g.bio,
+      photo_url: g.photo_url,
+      session_heading: g.session_heading,
+      session_points: g.session_points,
+      sort_order: g.sort_order,
+    }));
+  } catch (error) {
+    logger.warn('Failed to fetch guests for public settings', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    (config as Record<string, unknown>).guests = [];
+  }
+
+  // Fetch active MSME benefits
+  try {
+    const benefits = await msmeBenefitService.getActiveBenefits();
+    (config as Record<string, unknown>).msmeBenefits = benefits.map(b => ({
+      id: b.id,
+      title: b.title,
+      description: b.description,
+      icon: b.icon,
+      sort_order: b.sort_order,
+    }));
+  } catch (error) {
+    logger.warn('Failed to fetch MSME benefits for public settings', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    (config as Record<string, unknown>).msmeBenefits = [];
+  }
 
   res.json(config);
 }
@@ -150,7 +189,14 @@ export async function updateSettings(req: Request, res: Response): Promise<void>
   const adminIdentifier = req.headers['x-api-key'] as string || 'unknown';
   const ipAddress = req.ip || req.socket.remoteAddress;
 
-  const results = await settingsService.updateSettings(updates, adminIdentifier, ipAddress);
+  // Separate seat capacity keys (these go to seat_inventory, not site_settings)
+  const seatCapacityKeyPrefix = 'total_seats_';
+  const settingUpdates = updates.filter((u: { key: string }) => !u.key.startsWith(seatCapacityKeyPrefix));
+  const seatCapacityUpdates = updates.filter((u: { key: string }) => u.key.startsWith(seatCapacityKeyPrefix));
+
+  const results = settingUpdates.length > 0
+    ? await settingsService.updateSettings(settingUpdates, adminIdentifier, ipAddress)
+    : [];
 
   // Sync tier pricing to seat_inventory when offer prices are updated
   // This ensures the actual payment price matches the display price
@@ -170,6 +216,27 @@ export async function updateSettings(req: Request, res: Response): Promise<void>
         logger.info('Seat inventory price synced via batch update', { tier, priceInr: update.value });
       } catch (error) {
         const errorMsg = `Failed to sync ${tier} price to seat_inventory`;
+        logger.error(errorMsg, { error: error instanceof Error ? error.message : 'Unknown error' });
+        pricingSyncErrors.push(errorMsg);
+      }
+    }
+  }
+
+  // Sync total_seats to seat_inventory when seat capacity is updated
+  const seatsKeys: Record<string, TierType> = {
+    'total_seats_vip': 'vip',
+    'total_seats_standard': 'standard',
+    'total_seats_basic': 'basic',
+  };
+
+  for (const update of seatCapacityUpdates) {
+    const tier = seatsKeys[update.key];
+    if (tier && typeof update.value === 'number') {
+      try {
+        await seatService.updateTotalSeats(tier, update.value);
+        logger.info('Seat capacity synced via batch update', { tier, totalSeats: update.value });
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : `Failed to sync ${tier} seat capacity`;
         logger.error(errorMsg, { error: error instanceof Error ? error.message : 'Unknown error' });
         pricingSyncErrors.push(errorMsg);
       }

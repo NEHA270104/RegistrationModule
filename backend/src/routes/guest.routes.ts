@@ -8,6 +8,7 @@ import {
   uploadGuestPhoto,
   deleteGuestPhoto,
   reorderGuests,
+  aiEnhanceGuestText,
 } from '../controllers/guest.controller.js';
 import { adminAuth } from '../middleware/auth.js';
 import { standardLimiter, adminLimiter } from '../middleware/rateLimiter.js';
@@ -39,6 +40,13 @@ router.get('/admin', adminAuth, adminLimiter, asyncHandler(getAllGuests));
  * @access Admin
  */
 router.post('/admin', adminAuth, adminLimiter, asyncHandler(createGuest));
+
+/**
+ * @route POST /api/guests/admin/ai-enhance
+ * @desc AI-enhance a guest field text (admin only)
+ * @access Admin
+ */
+router.post('/admin/ai-enhance', adminAuth, adminLimiter, asyncHandler(aiEnhanceGuestText));
 
 /**
  * @route PUT /api/guests/admin/reorder

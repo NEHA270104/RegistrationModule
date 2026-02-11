@@ -61,9 +61,9 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                             <span>9:00 AM to 5:00 PM</span>
                         </div>
-                        <div class="modal-event-item">
+                        <div class="modal-event-item" id="modal-platform-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l5 5-5 5"/><path d="M4 4v7a4 4 0 004 4h12"/></svg>
-                            <span>Live on Zoom</span>
+                            <span id="modal-platform-text">Live on Zoom</span>
                         </div>
                     </div>
                 </div>
@@ -534,6 +534,16 @@
                     </p>
                 </div>
 
+                <!-- Hero Promo Section (admin-configurable) -->
+                <div class="hero-promo" id="hero-promo" style="display:none">
+                    <div class="promo-value-prop" id="promo-value-prop"></div>
+                    <a class="promo-whatsapp-btn" id="promo-whatsapp-btn" href="#" target="_blank" rel="noopener noreferrer">
+                        <svg class="promo-whatsapp-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                        <span id="promo-whatsapp-text"></span>
+                    </a>
+                    <div class="promo-urgency" id="promo-urgency"></div>
+                </div>
+
                 <!-- Event Details Card -->
                 <div class="event-details-card">
                     <div class="event-details-header">Summit Details</div>
@@ -556,13 +566,13 @@
                                 <span class="event-detail-value">9 AM - 5 PM IST</span>
                             </div>
                         </div>
-                        <div class="event-detail-item">
+                        <div class="event-detail-item" id="hero-platform-item">
                             <div class="event-detail-icon live">
                                 <span class="live-dot"></span>
                             </div>
                             <div class="event-detail-content">
                                 <span class="event-detail-label">Live On</span>
-                                <span class="event-detail-value">Zoom</span>
+                                <span class="event-detail-value" id="hero-platform-text">Zoom</span>
                             </div>
                         </div>
                         <div class="event-detail-item">
@@ -578,7 +588,7 @@
                 </div>
 
                 <button class="btn btn-cta hero-cta" onclick="openRegistrationModal()">
-                    <span>CLAIM YOUR SEAT NOW - SAVE UP TO &#8377;2,500</span>
+                    <span class="cta-save-text">CLAIM YOUR SEAT NOW - SAVE UP TO &#8377;2,500</span>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </button>
                 <p class="enrollment-close">🚨 Offer ends <strong id="offer-end-date">30th JAN</strong> — Don't miss your chance!</p>
@@ -700,7 +710,7 @@
             </div>
 
             <button class="btn btn-cta section-cta" onclick="openRegistrationModal()">
-                <span>REGISTER NOW - SAVE UP TO &#8377;2,500</span>
+                <span class="cta-save-text">REGISTER NOW - SAVE UP TO &#8377;2,500</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </button>
         </section>
@@ -791,7 +801,7 @@
         <section class="final-cta-section">
             <h2>This Is More Than A Summit.<br>It's Your <span class="text-primary">Launchpad</span> For An<br>Extraordinary Business Year.</h2>
             <button class="btn btn-cta" onclick="openRegistrationModal()">
-                <span>REGISTER NOW - SAVE UP TO &#8377;2,500</span>
+                <span class="cta-save-text">REGISTER NOW - SAVE UP TO &#8377;2,500</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </button>
             <p class="enrollment-close">Offer ends on <strong id="offer-end-date-2">30th JAN</strong></p>
@@ -912,6 +922,14 @@
             </div>
         </div>
         <button class="btn btn-reserve" onclick="openRegistrationModal()">SECURE MY SEAT</button>
+    </div>
+
+    <!-- Floating Offer Reminder (shown on scroll when promo is active) -->
+    <div class="offer-float-reminder" id="offer-float-reminder">
+        <div class="offer-float-star" onclick="openRegistrationModal()" title="Special Offer">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <div class="offer-float-label" id="offer-float-label">Special Offer</div>
     </div>
 
     <!-- Back to Top Button -->

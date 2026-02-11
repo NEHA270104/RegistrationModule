@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { guestService } from '../services/guest.service.js';
+import { openAIService } from '../services/openai.service.js';
 import { logger } from '../utils/logger.js';
 
 /**
@@ -135,6 +136,49 @@ export async function deleteGuestPhoto(req: Request, res: Response): Promise<voi
   const { id } = req.params;
   await guestService.deletePhoto(id);
   res.json({ success: true, message: 'Photo deleted' });
+}
+
+/**
+ * POST /api/guests/admin/ai-enhance (Admin)
+ * AI-enhance a guest field (shorten or expand)
+ */
+export async function aiEnhanceGuestText(req: Request, res: Response): Promise<void> {
+  const { fieldType, fieldValue, action, context, lineTarget } = req.body;
+
+  if (!fieldType || !fieldValue?.trim() || !action) {
+    res.status(400).json({
+      success: false,
+      error: { message: 'fieldType, fieldValue, and action are required', code: 'VALIDATION_ERROR' },
+    });
+    return;
+  }
+
+  if (!['title', 'bio', 'session_point'].includes(fieldType)) {
+    res.status(400).json({
+      success: false,
+      error: { message: 'fieldType must be title, bio, or session_point', code: 'VALIDATION_ERROR' },
+    });
+    return;
+  }
+
+  if (!['shorten', 'expand'].includes(action)) {
+    res.status(400).json({
+      success: false,
+      error: { message: 'action must be shorten or expand', code: 'VALIDATION_ERROR' },
+    });
+    return;
+  }
+
+  const enhanced = await openAIService.enhanceGuestText(
+    fieldType as 'title' | 'bio' | 'session_point',
+    fieldValue.trim(),
+    action as 'shorten' | 'expand',
+    context || {},
+    lineTarget ? Number(lineTarget) : undefined
+  );
+
+  logger.info('AI guest text enhanced', { fieldType, action, lineTarget });
+  res.json({ success: true, data: { original: fieldValue.trim(), enhanced } });
 }
 
 /**

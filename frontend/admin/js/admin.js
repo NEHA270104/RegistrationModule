@@ -263,7 +263,7 @@ function handleLogout() {
 // Auto Refresh
 function startAutoRefresh() {
     stopAutoRefresh();
-    autoRefreshInterval = setInterval(refreshDashboard, 30000); // 30 seconds (reduced to prevent rate limiting)
+    autoRefreshInterval = setInterval(refreshDashboard, 90000); // 90 seconds — gives admin more time to edit
 }
 
 function stopAutoRefresh() {
@@ -950,10 +950,15 @@ function populateSettingsForm() {
     setDateTimeInput('setting-offer-start', currentSettings.offer_start_date);
     setInput('setting-offer-duration', currentSettings.offer_duration_days);
 
-    // Tier-specific discounts
-    setInput('setting-offer-discount-vip', currentSettings.offer_discount_vip || currentSettings.offer_discount_amount || 1000);
-    setInput('setting-offer-discount-standard', currentSettings.offer_discount_standard || currentSettings.offer_discount_amount || 1000);
-    setInput('setting-offer-discount-basic', currentSettings.offer_discount_basic || currentSettings.offer_discount_amount || 1000);
+    // Offer messaging
+    setInput('setting-offer-label', currentSettings.offer_label);
+    setInput('setting-offer-description', currentSettings.offer_description);
+
+    // Hero promo section
+    setCheckbox('setting-promo-enabled', currentSettings.promo_enabled);
+    setInput('setting-promo-value-prop', currentSettings.promo_value_prop);
+    setInput('setting-promo-whatsapp-keyword', currentSettings.promo_whatsapp_keyword);
+    setInput('setting-promo-urgency-text', currentSettings.promo_urgency_text);
 
     // Pricing settings
     setInput('setting-vip-original', currentSettings.tier_vip_original_price);
@@ -968,6 +973,8 @@ function populateSettingsForm() {
     setInput('setting-event-name', currentSettings.event_name);
     setInput('setting-event-date', currentSettings.event_date);
     setInput('setting-event-time', currentSettings.event_time);
+    setInput('setting-event-platform', currentSettings.event_platform);
+    setCheckbox('setting-event-platform-visible', currentSettings.event_platform_visible);
     setInput('setting-event-venue', currentSettings.event_venue);
     setInput('setting-event-venue-map-link', currentSettings.event_venue_map_link);
 
@@ -1119,10 +1126,15 @@ function collectSettingsUpdates() {
     }
     addUpdate('offer_duration_days', parseInt(document.getElementById('setting-offer-duration')?.value) || 3);
 
-    // Tier-specific discounts
-    addUpdate('offer_discount_vip', parseInt(document.getElementById('setting-offer-discount-vip')?.value) || 1000);
-    addUpdate('offer_discount_standard', parseInt(document.getElementById('setting-offer-discount-standard')?.value) || 1000);
-    addUpdate('offer_discount_basic', parseInt(document.getElementById('setting-offer-discount-basic')?.value) || 1000);
+    // Offer messaging
+    addUpdate('offer_label', document.getElementById('setting-offer-label')?.value || 'Early Bird Special!');
+    addUpdate('offer_description', document.getElementById('setting-offer-description')?.value || 'Save on all passes');
+
+    // Hero promo section
+    addUpdate('promo_enabled', document.getElementById('setting-promo-enabled')?.checked || false);
+    addUpdate('promo_value_prop', document.getElementById('setting-promo-value-prop')?.value || '');
+    addUpdate('promo_whatsapp_keyword', document.getElementById('setting-promo-whatsapp-keyword')?.value || '');
+    addUpdate('promo_urgency_text', document.getElementById('setting-promo-urgency-text')?.value || '');
 
     // Pricing settings
     addUpdate('tier_vip_original_price', parseInt(document.getElementById('setting-vip-original')?.value) || 0);
@@ -1137,6 +1149,8 @@ function collectSettingsUpdates() {
     addUpdate('event_name', document.getElementById('setting-event-name')?.value || '');
     addUpdate('event_date', document.getElementById('setting-event-date')?.value || '');
     addUpdate('event_time', document.getElementById('setting-event-time')?.value || '');
+    addUpdate('event_platform', document.getElementById('setting-event-platform')?.value || '');
+    addUpdate('event_platform_visible', document.getElementById('setting-event-platform-visible')?.checked ?? true);
     addUpdate('event_venue', document.getElementById('setting-event-venue')?.value || '');
     addUpdate('event_venue_map_link', document.getElementById('setting-event-venue-map-link')?.value || '');
 
@@ -2191,6 +2205,9 @@ function addSessionPointInput(value = '') {
     div.innerHTML = `
         <span class="session-point-number">${index + 1}.</span>
         <input type="text" class="guest-form-input session-point-input" value="${escapeHtml(value)}" placeholder="Session point ${index + 1}">
+        <button type="button" class="btn-ai-enhance session-point-ai" onclick="showGuestAiActionsForPoint(this)" title="AI Enhance">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/></svg>
+        </button>
         <button type="button" class="btn-remove-point" onclick="removeSessionPoint(this)" title="Remove">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -2748,5 +2765,228 @@ async function saveAiSuggestions() {
         showAlertModal('Error', error.message || 'Failed to save suggestions.', false);
     } finally {
         hideLoading();
+    }
+}
+
+// ============================================
+// AI Promo Suggestions
+// ============================================
+
+async function generatePromoAiSuggestions() {
+    const occasion = document.getElementById('promo-ai-occasion')?.value?.trim();
+    if (!occasion) {
+        showAlertModal('Required', 'Please enter an occasion or theme (e.g., Valentine\'s Day).', false);
+        return;
+    }
+
+    const btn = document.getElementById('promo-ai-suggest-btn');
+    const container = document.getElementById('promo-ai-suggestions');
+    btn.disabled = true;
+    btn.textContent = 'Generating...';
+    container.style.display = 'none';
+
+    try {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/settings/admin/promo/ai-suggest`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+            body: JSON.stringify({ occasion })
+        });
+
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.error?.message || 'AI generation failed');
+        }
+
+        const result = await response.json();
+        const suggestions = result.data?.suggestions || [];
+
+        if (suggestions.length === 0) {
+            showAlertModal('No Suggestions', 'AI returned no suggestions. Try a different theme.', false);
+            return;
+        }
+
+        container.innerHTML = suggestions.map((s, i) => `
+            <div style="padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; margin-bottom: 0.5rem; background: white; cursor: pointer; transition: border-color 0.2s;"
+                 onclick="applyPromoSuggestion(${i})"
+                 onmouseenter="this.style.borderColor='#10b981'"
+                 onmouseleave="this.style.borderColor='#d1d5db'"
+                 title="Click to apply this suggestion">
+                <div style="font-size: 0.8125rem; font-weight: 600; color: #111827; margin-bottom: 0.25rem;">${escapeHtml(s.valueProp)}</div>
+                <div style="font-size: 0.75rem; color: #6b7280;">
+                    <span style="background: #25D366; color: white; padding: 0.125rem 0.375rem; border-radius: 4px; font-size: 0.6875rem; font-weight: 600;">${escapeHtml(s.whatsappKeyword)}</span>
+                    <span style="margin-left: 0.5rem;">${escapeHtml(s.urgencyText)}</span>
+                </div>
+            </div>
+        `).join('');
+
+        // Store suggestions for applying
+        window._promoAiSuggestions = suggestions;
+        container.style.display = 'block';
+    } catch (error) {
+        showAlertModal('Error', error.message || 'AI generation failed.', false);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'AI Suggest';
+    }
+}
+
+function applyPromoSuggestion(index) {
+    const suggestions = window._promoAiSuggestions;
+    if (!suggestions || !suggestions[index]) return;
+
+    const s = suggestions[index];
+    const valuePropEl = document.getElementById('setting-promo-value-prop');
+    const keywordEl = document.getElementById('setting-promo-whatsapp-keyword');
+    const urgencyEl = document.getElementById('setting-promo-urgency-text');
+
+    if (valuePropEl) valuePropEl.value = s.valueProp;
+    if (keywordEl) keywordEl.value = s.whatsappKeyword;
+    if (urgencyEl) urgencyEl.value = s.urgencyText;
+
+    // Mark settings as modified
+    settingsModified = true;
+
+    // Visual feedback
+    document.getElementById('promo-ai-suggestions').style.display = 'none';
+    showAlertModal('Applied', 'Suggestion applied to the fields below. Remember to Save All Changes.', true);
+}
+
+// ============================================
+// Guest AI Text Enhancement
+// ============================================
+let _aiTargetField = null;
+let _aiFieldType = null;
+let _aiButton = null;
+
+function showGuestAiActions(inputId, fieldType, btnEl) {
+    const inputEl = document.getElementById(inputId);
+    if (!inputEl || !inputEl.value.trim()) {
+        showAlertModal('Empty Field', 'Please enter some text first before using AI enhancement.', false);
+        return;
+    }
+    _aiTargetField = inputEl;
+    _aiFieldType = fieldType;
+    _aiButton = btnEl;
+    _positionAiDropdown(btnEl);
+}
+
+function showGuestAiActionsForPoint(btnEl) {
+    const inputEl = btnEl.previousElementSibling;
+    if (!inputEl || !inputEl.value.trim()) {
+        showAlertModal('Empty Field', 'Please enter some text first before using AI enhancement.', false);
+        return;
+    }
+    _aiTargetField = inputEl;
+    _aiFieldType = 'session_point';
+    _aiButton = btnEl;
+    _positionAiDropdown(btnEl);
+}
+
+function _positionAiDropdown(btnEl) {
+    const dropdown = document.getElementById('guest-ai-dropdown');
+    const rect = btnEl.getBoundingClientRect();
+    dropdown.style.top = `${rect.bottom + 4}px`;
+    dropdown.style.left = `${Math.min(rect.left, window.innerWidth - 150)}px`;
+    dropdown.classList.remove('hidden');
+
+    setTimeout(() => {
+        document.addEventListener('click', _closeAiDropdownHandler, { once: true });
+    }, 0);
+}
+
+function _closeAiDropdownHandler(e) {
+    const dropdown = document.getElementById('guest-ai-dropdown');
+    if (dropdown && !dropdown.contains(e.target)) {
+        dropdown.classList.add('hidden');
+    }
+}
+
+async function enhanceGuestField(action, lineTarget) {
+    const dropdown = document.getElementById('guest-ai-dropdown');
+    dropdown.classList.add('hidden');
+
+    if (!_aiTargetField || !_aiFieldType) return;
+
+    const originalValue = _aiTargetField.value.trim();
+    if (!originalValue) return;
+
+    const targetField = _aiTargetField;
+    const btn = _aiButton;
+
+    // Gather context from all guest fields
+    const context = {
+        name: document.getElementById('guest-name')?.value?.trim() || '',
+        title: document.getElementById('guest-title')?.value?.trim() || '',
+        bio: document.getElementById('guest-bio')?.value?.trim() || '',
+        sessionPoints: Array.from(document.querySelectorAll('.session-point-input'))
+            .map(inp => inp.value.trim())
+            .filter(v => v.length > 0)
+    };
+
+    // Loading state
+    if (btn) {
+        btn.classList.add('loading');
+        btn.disabled = true;
+    }
+
+    try {
+        const body = {
+            fieldType: _aiFieldType,
+            fieldValue: originalValue,
+            action: action,
+            context: context,
+        };
+        if (lineTarget) body.lineTarget = lineTarget;
+
+        const response = await fetch(`${CONFIG.API_BASE_URL}/guests/admin/ai-enhance`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key': apiKey,
+            },
+            body: JSON.stringify(body),
+        });
+
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.error?.message || 'AI enhancement failed');
+        }
+
+        const result = await response.json();
+        const enhanced = result.data?.enhanced;
+
+        if (!enhanced) {
+            throw new Error('No enhanced text returned');
+        }
+
+        // Build label for the action taken
+        const actionLabel = lineTarget
+            ? `${action === 'shorten' ? 'Shortened' : 'Expanded'} (~${lineTarget} lines)`
+            : `${action === 'shorten' ? 'Shortened' : 'Expanded'} (AI)`;
+
+        // Show confirm modal with before/after preview
+        showConfirmModal('AI Enhancement Preview', '', () => {
+            targetField.value = enhanced;
+        });
+        // Override textContent with HTML for rich preview
+        const msgEl = document.getElementById('confirm-modal-message');
+        if (msgEl) {
+            msgEl.innerHTML = `<div style="text-align:left;">
+                <div style="font-size:0.7rem;font-weight:600;color:var(--gray-500);text-transform:uppercase;margin-bottom:0.25rem;">Original:</div>
+                <div style="padding:0.625rem;background:var(--gray-50);border-radius:6px;font-size:0.8125rem;color:var(--gray-600);margin-bottom:0.75rem;white-space:pre-wrap;">${escapeHtml(originalValue)}</div>
+                <div style="font-size:0.7rem;font-weight:600;color:#059669;text-transform:uppercase;margin-bottom:0.25rem;">${actionLabel}:</div>
+                <div style="padding:0.625rem;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:6px;font-size:0.8125rem;color:var(--gray-800);white-space:pre-wrap;">${escapeHtml(enhanced)}</div>
+            </div>`;
+        }
+    } catch (error) {
+        showAlertModal('AI Error', error.message || 'Failed to enhance text. Please try again.', false);
+    } finally {
+        if (btn) {
+            btn.classList.remove('loading');
+            btn.disabled = false;
+        }
+        _aiTargetField = null;
+        _aiFieldType = null;
+        _aiButton = null;
     }
 }

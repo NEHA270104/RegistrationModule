@@ -47,8 +47,30 @@ async function loadDynamicSettings() {
         discountVip: dynamicConfig.offer.discountVip || dynamicConfig.offer.discountAmount || CONFIG.OFFER.discountAmount,
         discountStandard: dynamicConfig.offer.discountStandard || dynamicConfig.offer.discountAmount || CONFIG.OFFER.discountAmount,
         discountBasic: dynamicConfig.offer.discountBasic || dynamicConfig.offer.discountAmount || CONFIG.OFFER.discountAmount,
+        label: dynamicConfig.offer.label || CONFIG.OFFER.label,
+        description: dynamicConfig.offer.description || CONFIG.OFFER.description,
+      };
+
+      // Update offer banner label from dynamic settings
+      const offerLabelEl = document.querySelector('#offer-banner .offer-label');
+      if (offerLabelEl && CONFIG.OFFER.label) {
+        offerLabelEl.textContent = CONFIG.OFFER.label;
+      }
+    }
+
+    // Merge promo settings
+    if (dynamicConfig.promo) {
+      CONFIG.PROMO = {
+        ...CONFIG.PROMO,
+        enabled: dynamicConfig.promo.enabled ?? CONFIG.PROMO.enabled,
+        valueProp: dynamicConfig.promo.valueProp || CONFIG.PROMO.valueProp,
+        whatsappKeyword: dynamicConfig.promo.whatsappKeyword || CONFIG.PROMO.whatsappKeyword,
+        urgencyText: dynamicConfig.promo.urgencyText || CONFIG.PROMO.urgencyText,
       };
     }
+
+    // Render hero promo section
+    renderHeroPromo();
 
     // Merge pricing settings and apply tier-specific discounts
     if (dynamicConfig.pricing) {
@@ -76,6 +98,20 @@ async function loadDynamicSettings() {
         CONFIG.TIERS.waitlist.originalPrice = dynamicConfig.pricing.waitlist.price || CONFIG.TIERS.waitlist.originalPrice;
         CONFIG.TIERS.waitlist.discount = 0;
       }
+
+      // Update CTA buttons with dynamic max discount
+      const maxDiscount = Math.max(
+        CONFIG.TIERS.vip.discount || 0,
+        CONFIG.TIERS.standard.discount || 0,
+        CONFIG.TIERS.basic.discount || 0
+      );
+      if (maxDiscount > 0) {
+        const formatted = maxDiscount.toLocaleString('en-IN');
+        document.querySelectorAll('.cta-save-text').forEach((el, i) => {
+          const prefix = i === 0 ? 'CLAIM YOUR SEAT NOW' : 'REGISTER NOW';
+          el.textContent = `${prefix} \u2013 SAVE UP TO \u20B9${formatted}`;
+        });
+      }
     }
 
     // Merge event settings
@@ -86,7 +122,12 @@ async function loadDynamicSettings() {
         date: dynamicConfig.event.date || CONFIG.EVENT.date,
         time: dynamicConfig.event.time || CONFIG.EVENT.time,
         venue: dynamicConfig.event.venue || CONFIG.EVENT.venue,
+        platform: dynamicConfig.event.platform || CONFIG.EVENT.platform,
+        platformVisible: dynamicConfig.event.platformVisible ?? CONFIG.EVENT.platformVisible,
       };
+
+      // Update platform display based on visibility toggle
+      updatePlatformDisplay();
     }
 
     // Update offer end date on the page (all instances)
@@ -176,6 +217,76 @@ async function loadDynamicSettings() {
     console.warn('Error loading dynamic settings:', error);
     // Continue with static config
   }
+}
+
+/**
+ * Render hero promo section from dynamic settings
+ */
+function renderHeroPromo() {
+  const promoSection = document.getElementById('hero-promo');
+  if (!promoSection || !CONFIG.PROMO.enabled) return;
+
+  const valuePropEl = document.getElementById('promo-value-prop');
+  const whatsappBtn = document.getElementById('promo-whatsapp-btn');
+  const whatsappText = document.getElementById('promo-whatsapp-text');
+  const urgencyEl = document.getElementById('promo-urgency');
+
+  // Value proposition
+  if (valuePropEl && CONFIG.PROMO.valueProp) {
+    valuePropEl.textContent = CONFIG.PROMO.valueProp;
+    valuePropEl.style.display = '';
+  } else if (valuePropEl) {
+    valuePropEl.style.display = 'none';
+  }
+
+  // WhatsApp CTA
+  const whatsappNumber = dynamicConfig?.support?.whatsapp || '';
+  if (whatsappBtn && CONFIG.PROMO.whatsappKeyword && whatsappNumber) {
+    const cleanNumber = whatsappNumber.replace(/\D/g, '');
+    whatsappBtn.href = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(CONFIG.PROMO.whatsappKeyword)}`;
+    if (whatsappText) {
+      whatsappText.textContent = `Message "${CONFIG.PROMO.whatsappKeyword}" on WhatsApp to claim your seat`;
+    }
+    whatsappBtn.style.display = '';
+  } else if (whatsappBtn) {
+    whatsappBtn.style.display = 'none';
+  }
+
+  // Urgency text
+  if (urgencyEl && CONFIG.PROMO.urgencyText) {
+    urgencyEl.textContent = CONFIG.PROMO.urgencyText;
+    urgencyEl.style.display = '';
+  } else if (urgencyEl) {
+    urgencyEl.style.display = 'none';
+  }
+
+  promoSection.style.display = '';
+
+  // Update floating offer reminder label
+  const floatLabel = document.getElementById('offer-float-label');
+  if (floatLabel) {
+    floatLabel.textContent = CONFIG.OFFER.label ? CONFIG.OFFER.label.replace(/[!.]+$/, '') : 'Special Offer';
+  }
+}
+
+/**
+ * Update event platform display (name + visibility)
+ */
+function updatePlatformDisplay() {
+  const visible = CONFIG.EVENT.platformVisible;
+  const platform = CONFIG.EVENT.platform || 'Zoom';
+
+  // Hero section platform item
+  const heroPlatformItem = document.getElementById('hero-platform-item');
+  const heroPlatformText = document.getElementById('hero-platform-text');
+  if (heroPlatformItem) heroPlatformItem.style.display = visible ? '' : 'none';
+  if (heroPlatformText) heroPlatformText.textContent = platform;
+
+  // Modal platform item
+  const modalPlatformItem = document.getElementById('modal-platform-item');
+  const modalPlatformText = document.getElementById('modal-platform-text');
+  if (modalPlatformItem) modalPlatformItem.style.display = visible ? '' : 'none';
+  if (modalPlatformText) modalPlatformText.textContent = `Live on ${platform}`;
 }
 
 /**
@@ -333,8 +444,9 @@ function updateOfferCountdown() {
   if (offerBanner) {
     const offerText = offerBanner.querySelector('.offer-text');
     if (offerText) {
+      const offerName = (CONFIG.OFFER.label || 'Offer').replace(/[!.]+$/, '');
       if (days > 0) {
-        offerText.innerHTML = `Early Bird ends in <strong>${days} day${days > 1 ? 's' : ''}</strong>`;
+        offerText.innerHTML = `${offerName} ends in <strong>${days} day${days > 1 ? 's' : ''}</strong>`;
       } else if (hours > 0) {
         offerText.innerHTML = `Only <strong>${hours} hour${hours > 1 ? 's' : ''}</strong> left!`;
       } else {
@@ -356,7 +468,8 @@ function handleOfferExpiry() {
     offerBanner.classList.add('expired');
     const offerText = offerBanner.querySelector('.offer-text');
     if (offerText) {
-      offerText.innerHTML = 'Early bird offer has <strong>ended</strong>';
+      const offerName = (CONFIG.OFFER.label || 'Offer').replace(/[!.]+$/, '');
+      offerText.innerHTML = `${offerName} has <strong>ended</strong>`;
     }
   }
 
@@ -1687,6 +1800,18 @@ function initScrollHandlers() {
         backToTop.classList.add('visible');
       } else {
         backToTop.classList.remove('visible');
+      }
+    }
+
+    // Show floating offer reminder after scrolling past hero section (only when promo is enabled)
+    const offerFloatReminder = document.getElementById('offer-float-reminder');
+    if (offerFloatReminder) {
+      const heroSection = document.querySelector('.hero');
+      const heroBottom = heroSection ? heroSection.offsetTop + heroSection.offsetHeight : 800;
+      if (scrollY > heroBottom && CONFIG.PROMO && CONFIG.PROMO.enabled) {
+        offerFloatReminder.classList.add('visible');
+      } else {
+        offerFloatReminder.classList.remove('visible');
       }
     }
 

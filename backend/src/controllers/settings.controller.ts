@@ -3,6 +3,7 @@ import { settingsService } from '../services/settings.service.js';
 import { seatService } from '../services/seat.service.js';
 import { guestService } from '../services/guest.service.js';
 import { msmeBenefitService } from '../services/msmeBenefit.service.js';
+import { openAIService } from '../services/openai.service.js';
 import { logger } from '../utils/logger.js';
 import type { TierType } from '../types/index.js';
 
@@ -27,12 +28,22 @@ export async function getPublicSettings(req: Request, res: Response): Promise<vo
       discountStandard: settings.offer_discount_standard || defaultDiscount,
       discountBasic: settings.offer_discount_basic || defaultDiscount,
       isActive: settings.offer_is_active,
+      label: settings.offer_label,
+      description: settings.offer_description,
+    },
+    promo: {
+      enabled: settings.promo_enabled,
+      valueProp: settings.promo_value_prop,
+      whatsappKeyword: settings.promo_whatsapp_keyword,
+      urgencyText: settings.promo_urgency_text,
     },
     event: {
       name: settings.event_name,
       date: settings.event_date,
       time: settings.event_time,
       venue: settings.event_venue,
+      platform: settings.event_platform,
+      platformVisible: settings.event_platform_visible,
     },
     support: {
       email: settings.support_email,
@@ -381,4 +392,24 @@ export async function getSettingsHistory(req: Request, res: Response): Promise<v
   const history = await settingsService.getSettingsHistory(limit);
 
   res.json({ history });
+}
+
+/**
+ * Generate AI promo suggestions (admin only)
+ */
+export async function aiGeneratePromo(req: Request, res: Response): Promise<void> {
+  const { occasion } = req.body;
+
+  if (!occasion || !occasion.trim()) {
+    res.status(400).json({
+      success: false,
+      error: { message: 'Occasion/theme is required', code: 'VALIDATION_ERROR' },
+    });
+    return;
+  }
+
+  const suggestions = await openAIService.generatePromoSuggestions(occasion.trim());
+
+  logger.info('AI promo suggestions generated', { occasion: occasion.trim(), count: suggestions.length });
+  res.json({ success: true, data: { suggestions, occasion: occasion.trim() } });
 }

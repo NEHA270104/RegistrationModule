@@ -27,6 +27,8 @@ const CONFIG = {
     date: '21st Feb 2026',
     time: '9:00 AM - 5:00 PM IST',
     venue: 'Ashish Plaza, opposite Fergusson college campus road, Shivajinagar, Pune, Maharashtra 411004',
+    platform: 'Zoom',
+    platformVisible: true,
     organizer: 'BRTNeura Technology LLP',
   },
 
@@ -42,6 +44,16 @@ const CONFIG = {
     durationDays: 4, // Number of days the offer runs (27, 28, 29, 30 Jan)
     discountAmount: 1000, // Base discount (varies per tier)
     isActive: true, // Toggle offer on/off
+    label: 'Early Bird Special!',
+    description: 'Save on all passes',
+  },
+
+  // Hero Promo Section (admin-configurable)
+  PROMO: {
+    enabled: false,
+    valueProp: '',
+    whatsappKeyword: '',
+    urgencyText: '',
   },
 
   // Empathetic Tier Configuration

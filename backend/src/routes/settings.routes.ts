@@ -8,6 +8,7 @@ import {
   updateOfferConfig,
   updateTierPricing,
   getSettingsHistory,
+  aiGeneratePromo,
 } from '../controllers/settings.controller.js';
 import { adminAuth } from '../middleware/auth.js';
 import { standardLimiter, adminLimiter } from '../middleware/rateLimiter.js';
@@ -74,5 +75,12 @@ router.put('/admin/offer', adminAuth, adminLimiter, asyncHandler(updateOfferConf
  * @access Admin
  */
 router.put('/admin/pricing/:tier', adminAuth, adminLimiter, asyncHandler(updateTierPricing));
+
+/**
+ * @route POST /api/settings/admin/promo/ai-suggest
+ * @desc Generate AI promo content suggestions (admin only)
+ * @access Admin
+ */
+router.post('/admin/promo/ai-suggest', adminAuth, adminLimiter, asyncHandler(aiGeneratePromo));
 
 export default router;

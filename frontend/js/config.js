@@ -5,16 +5,39 @@
  */
 
 const CONFIG = {
+  // Tenant Detection
+  // Extract tenant slug from URL path /t/:slug
+  TENANT_SLUG: (() => {
+    const pathParts = window.location.pathname.split('/');
+    if (pathParts[1] === 't' && pathParts[2]) {
+      return pathParts[2];
+    }
+    return null;
+  })(),
+
   // API Configuration
   // Frontend and backend are served from the same origin on Cloud Run
   API_BASE_URL: (() => {
-    // Use localhost for local development
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://localhost:3000/api';
+    const base = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ? 'http://localhost:3000/api'
+      : '/api';
+
+    // If tenant slug is detected, use tenant-scoped public API
+    const pathParts = window.location.pathname.split('/');
+    if (pathParts[1] === 't' && pathParts[2]) {
+      // For tenant-scoped pages, still use base /api but tenant endpoints use /api/t/:slug/public/*
+      return base;
     }
-    // In production, use relative URL (same origin)
-    return '/api';
+    return base;
   })(),
+
+  // Tenant-scoped API base (for public endpoints)
+  get TENANT_API_BASE() {
+    if (this.TENANT_SLUG) {
+      return `${this.API_BASE_URL}/t/${this.TENANT_SLUG}/public`;
+    }
+    return null;
+  },
 
   // Razorpay Configuration (Live Mode)
   RAZORPAY_KEY_ID: 'rzp_live_SBXVkYjOsVLrl2',

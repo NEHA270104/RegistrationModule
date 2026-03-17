@@ -39,13 +39,24 @@ export async function createOrder(req: Request, res: Response): Promise<void> {
         email: req.body?.email,
       });
 
-      res.status(error.statusCode).json({
+      const errorResponse: any = {
         success: false,
         error: {
           message: error.message,
           code: error.code,
         },
-      });
+      };
+
+      // Include recovery link if available (for pending registration scenario)
+      if ((error as any).recoveryLink) {
+        errorResponse.recovery_link = (error as any).recoveryLink;
+        logger.info('Including recovery link in error response', {
+          email: req.body?.email,
+          code: error.code,
+        });
+      }
+
+      res.status(error.statusCode).json(errorResponse);
       return;
     }
 

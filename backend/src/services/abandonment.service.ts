@@ -477,6 +477,30 @@ export class AbandonmentService {
   }
 
   /**
+   * Get abandonment by registration ID
+   */
+  async getByRegistrationId(registrationId: string): Promise<PaymentAbandonment | null> {
+    try {
+      const { data, error } = await supabase
+        .from('payment_abandonments')
+        .select('*')
+        .eq('registration_id', registrationId)
+        .order('abandoned_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        logger.error('Error fetching abandonment by registration ID', { registrationId, error: error.message });
+        return null;
+      }
+
+      return data as PaymentAbandonment | null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Update follow-up status
    */
   async updateFollowupStatus(

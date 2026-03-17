@@ -28,13 +28,25 @@ let redirectCancelled = false;
  */
 async function loadDynamicSettings() {
   try {
-    const response = await fetch(`${CONFIG.API_BASE_URL}/settings`);
+    // Use tenant-scoped config endpoint if on /t/:slug
+    const settingsUrl = CONFIG.TENANT_SLUG
+      ? `${CONFIG.API_BASE_URL}/t/${CONFIG.TENANT_SLUG}/public/config`
+      : `${CONFIG.API_BASE_URL}/settings`;
+
+    const response = await fetch(settingsUrl);
     if (!response.ok) {
       console.warn('Failed to fetch dynamic settings, using static config');
       return;
     }
 
-    dynamicConfig = await response.json();
+    const rawConfig = await response.json();
+    // Tenant-scoped config wraps data differently
+    dynamicConfig = CONFIG.TENANT_SLUG ? (rawConfig.data?.settings || rawConfig) : rawConfig;
+
+    // Apply tenant branding if available
+    if (CONFIG.TENANT_SLUG && rawConfig.data?.tenant) {
+      applyTenantBranding(rawConfig.data.tenant);
+    }
 
     // Merge offer settings
     if (dynamicConfig.offer) {
@@ -217,6 +229,51 @@ async function loadDynamicSettings() {
     console.warn('Error loading dynamic settings:', error);
     // Continue with static config
   }
+}
+
+/**
+ * Apply tenant branding (colors, logo, title) from tenant config
+ */
+function applyTenantBranding(tenant) {
+  if (!tenant) return;
+
+  // Apply brand colors
+  if (tenant.primary_color) {
+    document.documentElement.style.setProperty('--primary', tenant.primary_color);
+    document.documentElement.style.setProperty('--primary-color', tenant.primary_color);
+  }
+  if (tenant.secondary_color) {
+    document.documentElement.style.setProperty('--secondary', tenant.secondary_color);
+    document.documentElement.style.setProperty('--secondary-color', tenant.secondary_color);
+  }
+
+  // Apply logo
+  if (tenant.logo_url) {
+    const logoEls = document.querySelectorAll('.logo, .brand-logo, #brand-logo');
+    logoEls.forEach(el => {
+      if (el.tagName === 'IMG') {
+        el.src = tenant.logo_url;
+      }
+    });
+  }
+
+  // Update page title
+  if (tenant.name || tenant.company_name) {
+    document.title = `${tenant.company_name || tenant.name} - Registration`;
+  }
+
+  // Apply favicon
+  if (tenant.favicon_url) {
+    let favicon = document.querySelector('link[rel="icon"]');
+    if (!favicon) {
+      favicon = document.createElement('link');
+      favicon.rel = 'icon';
+      document.head.appendChild(favicon);
+    }
+    favicon.href = tenant.favicon_url;
+  }
+
+  console.log('Tenant branding applied:', tenant.slug);
 }
 
 /**
@@ -1026,8 +1083,12 @@ class RegistrationApp {
     } catch (error) {
       this.hideLoading();
 
+      // Handle pending registration with recovery link
+      if (error.code === 'PENDING_REGISTRATION_EXISTS') {
+        this.showPendingRegistrationWithRecovery(error.message, error.recoveryLink);
+      }
       // Handle duplicate registration errors
-      if (error.code === 'EMAIL_ALREADY_REGISTERED') {
+      else if (error.code === 'EMAIL_ALREADY_REGISTERED') {
         this.showError(
           'This email address is already registered for the summit. Please use a different email or contact support if you need assistance.',
           'warning',
@@ -1409,6 +1470,78 @@ class RegistrationApp {
 
   showError(message, type = 'error', title = null) {
     showMessageModal(message, type, title);
+  }
+
+  /**
+   * Show pending registration modal with recovery link
+   */
+  showPendingRegistrationWithRecovery(message, recoveryLink) {
+    const modal = document.getElementById('message-modal');
+    const iconEl = document.getElementById('message-icon');
+    const titleEl = document.getElementById('message-title');
+    const textEl = document.getElementById('message-text');
+    const closeBtn = modal?.querySelector('.message-modal-close');
+
+    // Set warning icon
+    iconEl.className = 'message-icon warning';
+    iconEl.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+    titleEl.textContent = 'Incomplete Registration Found';
+
+    // Create custom HTML with recovery link
+    const messageHtml = `
+      <p style="margin-bottom: 1rem;">${this.escapeHtml(message)}</p>
+      ${recoveryLink ? `
+        <div style="margin-top: 1.5rem; padding: 1rem; background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px;">
+          <p style="margin-bottom: 0.75rem; font-weight: 600; color: #166534;">Complete Your Payment:</p>
+          <a href="${this.escapeHtml(recoveryLink)}"
+             style="display: inline-block; padding: 0.75rem 1.5rem; background: #059669; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; transition: background 0.2s;"
+             onmouseover="this.style.background='#047857'"
+             onmouseout="this.style.background='#059669'">
+            Click Here to Complete Payment
+          </a>
+        </div>
+      ` : ''}
+    `;
+
+    textEl.innerHTML = messageHtml;
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+
+    // Auto-redirect to recovery link after 10 seconds if provided
+    if (recoveryLink) {
+      let countdown = 10;
+      const countdownEl = document.createElement('p');
+      countdownEl.style.marginTop = '1rem';
+      countdownEl.style.fontSize = '0.875rem';
+      countdownEl.style.color = '#6b7280';
+      countdownEl.style.textAlign = 'center';
+      countdownEl.innerHTML = `Auto-redirecting in <strong>${countdown}</strong> seconds...`;
+      textEl.appendChild(countdownEl);
+
+      const countdownInterval = setInterval(() => {
+        countdown--;
+        if (countdown > 0) {
+          countdownEl.innerHTML = `Auto-redirecting in <strong>${countdown}</strong> seconds...`;
+        } else {
+          clearInterval(countdownInterval);
+          window.location.href = recoveryLink;
+        }
+      }, 1000);
+
+      // Cancel countdown if user closes modal
+      const cancelCountdown = () => {
+        clearInterval(countdownInterval);
+        closeBtn?.removeEventListener('click', cancelCountdown);
+        modal?.removeEventListener('click', cancelCountdown);
+      };
+
+      closeBtn?.addEventListener('click', cancelCountdown);
+      modal?.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal')) {
+          cancelCountdown();
+        }
+      });
+    }
   }
 
   escapeHtml(text) {

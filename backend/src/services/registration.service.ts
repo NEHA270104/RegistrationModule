@@ -366,15 +366,79 @@ export class RegistrationService {
   }
 
   /**
+   * Check if email has a pending or failed registration
+   */
+  async hasPendingRegistration(email: string): Promise<{
+    hasPending: boolean;
+    registration?: {
+      id: string;
+      email: string;
+      phone: string;
+      payment_status: string;
+      created_at: string;
+    };
+  }> {
+    try {
+      const { data, error } = await supabase
+        .from('registrations')
+        .select('id, email, phone, payment_status, created_at')
+        .eq('email', email.toLowerCase())
+        .in('payment_status', ['pending', 'failed'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        logger.error('Error checking pending registration', { error: error.message });
+        return { hasPending: false };
+      }
+
+      if (data) {
+        return {
+          hasPending: true,
+          registration: data as {
+            id: string;
+            email: string;
+            phone: string;
+            payment_status: string;
+            created_at: string;
+          },
+        };
+      }
+
+      return { hasPending: false };
+    } catch (error) {
+      logger.error('Error in hasPendingRegistration', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      return { hasPending: false };
+    }
+  }
+
+  /**
    * Check for all duplicate conditions and return specific error
    */
   async checkDuplicateRegistration(
     email: string,
     phone: string,
     name: string
-  ): Promise<{ isDuplicate: boolean; reason?: string; code?: string }> {
+  ): Promise<{ isDuplicate: boolean; reason?: string; code?: string; registrationId?: string }> {
     try {
-      // Check email first (most common identifier)
+      // First, check for pending/failed registrations with same email
+      const pendingCheck = await this.hasPendingRegistration(email);
+      if (pendingCheck.hasPending && pendingCheck.registration) {
+        const reg = pendingCheck.registration;
+        const status = reg.payment_status === 'pending' ? 'incomplete' : 'failed';
+
+        return {
+          isDuplicate: true,
+          reason: `You have an ${status} registration. Please check your email (${email}) for a payment link to complete your registration. If you need assistance, please contact support.`,
+          code: 'PENDING_REGISTRATION_EXISTS',
+          registrationId: reg.id,
+        };
+      }
+
+      // Check for confirmed email registration
       if (await this.isEmailRegistered(email)) {
         return {
           isDuplicate: true,
@@ -383,7 +447,7 @@ export class RegistrationService {
         };
       }
 
-      // Check phone number
+      // Check phone number (confirmed only)
       if (await this.isPhoneRegistered(phone)) {
         return {
           isDuplicate: true,
@@ -392,7 +456,7 @@ export class RegistrationService {
         };
       }
 
-      // Check name + phone combination (same person with different email)
+      // Check name + phone combination (same person with different email, confirmed only)
       if (await this.isPersonRegistered(name, phone)) {
         return {
           isDuplicate: true,

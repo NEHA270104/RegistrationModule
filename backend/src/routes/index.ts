@@ -7,6 +7,11 @@ import adminRouter from './admin.routes.js';
 import settingsRouter from './settings.routes.js';
 import guestRouter from './guest.routes.js';
 import msmeBenefitRouter from './msmeBenefit.routes.js';
+import authRouter from './auth.routes.js';
+import tenantRouter from './tenant.routes.js';
+import superAdminRouter from './superAdmin.routes.js';
+import ssoRouter from './sso.routes.js';
+import agentStudioRouter from './agentStudio.routes.js';
 
 const router = Router();
 
@@ -16,11 +21,13 @@ router.get('/health', (req, res) => {
     success: true,
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: '1.0.0',
+    version: '2.0.0',
   });
 });
 
-// API routes
+// ============================================
+// Legacy single-tenant API routes (backward compatible)
+// ============================================
 router.use('/seats', seatsRouter);
 router.use('/', paymentRouter);
 router.use('/registration', registrationRouter);
@@ -29,5 +36,18 @@ router.use('/admin', adminRouter);
 router.use('/settings', settingsRouter);
 router.use('/guests', guestRouter);
 router.use('/msme-benefits', msmeBenefitRouter);
+
+// ============================================
+// Multi-tenant API routes
+// ============================================
+router.use('/auth', authRouter);
+router.use('/t', tenantRouter);
+router.use('/super-admin', superAdminRouter);
+
+// ============================================
+// Agent Studio integration routes
+// ============================================
+router.use('/sso', ssoRouter);
+router.use('/', agentStudioRouter);
 
 export default router;

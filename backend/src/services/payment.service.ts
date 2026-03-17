@@ -41,6 +41,40 @@ export class PaymentService {
         data.name
       );
       if (duplicateCheck.isDuplicate) {
+        // If there's a pending/failed registration, try to find and create a recovery link
+        if (duplicateCheck.code === 'PENDING_REGISTRATION_EXISTS' && duplicateCheck.registrationId) {
+          try {
+            // Look for existing abandonment record
+            const abandonment = await abandonmentService.getByRegistrationId(duplicateCheck.registrationId);
+
+            if (abandonment) {
+              // Generate/regenerate recovery link
+              const recovery = await abandonmentService.generateRecoveryLink(abandonment.id);
+
+              logger.info('Generated recovery link for duplicate registration attempt', {
+                email: data.email,
+                abandonmentId: abandonment.id,
+                registrationId: duplicateCheck.registrationId,
+              });
+
+              // Include recovery link in error for frontend to display
+              const errorWithRecovery = new AppError(
+                duplicateCheck.reason || 'You have an incomplete registration',
+                400,
+                duplicateCheck.code || 'PENDING_REGISTRATION_EXISTS'
+              );
+              (errorWithRecovery as any).recoveryLink = recovery.link;
+              throw errorWithRecovery;
+            }
+          } catch (recoveryError) {
+            // If recovery link generation fails, just show the standard message
+            logger.warn('Failed to generate recovery link for pending registration', {
+              error: recoveryError instanceof Error ? recoveryError.message : 'Unknown error',
+              registrationId: duplicateCheck.registrationId,
+            });
+          }
+        }
+
         throw new AppError(
           duplicateCheck.reason || 'You are already registered for the summit',
           400,

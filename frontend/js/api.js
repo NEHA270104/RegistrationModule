@@ -33,11 +33,16 @@ class ApiClient {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new ApiError(
+        const apiError = new ApiError(
           data.error?.message || 'Request failed',
           data.error?.code || 'REQUEST_ERROR',
           response.status
         );
+        // Preserve recovery_link if present in error response
+        if (data.recovery_link) {
+          apiError.recoveryLink = data.recovery_link;
+        }
+        throw apiError;
       }
 
       return data;
@@ -89,6 +94,22 @@ class ApiError extends Error {
 class RegistrationApi {
   constructor() {
     this.client = new ApiClient(CONFIG.API_BASE_URL);
+    this.tenantSlug = CONFIG.TENANT_SLUG;
+  }
+
+  /**
+   * Get the correct endpoint path based on tenant context.
+   * When on /t/:slug, maps legacy endpoints to tenant-scoped public endpoints.
+   */
+  _ep(path) {
+    if (this.tenantSlug) {
+      const tb = `/t/${this.tenantSlug}/public`;
+      if (path === '/seats') return `${tb}/seats`;
+      if (path === '/settings') return `${tb}/config`;
+      if (path === '/guests') return `${tb}/guests`;
+      if (path === '/msme-benefits') return `${tb}/benefits`;
+    }
+    return path;
   }
 
   /**
@@ -96,7 +117,7 @@ class RegistrationApi {
    */
   async getSeats() {
     try {
-      const response = await this.client.get('/seats');
+      const response = await this.client.get(this._ep('/seats'));
       return response;
     } catch (error) {
       console.error('Error fetching seats:', error);

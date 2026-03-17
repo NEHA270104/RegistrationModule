@@ -1937,6 +1937,33 @@ body {
   margin-bottom: 1rem;
 }
 
+.email-reminder {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 2px solid #86efac;
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+  color: #166534;
+  line-height: 1.6;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.15);
+  animation: emailPulse 2s ease-in-out infinite;
+}
+
+.email-reminder strong {
+  color: #065f46;
+  font-weight: 700;
+}
+
+@keyframes emailPulse {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.15);
+  }
+  50% {
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+  }
+}
+
 .success-message {
   font-size: 0.875rem;
   color: var(--gray-600);

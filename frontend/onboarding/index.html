@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get Started - Onboarding</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/onboarding.css">
+</head>
+<body>
+
+<div class="onboarding-wrapper">
+
+  <!-- Header -->
+  <div class="onboarding-header">
+    <div class="logo">EventReg <span>Platform</span></div>
+    <div class="tagline">Set up your event registration in minutes</div>
+  </div>
+
+  <!-- Stepper -->
+  <div class="stepper">
+    <div class="stepper-step active">
+      <div class="step-circle">1</div>
+      <div class="step-label">Company</div>
+    </div>
+    <div class="stepper-step">
+      <div class="step-circle">2</div>
+      <div class="step-label">Plan</div>
+    </div>
+    <div class="stepper-step">
+      <div class="step-circle">3</div>
+      <div class="step-label">Account</div>
+    </div>
+    <div class="stepper-step">
+      <div class="step-circle">4</div>
+      <div class="step-label">Event</div>
+    </div>
+    <div class="stepper-step">
+      <div class="step-circle">5</div>
+      <div class="step-label">Go Live</div>
+    </div>
+  </div>
+
+  <!-- Wizard Card -->
+  <div class="wizard-card">
+    <div class="wizard-card-body">
+
+      <!-- ==================== STEP 1: Company Details ==================== -->
+      <div class="step-panel active" data-step="1">
+        <h2 class="step-title">Company Details</h2>
+        <p class="step-subtitle">Tell us about your organization.</p>
+
+        <div class="form-group">
+          <label for="companyName">Company / Organization Name <span class="required">*</span></label>
+          <input type="text" id="companyName" class="form-control" placeholder="e.g. Acme Events Pvt Ltd">
+          <div class="field-error">Company name is required</div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="contactName">Contact Person <span class="required">*</span></label>
+            <input type="text" id="contactName" class="form-control" placeholder="Full name">
+            <div class="field-error">Contact name is required</div>
+          </div>
+          <div class="form-group">
+            <label for="companyPhone">Phone <span class="required">*</span></label>
+            <input type="tel" id="companyPhone" class="form-control" placeholder="+91 98765 43210">
+            <div class="field-error">Valid phone number is required</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="companyEmail">Business Email <span class="required">*</span></label>
+          <input type="email" id="companyEmail" class="form-control" placeholder="you@company.com">
+          <div class="field-error">Valid email is required</div>
+        </div>
+
+        <div class="form-group">
+          <label for="companyWebsite">Website <span class="text-muted">(optional)</span></label>
+          <input type="url" id="companyWebsite" class="form-control" placeholder="https://www.example.com">
+        </div>
+      </div>
+
+      <!-- ==================== STEP 2: Choose Plan ==================== -->
+      <div class="step-panel" data-step="2">
+        <h2 class="step-title">Choose Your Plan</h2>
+        <p class="step-subtitle">Pick the plan that fits your needs. Upgrade anytime.</p>
+
+        <div class="plan-toggle">
+          <span id="labelMonthly" class="active-label">Monthly</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="billingToggle">
+            <span class="toggle-slider"></span>
+          </label>
+          <span id="labelYearly">Yearly</span>
+          <span id="saveBadge" class="save-badge">Save 17%</span>
+        </div>
+
+        <div class="plans-grid">
+          <!-- LaunchPad -->
+          <div class="plan-card" data-plan="launchpad">
+            <div class="plan-name">LaunchPad</div>
+            <div class="plan-price">&#8377; 1,999</div>
+            <div class="plan-period">/month</div>
+            <ul class="plan-features">
+              <li>1 concurrent event</li>
+              <li>Up to 500 registrations</li>
+              <li>Basic analytics dashboard</li>
+              <li>Email notifications</li>
+              <li>Standard support</li>
+            </ul>
+          </div>
+
+          <!-- ScaleUp Pro -->
+          <div class="plan-card" data-plan="scaleup">
+            <div class="popular-badge">Popular</div>
+            <div class="plan-name">ScaleUp Pro</div>
+            <div class="plan-price">&#8377; 4,999</div>
+            <div class="plan-period">/month</div>
+            <ul class="plan-features">
+              <li>Unlimited events</li>
+              <li>Unlimited registrations</li>
+              <li>Advanced analytics & exports</li>
+              <li>Custom branding & domain</li>
+              <li>Priority support & onboarding</li>
+              <li>API access</li>
+              <li>Team collaboration</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="referralCode">Referral Code <span class="text-muted">(optional)</span></label>
+          <input type="text" id="referralCode" class="form-control" placeholder="Enter referral code if you have one">
+        </div>
+      </div>
+
+      <!-- ==================== STEP 3: Create Account ==================== -->
+      <div class="step-panel" data-step="3">
+        <h2 class="step-title">Create Your Account</h2>
+        <p class="step-subtitle">Set up your login credentials.</p>
+
+        <div class="form-group">
+          <label for="accountEmail">Email Address <span class="required">*</span></label>
+          <input type="email" id="accountEmail" class="form-control" placeholder="you@company.com">
+          <div class="field-error">Valid email is required</div>
+          <div class="form-hint">This will be your login email</div>
+        </div>
+
+        <div class="form-group">
+          <label for="accountPassword">Password <span class="required">*</span></label>
+          <input type="password" id="accountPassword" class="form-control" placeholder="Min 8 characters">
+          <div class="field-error">Password must be at least 8 characters</div>
+          <div class="password-strength">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+          </div>
+          <div id="passwordHint" class="password-hint"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="accountPasswordConfirm">Confirm Password <span class="required">*</span></label>
+          <input type="password" id="accountPasswordConfirm" class="form-control" placeholder="Re-enter password">
+          <div class="field-error">Passwords do not match</div>
+        </div>
+
+        <div class="form-group">
+          <div class="checkbox-group">
+            <input type="checkbox" id="tosCheckbox">
+            <label for="tosCheckbox">I agree to the <a href="/legal/terms-of-service" target="_blank">Terms of Service</a> and <a href="/legal/privacy-policy" target="_blank">Privacy Policy</a></label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="checkbox-group">
+            <input type="checkbox" id="dpaCheckbox">
+            <label for="dpaCheckbox">I agree to the <a href="/legal/data-processing-agreement" target="_blank">Data Processing Agreement</a></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== STEP 4: Configure First Event ==================== -->
+      <div class="step-panel" data-step="4">
+        <h2 class="step-title">Configure Your First Event</h2>
+        <p class="step-subtitle">Set up your inaugural event. You can always edit this later.</p>
+
+        <div class="form-group">
+          <label for="eventName">Event Name <span class="required">*</span></label>
+          <input type="text" id="eventName" class="form-control" placeholder="e.g. Annual Tech Summit 2026">
+          <div class="field-error">Event name is required</div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="eventDate">Event Date <span class="required">*</span></label>
+            <input type="date" id="eventDate" class="form-control">
+            <div class="field-error">Event date is required</div>
+          </div>
+          <div class="form-group">
+            <label for="eventVenue">Venue <span class="required">*</span></label>
+            <input type="text" id="eventVenue" class="form-control" placeholder="Venue name & city">
+            <div class="field-error">Venue is required</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Ticket Tiers</label>
+          <div class="form-hint" style="margin-bottom: 10px;">Define pricing tiers for your event. Add at least one.</div>
+
+          <div id="tiersContainer" class="tiers-container">
+            <!-- Default tier row -->
+            <div class="tier-row">
+              <div class="form-group">
+                <input type="text" class="form-control tier-name" placeholder="Tier name (e.g. General)" value="General">
+              </div>
+              <div class="form-group">
+                <input type="number" class="form-control tier-price" placeholder="Price" min="0" value="500">
+              </div>
+              <div class="form-group">
+                <input type="number" class="form-control tier-seats" placeholder="Seats" min="1" value="100">
+              </div>
+              <button type="button" class="btn-remove-tier" title="Remove tier">&times;</button>
+            </div>
+          </div>
+
+          <button type="button" id="btnAddTier" class="btn-add-tier">+ Add Tier</button>
+        </div>
+      </div>
+
+      <!-- ==================== STEP 5: Go Live ==================== -->
+      <div class="step-panel" data-step="5">
+        <div class="success-check">&#10003;</div>
+        <h2 class="step-title" style="text-align:center;">You're Almost Live!</h2>
+        <p class="step-subtitle" style="text-align:center;">Review your registration page and launch when ready.</p>
+
+        <div class="golive-preview">
+          <div class="preview-label">Your Registration Page</div>
+          <div id="previewUrl" class="preview-url">--</div>
+        </div>
+
+        <div class="launch-section">
+          <button id="btnLaunch" class="btn-launch">&#128640; Launch Now</button>
+        </div>
+
+        <div id="shareSection" class="share-section" style="display:none;">
+          <button id="btnCopyUrl" class="btn-share">&#128279; Copy Link</button>
+          <button id="btnWhatsApp" class="btn-share whatsapp">&#9993; Share on WhatsApp</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="wizard-footer">
+      <button id="btnBack" class="btn btn-back" disabled>&larr; Back</button>
+      <button id="btnNext" class="btn btn-next">Continue &rarr;</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Alert Modal -->
+<div id="alertOverlay" class="alert-overlay">
+  <div class="alert-box">
+    <div id="alertIcon" class="alert-icon"></div>
+    <div id="alertTitle" class="alert-title"></div>
+    <div id="alertMessage" class="alert-message"></div>
+    <button id="alertCloseBtn" class="btn-alert-close">OK</button>
+  </div>
+</div>
+
+<script src="js/onboarding.js"></script>
+</body>
+</html>

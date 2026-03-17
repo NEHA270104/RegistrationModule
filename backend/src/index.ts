@@ -15,6 +15,8 @@ import {
 import { standardLimiter, adminLimiter } from './middleware/rateLimiter.js';
 import routes from './routes/index.js';
 import { abandonmentService } from './services/abandonment.service.js';
+import { domainRouter } from './middleware/domainRouter.js';
+import { initializeJobs } from './jobs/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -57,6 +59,8 @@ app.use(
         'https://registration.bizflowai.in',
         // Cloud Run domain
         'https://bizflow-registration-847587405518.asia-south1.run.app',
+        // Agent Studio
+        'https://agentstudio.brtneura.com',
       ];
 
       if (allowedOrigins.includes(origin) || config.nodeEnv === 'development') {
@@ -68,7 +72,7 @@ app.use(
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'X-Razorpay-Signature'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'X-Razorpay-Signature', 'X-Agent-Studio-Key', 'X-Webhook-Secret'],
   })
 );
 
@@ -97,6 +101,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
+// Custom domain routing — resolve custom domains to tenant slugs before other middleware
+app.use(domainRouter);
+
 // Apply rate limiting to API routes
 // Admin routes with API key skip rate limiting, others use standard limiter
 app.use('/api', (req: Request, res: Response, next: NextFunction) => {
@@ -117,11 +124,39 @@ app.use('/api', routes);
 
 // Serve frontend static files
 const frontendPath = path.join(__dirname, '../../frontend');
-app.use(express.static(frontendPath));
 
-// Serve admin dashboard
+// Landing page at root (must be before express.static which would serve frontend/index.html)
+app.get('/', (req: Request, res: Response) => {
+  res.sendFile(path.join(frontendPath, 'landing', 'index.html'));
+});
+
+// Static files (CSS, JS, images, etc.) — index option disabled so / doesn't serve frontend/index.html
+app.use(express.static(frontendPath, { index: false }));
+
+// Serve admin dashboard (legacy)
 app.get('/admin', (req: Request, res: Response) => {
   res.sendFile(path.join(frontendPath, 'admin', 'index.html'));
+});
+
+// Serve onboarding wizard
+app.get('/onboarding', (req: Request, res: Response) => {
+  res.sendFile(path.join(frontendPath, 'onboarding', 'index.html'));
+});
+
+// Serve tenant dashboard
+app.get('/dashboard', (req: Request, res: Response) => {
+  res.sendFile(path.join(frontendPath, 'dashboard', 'index.html'));
+});
+app.get('/dashboard/*', (req: Request, res: Response) => {
+  res.sendFile(path.join(frontendPath, 'dashboard', 'index.html'));
+});
+
+// Serve super admin panel
+app.get('/super-admin', (req: Request, res: Response) => {
+  res.sendFile(path.join(frontendPath, 'super-admin', 'index.html'));
+});
+app.get('/super-admin/*', (req: Request, res: Response) => {
+  res.sendFile(path.join(frontendPath, 'super-admin', 'index.html'));
 });
 
 // Serve waitlist page
@@ -129,12 +164,17 @@ app.get('/waitlist', (req: Request, res: Response) => {
   res.sendFile(path.join(frontendPath, 'waitlist.html'));
 });
 
-// Serve index.html for all non-API routes (SPA support)
+// Serve tenant-scoped registration form /t/:slug
+app.get('/t/:slug', (req: Request, res: Response) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
+});
+
+// Fallback: serve landing page for unknown non-API routes
 app.get('*', (req: Request, res: Response, next: NextFunction) => {
   if (req.path.startsWith('/api')) {
     return next();
   }
-  res.sendFile(path.join(frontendPath, 'index.html'));
+  res.sendFile(path.join(frontendPath, 'landing', 'index.html'));
 });
 
 // 404 handler for API routes
@@ -169,6 +209,9 @@ async function startServer(): Promise<void> {
 
       // Start automatic cleanup of expired pending registrations
       startAutomaticCleanup();
+
+      // Initialize scheduled cron jobs (Phase 4)
+      initializeJobs();
     });
   } catch (error) {
     logger.error('Failed to start server', {

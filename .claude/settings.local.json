@@ -52,7 +52,11 @@
       "Bash(cmd //c \"del /f /q \"\"\\\\?\\\\D:\\\\Data\\\\BRTNeura\\\\Products\\\\Registration Form\\\\backend\\\\nul\"\"\")",
       "Bash(cmd //c \"del /f /q \"\"\\\\?\\\\D:\\\\Data\\\\BRTNeura\\\\Products\\\\Registration Form\\\\nul\"\"\")",
       "Bash(node -e:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(set \"CLOUDSDK_PYTHON=C:\\\\Python314\\\\python.exe\")",
+      "Bash(gcloud run deploy:*)",
+      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gcloud.cmd\" builds submit --config=cloudbuild.yaml --project=brtneura-registration .)",
+      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gcloud.cmd\" run domain-mappings list --region=asia-south1 --project=bizflowai-478116)"
     ]
   }
 }

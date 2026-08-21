@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your Registration - AI for MSME Summit 2026</title>
+    <link rel="icon" type="image/png" href="/images/favicon.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #d1fae5 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            padding: 2.5rem;
+            text-align: center;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, #059669, #10b981);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            color: #111827;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 2rem;
+        }
+
+        .loading-state, .error-state, .success-state, .details-state {
+            display: none;
+        }
+
+        .loading-state.active, .error-state.active, .success-state.active, .details-state.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #e5e7eb;
+            border-top-color: #059669;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 2rem auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .details-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            text-align: left;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .detail-value {
+            color: #111827;
+            font-weight: 600;
+        }
+
+        .amount-highlight {
+            font-size: 1.5rem;
+            color: #059669;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            margin-top: 1rem;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .error-icon {
+            width: 64px;
+            height: 64px;
+            background: #fef2f2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: #ef4444;
+            font-size: 2rem;
+        }
+
+        .success-icon {
+            width: 64px;
+            height: 64px;
+            background: #f0fdf4;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: #10b981;
+            font-size: 2rem;
+        }
+
+        .error-message {
+            color: #dc2626;
+            margin-bottom: 1.5rem;
+        }
+
+        .support-info {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .support-info a {
+            color: #059669;
+            text-decoration: none;
+        }
+
+        .support-info a:hover {
+            text-decoration: underline;
+        }
+
+        .timer-warning {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">AI</div>
+        <h1>Complete Your Registration</h1>
+        <p class="subtitle">AI for MSME Summit 2026</p>
+
+        <!-- Loading State -->
+        <div class="loading-state active" id="loading-state">
+            <div class="spinner"></div>
+            <p>Validating your recovery link...</p>
+        </div>
+
+        <!-- Error State -->
+        <div class="error-state" id="error-state">
+            <div class="error-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="15" y1="9" x2="9" y2="15"/>
+                    <line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+            </div>
+            <h2>Link Invalid or Expired</h2>
+            <p class="error-message" id="error-message">This recovery link is no longer valid.</p>
+            <a href="/" class="btn btn-primary">Register Fresh</a>
+            <div class="support-info">
+                Need help? Contact us at<br>
+                <a href="mailto:support@bizflowai.in">support@bizflowai.in</a> |
+                <a href="tel:+918188050895">+91 8188050895</a>
+            </div>
+        </div>
+
+        <!-- Details State -->
+        <div class="details-state" id="details-state">
+            <div class="timer-warning" id="timer-warning">
+                Your seat is reserved. Complete payment to confirm.
+            </div>
+
+            <div class="details-card">
+                <div class="detail-row">
+                    <span class="detail-label">Name</span>
+                    <span class="detail-value" id="detail-name">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Email</span>
+                    <span class="detail-value" id="detail-email">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Tier</span>
+                    <span class="detail-value" id="detail-tier">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Amount</span>
+                    <span class="detail-value amount-highlight" id="detail-amount">-</span>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="pay-now-btn" onclick="initiatePayment()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                    <line x1="1" y1="10" x2="23" y2="10"/>
+                </svg>
+                Complete Payment
+            </button>
+
+            <a href="/" class="btn btn-secondary">Cancel & Start Fresh</a>
+
+            <div class="support-info">
+                Having trouble? Contact us at<br>
+                <a href="mailto:support@bizflowai.in">support@bizflowai.in</a> |
+                <a href="tel:+918188050895">+91 8188050895</a>
+            </div>
+        </div>
+
+        <!-- Success State -->
+        <div class="success-state" id="success-state">
+            <div class="success-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+            </div>
+            <h2>Payment Successful!</h2>
+            <p style="color: #6b7280; margin-bottom: 1rem;">Your registration is confirmed. A confirmation email has been sent to your inbox.</p>
+
+            <div class="details-card" id="success-details" style="display: none;">
+                <div class="detail-row">
+                    <span class="detail-label">Booking ID</span>
+                    <span class="detail-value" id="success-booking-id">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Name</span>
+                    <span class="detail-value" id="success-name">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Email</span>
+                    <span class="detail-value" id="success-email">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Tier</span>
+                    <span class="detail-value" id="success-tier">-</span>
+                </div>
+            </div>
+
+            <p id="redirect-countdown" style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;"></p>
+            <a href="/" class="btn btn-primary">Go to Homepage</a>
+        </div>
+    </div>
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="/js/config.js"></script>
+    <script>
+        let recoveryData = null;
+        let recoveryToken = null;
+        let countdownInterval = null;
+
+        // Get token from URL
+        const pathParts = window.location.pathname.split('/');
+        recoveryToken = pathParts[pathParts.length - 1];
+
+        // Validate token on page load + check for pending recovery payment (redirect-based)
+        document.addEventListener('DOMContentLoaded', async () => {
+            // First, check if we're returning from a redirect-based payment
+            const pendingRecovery = sessionStorage.getItem('recovery_pending_order');
+            if (pendingRecovery) {
+                const pending = JSON.parse(pendingRecovery);
+                document.getElementById('loading-state').querySelector('p').textContent = 'Checking payment status...';
+                await checkPendingPayment(pending.order_id, pending.recovery_data);
+                return;
+            }
+
+            if (!recoveryToken || recoveryToken === 'recover') {
+                showError('No recovery token provided. Please use the link from your email.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/recover/${recoveryToken}`);
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    showError(data.error?.message || 'This recovery link is invalid or has expired.');
+                    return;
+                }
+
+                recoveryData = data.data;
+                showDetails(recoveryData);
+            } catch (error) {
+                console.error('Error validating token:', error);
+                showError('Unable to validate recovery link. Please try again or contact support.');
+            }
+        });
+
+        // Check pending payment status (for redirect-based payment methods)
+        async function checkPendingPayment(orderId, savedRecoveryData, attempt = 1) {
+            const MAX_ATTEMPTS = 5;
+            try {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/payment-status/${orderId}`);
+                const data = await response.json();
+
+                if (data.success && data.data.payment_status === 'confirmed') {
+                    sessionStorage.removeItem('recovery_pending_order');
+                    showSuccess({
+                        booking_id: data.data.booking_id,
+                        registration: {
+                            name: savedRecoveryData.name,
+                            email: savedRecoveryData.email,
+                            tier: savedRecoveryData.tier,
+                        }
+                    });
+                    return;
+                }
+
+                // Still pending - retry up to MAX_ATTEMPTS
+                if (attempt < MAX_ATTEMPTS) {
+                    document.getElementById('loading-state').querySelector('p').textContent =
+                        `Checking payment status... (attempt ${attempt}/${MAX_ATTEMPTS})`;
+                    setTimeout(() => checkPendingPayment(orderId, savedRecoveryData, attempt + 1), 3000);
+                } else {
+                    // Max attempts reached - clear storage and show normal recovery page
+                    sessionStorage.removeItem('recovery_pending_order');
+                    if (recoveryToken && recoveryToken !== 'recover') {
+                        // Re-validate token and show details
+                        try {
+                            const tokenResponse = await fetch(`${CONFIG.API_BASE_URL}/recover/${recoveryToken}`);
+                            const tokenData = await tokenResponse.json();
+                            if (tokenResponse.ok && tokenData.success) {
+                                recoveryData = tokenData.data;
+                                showDetails(recoveryData);
+                                return;
+                            }
+                        } catch (e) { /* fall through */ }
+                    }
+                    showError('Payment status could not be confirmed. If money was deducted, please contact support.');
+                }
+            } catch (error) {
+                console.error('Error checking payment status:', error);
+                if (attempt < MAX_ATTEMPTS) {
+                    setTimeout(() => checkPendingPayment(orderId, savedRecoveryData, attempt + 1), 3000);
+                } else {
+                    sessionStorage.removeItem('recovery_pending_order');
+                    showError('Unable to verify payment status. If money was deducted, please contact support.');
+                }
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('loading-state').classList.remove('active');
+            document.getElementById('error-state').classList.add('active');
+            document.getElementById('error-message').textContent = message;
+        }
+
+        function showDetails(data) {
+            document.getElementById('loading-state').classList.remove('active');
+            document.getElementById('details-state').classList.add('active');
+
+            document.getElementById('detail-name').textContent = data.name;
+            document.getElementById('detail-email').textContent = data.email;
+            document.getElementById('detail-tier').textContent = getTierName(data.tier);
+            document.getElementById('detail-amount').textContent = formatPrice(data.amount);
+        }
+
+        function showSuccess(data) {
+            document.getElementById('loading-state').classList.remove('active');
+            document.getElementById('details-state').classList.remove('active');
+            document.getElementById('success-state').classList.add('active');
+
+            // Populate booking details if available
+            if (data) {
+                const reg = data.registration || {};
+                const detailsEl = document.getElementById('success-details');
+
+                if (data.booking_id) {
+                    document.getElementById('success-booking-id').textContent = data.booking_id;
+                }
+                if (reg.name) {
+                    document.getElementById('success-name').textContent = reg.name;
+                }
+                if (reg.email) {
+                    document.getElementById('success-email').textContent = reg.email;
+                }
+                if (reg.tier) {
+                    document.getElementById('success-tier').textContent = getTierName(reg.tier);
+                }
+
+                detailsEl.style.display = 'block';
+            }
+
+            // Start countdown for auto-redirect
+            startRedirectCountdown();
+        }
+
+        function startRedirectCountdown() {
+            let seconds = 30;
+            const el = document.getElementById('redirect-countdown');
+            el.textContent = `Redirecting to homepage in ${seconds} seconds...`;
+
+            countdownInterval = setInterval(() => {
+                seconds--;
+                if (seconds <= 0) {
+                    clearInterval(countdownInterval);
+                    window.location.href = '/';
+                } else {
+                    el.textContent = `Redirecting to homepage in ${seconds} seconds...`;
+                }
+            }, 1000);
+        }
+
+        function getTierName(tier) {
+            const names = {
+                vip: 'VIP Pass - Executive Experience',
+                standard: 'Standard Pass - Business Builder',
+                basic: 'Basic Pass - Growth Starter',
+                waitlist: 'Livestream Access'
+            };
+            return names[tier] || tier;
+        }
+
+        function formatPrice(amount) {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+
+        async function initiatePayment() {
+            const btn = document.getElementById('pay-now-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner" style="width:20px;height:20px;border-width:2px;margin:0;"></span> Processing...';
+
+            try {
+                // Create order for recovery
+                const response = await fetch(`${CONFIG.API_BASE_URL}/recover/${recoveryToken}/order`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    alert(data.error?.message || 'Failed to create order. Please try again.');
+                    btn.disabled = false;
+                    btn.innerHTML = 'Complete Payment';
+                    return;
+                }
+
+                // Save to sessionStorage for redirect-based payment recovery
+                sessionStorage.setItem('recovery_pending_order', JSON.stringify({
+                    order_id: data.order_id,
+                    recovery_token: recoveryToken,
+                    recovery_data: {
+                        name: recoveryData.name,
+                        email: recoveryData.email,
+                        tier: recoveryData.tier,
+                    }
+                }));
+
+                // Open Razorpay checkout
+                const options = {
+                    key: data.key_id || CONFIG.RAZORPAY_KEY_ID,
+                    amount: data.amount,
+                    currency: data.currency || 'INR',
+                    name: 'AI for MSME Summit 2026',
+                    description: 'Summit Registration - Recovery',
+                    order_id: data.order_id,
+                    prefill: {
+                        name: recoveryData.name,
+                        email: recoveryData.email,
+                        contact: recoveryData.phone
+                    },
+                    theme: {
+                        color: '#059669'
+                    },
+                    handler: async function(response) {
+                        // Clear sessionStorage on successful inline payment
+                        sessionStorage.removeItem('recovery_pending_order');
+                        await verifyPayment(response);
+                    },
+                    modal: {
+                        ondismiss: function() {
+                            // Don't clear sessionStorage here - user might return from redirect
+                            btn.disabled = false;
+                            btn.innerHTML = 'Complete Payment';
+                        }
+                    }
+                };
+
+                const rzp = new Razorpay(options);
+                rzp.on('payment.failed', function(response) {
+                    sessionStorage.removeItem('recovery_pending_order');
+                    alert('Payment failed: ' + response.error.description);
+                    btn.disabled = false;
+                    btn.innerHTML = 'Complete Payment';
+                });
+                rzp.open();
+            } catch (error) {
+                console.error('Payment error:', error);
+                sessionStorage.removeItem('recovery_pending_order');
+                alert('An error occurred. Please try again or contact support.');
+                btn.disabled = false;
+                btn.innerHTML = 'Complete Payment';
+            }
+        }
+
+        async function verifyPayment(paymentResponse) {
+            try {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/verify-payment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        razorpay_order_id: paymentResponse.razorpay_order_id,
+                        razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                        razorpay_signature: paymentResponse.razorpay_signature,
+                        recovery_token: recoveryToken
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showSuccess(data);
+                } else {
+                    alert(data.error?.message || 'Payment verification failed. Please contact support.');
+                }
+            } catch (error) {
+                console.error('Verification error:', error);
+                alert('Payment may have succeeded but verification failed. Please contact support with your payment ID.');
+            }
+        }
+    </script>
+</body>
+</html>

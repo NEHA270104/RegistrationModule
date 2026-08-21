@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Join the waitlist for AI Summit for MSME Business Owners 2026 - From Survival to Scale">
+    <title>Join Waitlist | AI Summit for MSME Business Owners 2026</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="images/BizflowLogo.png">
+    <link rel="apple-touch-icon" href="images/BizflowLogo.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Razorpay Checkout -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, var(--gray-900), var(--gray-800));
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
+        .waitlist-container {
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .waitlist-card {
+            background: white;
+            border-radius: var(--radius-2xl);
+            overflow: hidden;
+        }
+
+        .waitlist-header {
+            background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+            padding: 2rem;
+            text-align: center;
+            color: white;
+        }
+
+        .waitlist-header .logo {
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .waitlist-header .logo-text,
+        .waitlist-header .logo-msme {
+            color: white;
+        }
+
+        .waitlist-header .logo {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .waitlist-tagline {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.85rem;
+            font-style: italic;
+            margin-top: 0.5rem;
+        }
+
+        .sold-out-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1.5rem;
+            border-radius: var(--radius-lg);
+            font-size: 0.875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+
+        .waitlist-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .waitlist-subtitle {
+            font-size: 0.9375rem;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .waitlist-body {
+            padding: 2rem;
+        }
+
+        .empathy-message {
+            background: var(--primary-50);
+            border-left: 4px solid var(--primary-500);
+            padding: 1rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .empathy-message p {
+            font-size: 0.875rem;
+            color: var(--gray-700);
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .livestream-option {
+            background: var(--gray-50);
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .livestream-option.selected {
+            border-color: var(--primary-500);
+            background: var(--primary-50);
+        }
+
+        .livestream-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .livestream-checkbox {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--primary-500);
+        }
+
+        .livestream-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .livestream-price {
+            margin-left: auto;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-600);
+        }
+
+        .livestream-benefits {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 0 2rem;
+        }
+
+        .livestream-benefits li {
+            position: relative;
+            padding-left: 1.25rem;
+            font-size: 0.8125rem;
+            color: var(--gray-600);
+            margin-bottom: 0.25rem;
+        }
+
+        .livestream-benefits li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.25rem;
+            width: 12px;
+            height: 12px;
+            background: var(--primary-100);
+            border-radius: 50%;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23059669' stroke-width='3'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+            background-size: 7px;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .waitlist-form .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .btn-waitlist {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+            color: white;
+            padding: 1rem;
+            border: none;
+            border-radius: var(--radius-lg);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-waitlist:hover {
+            background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .waitlist-footer {
+            text-align: center;
+            padding: 1rem 2rem 2rem;
+        }
+
+        .waitlist-footer p {
+            font-size: 0.8125rem;
+            color: var(--gray-500);
+        }
+
+        .waitlist-footer a {
+            color: var(--primary-600);
+            text-decoration: underline;
+        }
+
+        /* Success state */
+        .waitlist-success {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .waitlist-success.active {
+            display: block;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--primary-100);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+        }
+
+        .success-icon svg {
+            width: 40px;
+            height: 40px;
+            stroke: var(--primary-600);
+        }
+
+        .success-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+        }
+
+        .success-message {
+            font-size: 0.9375rem;
+            color: var(--gray-600);
+            margin-bottom: 1.5rem;
+        }
+
+        .position-badge {
+            display: inline-block;
+            background: var(--primary-50);
+            border: 2px solid var(--primary-200);
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-lg);
+            font-size: 0.875rem;
+            color: var(--primary-700);
+        }
+
+        .position-badge strong {
+            font-size: 1.25rem;
+            display: block;
+            color: var(--primary-600);
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loader">
+            <div class="loader-spinner"></div>
+            <p class="loader-text">Processing...</p>
+        </div>
+    </div>
+
+    <div class="waitlist-container">
+        <div class="waitlist-card">
+            <!-- Header -->
+            <div class="waitlist-header">
+                <img src="images/BizflowLogo.png" alt="BizFlowAI" class="waitlist-bizflow-logo" style="height: 50px; background: white; border-radius: 8px; padding: 6px 10px; margin-bottom: 0.5rem;">
+                <span style="font-size: 0.7rem; color: rgba(255,255,255,0.7); margin-bottom: 0.75rem;">by EventReg Platform</span>
+                <div class="logo">
+                    <span class="logo-text">AI Summit for</span>
+                    <span class="logo-msme">MSME Business Owners</span>
+                </div>
+                <p class="waitlist-tagline">"From Survival to Scale"</p>
+                <div class="sold-out-badge">All Seats Filled!</div>
+                <h1 class="waitlist-title">Join the Waitlist</h1>
+                <p class="waitlist-subtitle">Be the first to know when seats become available</p>
+            </div>
+
+            <!-- Form Section -->
+            <div class="waitlist-body" id="waitlist-form-section">
+                <div class="empathy-message">
+                    <p>We're genuinely overwhelmed by your enthusiasm for the AI Summit for MSME Business Owners! While all in-person seats are currently reserved, we don't want you to miss out on this transformational experience.</p>
+                </div>
+
+                <!-- Livestream Option -->
+                <div class="livestream-option" id="livestream-option">
+                    <div class="livestream-header">
+                        <input type="checkbox" id="livestream-checkbox" class="livestream-checkbox" checked>
+                        <label for="livestream-checkbox" class="livestream-title">Get Livestream Access</label>
+                        <span class="livestream-price">&#8377;699</span>
+                    </div>
+                    <ul class="livestream-benefits">
+                        <li>Full Live Stream of All Sessions</li>
+                        <li>Live Chat & Q&A Participation</li>
+                        <li>3-Day Recording Access</li>
+                        <li>Digital Certificate</li>
+                    </ul>
+                </div>
+
+                <!-- Waitlist Form -->
+                <form id="waitlist-form" class="waitlist-form">
+                    <div class="form-group">
+                        <label for="name" class="form-label">Full Name <span class="required">*</span></label>
+                        <input type="text" id="name" name="name" class="form-input" placeholder="Enter your full name" required>
+                        <span class="form-error" id="name-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email <span class="required">*</span></label>
+                        <input type="email" id="email" name="email" class="form-input" placeholder="your@email.com" required>
+                        <span class="form-error" id="email-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone" class="form-label">Phone <span class="required">*</span></label>
+                        <input type="tel" id="phone" name="phone" class="form-input" placeholder="10-digit mobile number" required maxlength="10">
+                        <span class="form-error" id="phone-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="business_name" class="form-label">Business/Company Name</label>
+                        <input type="text" id="business_name" name="business_name" class="form-input" placeholder="Your company name">
+                    </div>
+
+                    <button type="submit" class="btn-waitlist" id="submit-btn">
+                        Join Waitlist
+                    </button>
+                </form>
+            </div>
+
+            <!-- Success Section -->
+            <div class="waitlist-success" id="waitlist-success">
+                <div class="success-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+                <h2 class="success-title">You're on the Waitlist!</h2>
+                <p class="success-message">We'll notify you immediately when a seat becomes available.</p>
+                <div class="position-badge">
+                    <span>Your Position</span>
+                    <strong id="waitlist-position">#--</strong>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="waitlist-footer">
+                <p>Questions? Contact us at <a href="mailto:support@bizflowai.in">support@bizflowai.in</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        // Waitlist form handling
+        const waitlistForm = document.getElementById('waitlist-form');
+        const livestreamCheckbox = document.getElementById('livestream-checkbox');
+        const livestreamOption = document.getElementById('livestream-option');
+        const submitBtn = document.getElementById('submit-btn');
+        const loadingOverlay = document.getElementById('loading-overlay');
+
+        // Update submit button text based on livestream selection
+        function updateSubmitButton() {
+            if (livestreamCheckbox.checked) {
+                submitBtn.textContent = 'Join Waitlist & Pay ₹699 for Livestream';
+            } else {
+                submitBtn.textContent = 'Join Waitlist (Free)';
+            }
+        }
+
+        livestreamCheckbox.addEventListener('change', () => {
+            livestreamOption.classList.toggle('selected', livestreamCheckbox.checked);
+            updateSubmitButton();
+        });
+
+        // Phone number formatting
+        document.getElementById('phone').addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
+        });
+
+        // Form submission
+        waitlistForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Validate
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const businessName = document.getElementById('business_name').value.trim();
+            const wantsLivestream = livestreamCheckbox.checked;
+
+            if (!name || !email || !phone) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+
+            if (!/^[6-9]\d{9}$/.test(phone)) {
+                alert('Please enter a valid 10-digit phone number.');
+                return;
+            }
+
+            loadingOverlay.classList.remove('hidden');
+
+            try {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/waitlist`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name,
+                        email,
+                        phone,
+                        business_name: businessName,
+                        wants_livestream: wantsLivestream
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error?.message || 'Failed to join waitlist');
+                }
+
+                loadingOverlay.classList.add('hidden');
+
+                // If livestream is selected and payment is required
+                if (wantsLivestream && data.order_id) {
+                    // Open Razorpay checkout
+                    const options = {
+                        key: data.key_id || CONFIG.RAZORPAY_KEY_ID,
+                        amount: data.amount,
+                        currency: data.currency || 'INR',
+                        name: CONFIG.EVENT.name,
+                        description: 'Livestream Access',
+                        order_id: data.order_id,
+                        prefill: {
+                            name: name,
+                            email: email,
+                            contact: `+91${phone}`,
+                        },
+                        theme: { color: '#059669' },
+                        handler: async (response) => {
+                            // Verify payment
+                            try {
+                                const verifyResponse = await fetch(`${CONFIG.API_BASE_URL}/waitlist/verify-payment`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        razorpay_order_id: response.razorpay_order_id,
+                                        razorpay_payment_id: response.razorpay_payment_id,
+                                        razorpay_signature: response.razorpay_signature,
+                                    })
+                                });
+
+                                if (verifyResponse.ok) {
+                                    showSuccess(data.position);
+                                } else {
+                                    alert('Payment verification failed. Please contact support.');
+                                }
+                            } catch (error) {
+                                alert('Payment verification failed. Please contact support.');
+                            }
+                        }
+                    };
+
+                    const rzp = new Razorpay(options);
+                    rzp.open();
+                } else {
+                    // Free waitlist registration
+                    showSuccess(data.position);
+                }
+
+            } catch (error) {
+                loadingOverlay.classList.add('hidden');
+                alert(error.message || 'Something went wrong. Please try again.');
+            }
+        });
+
+        function showSuccess(position) {
+            document.getElementById('waitlist-form-section').style.display = 'none';
+            document.getElementById('waitlist-success').classList.add('active');
+            document.getElementById('waitlist-position').textContent = `#${position || '--'}`;
+        }
+
+        // Initialize
+        updateSubmitButton();
+    </script>
+</body>
+</html>

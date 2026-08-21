@@ -1,0 +1,1915 @@
+/* ============================================
+   Flyer Generation Module Styling
+   ============================================ */
+.flyer-generator-layout {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+    .flyer-generator-layout {
+        flex-direction: column;
+    }
+}
+
+/* Sidebar controls */
+.flyer-controls {
+    width: 320px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+@media (max-width: 1024px) {
+    .flyer-controls {
+        width: 100%;
+    }
+}
+
+.logo-box {
+    width: 100%;
+    height: 120px;
+    border: 2px dashed var(--gray-300);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    overflow: hidden;
+    padding: 0.5rem;
+    box-sizing: border-box;
+}
+
+.logo-box img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.theme-selector-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+@media (max-width: 1024px) {
+    .theme-selector-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .theme-selector-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.theme-card {
+    border: 2px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 0.75rem 0.5rem;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: white;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 120px;
+}
+
+.theme-card:hover {
+    border-color: var(--primary-400);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: var(--shadow-md);
+}
+
+.theme-card.active {
+    border-color: var(--primary-600);
+    background: var(--primary-50);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+}
+
+.theme-card-preview-thumb {
+    height: 60px;
+    border-radius: 6px;
+    background: var(--gray-100);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    padding: 6px;
+    box-sizing: border-box;
+    overflow: hidden;
+    transition: all 0.2s;
+}
+
+/* 10 Theme Thumbnails */
+.summit-classic-thumb { background: linear-gradient(135deg, #0f172a, #1e293b); }
+.summit-classic-thumb .thumb-header { height: 4px; width: 40%; background: #10b981; border-radius: 2px; }
+.summit-classic-thumb .thumb-title { height: 8px; width: 80%; background: white; border-radius: 2px; }
+.summit-classic-thumb .thumb-footer { height: 4px; width: 60%; background: var(--gray-400); border-radius: 2px; }
+
+.summit-neon-thumb { background: linear-gradient(135deg, #180828, #090214); }
+.summit-neon-thumb .thumb-header { height: 4px; width: 40%; background: #ff007f; border-radius: 2px; }
+.summit-neon-thumb .thumb-title { height: 8px; width: 80%; background: #00f0ff; border-radius: 2px; }
+.summit-neon-thumb .thumb-footer { height: 4px; width: 60%; background: #e0e0e0; border-radius: 2px; }
+
+.summit-light-thumb { background: linear-gradient(135deg, #f8fafc, #f1f5f9); border: 1px solid var(--gray-200); }
+.summit-light-thumb .thumb-header { height: 4px; width: 40%; background: #4f46e5; border-radius: 2px; }
+.summit-light-thumb .thumb-title { height: 8px; width: 80%; background: var(--gray-800); border-radius: 2px; }
+.summit-light-thumb .thumb-footer { height: 4px; width: 60%; background: var(--gray-500); border-radius: 2px; }
+
+.speaker-spotlight-thumb { background: linear-gradient(135deg, #0b0f19, #111827); align-items: center; }
+.speaker-spotlight-thumb .thumb-circle { width: 20px; height: 20px; border-radius: 50%; background: #8b5cf6; }
+.speaker-spotlight-thumb .thumb-text { height: 6px; width: 70%; background: white; border-radius: 2px; }
+
+.speaker-academic-thumb { background: linear-gradient(135deg, #0f172a, #1e3a8a); align-items: center; }
+.speaker-academic-thumb .thumb-circle { width: 20px; height: 20px; border-radius: 50%; background: #3b82f6; }
+.speaker-academic-thumb .thumb-text { height: 6px; width: 70%; background: #f3f4f6; border-radius: 2px; }
+
+.speaker-warm-thumb { background: linear-gradient(135deg, #2c1a04, #120700); align-items: center; }
+.speaker-warm-thumb .thumb-circle { width: 20px; height: 20px; border-radius: 50%; background: #f97316; }
+.speaker-warm-thumb .thumb-text { height: 6px; width: 70%; background: #ffedd5; border-radius: 2px; }
+
+.pricing-emerald-thumb { background: linear-gradient(135deg, #064e3b, #022c22); justify-content: center; }
+.pricing-emerald-thumb .thumb-box-row { display: flex; gap: 4px; justify-content: center; width: 100%; }
+.pricing-emerald-thumb .thumb-box { width: 14px; height: 14px; background: #10b981; border-radius: 2px; }
+
+.pricing-corporate-thumb { background: linear-gradient(135deg, #1e293b, #0f172a); justify-content: center; }
+.pricing-corporate-thumb .thumb-box-row { display: flex; gap: 4px; justify-content: center; width: 100%; }
+.pricing-corporate-thumb .thumb-box { width: 14px; height: 14px; background: #64748b; border-radius: 2px; }
+
+.pricing-gradient-thumb { background: linear-gradient(135deg, #431407, #7c2d12); justify-content: center; }
+.pricing-gradient-thumb .thumb-box-row { display: flex; gap: 4px; justify-content: center; width: 100%; }
+.pricing-gradient-thumb .thumb-box { width: 14px; height: 14px; background: #f97316; border-radius: 2px; }
+
+.minimal-clean-thumb { background: linear-gradient(135deg, #ffffff, #fafafa); border: 1px solid var(--gray-200); }
+.minimal-clean-thumb .thumb-header { height: 4px; width: 50%; background: #111827; border-radius: 1px; }
+.minimal-clean-thumb .thumb-text { height: 6px; width: 75%; background: var(--gray-400); border-radius: 1px; }
+
+.theme-card-name {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--gray-700);
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 0.25rem;
+}
+
+.flyer-actions-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--gray-200);
+}
+
+.btn-action-flyer {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    border-radius: var(--radius-md);
+    border: none;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: white;
+}
+
+.btn-action-flyer svg {
+    flex-shrink: 0;
+}
+
+.btn-action-flyer.btn-edit {
+    background: white;
+    color: var(--gray-700);
+    border: 1.5px solid var(--gray-300);
+}
+
+.btn-action-flyer.btn-edit:hover {
+    background: var(--gray-50);
+    border-color: var(--gray-400);
+}
+
+.btn-action-flyer.btn-edit.active-editing {
+    background: #fef3c7;
+    color: #d97706;
+    border-color: #f59e0b;
+}
+
+.btn-action-flyer.btn-download-img {
+    background: var(--primary-500);
+}
+.btn-action-flyer.btn-download-img:hover {
+    background: var(--primary-600);
+}
+
+.btn-action-flyer.btn-download-pdf {
+    background: #2563eb;
+}
+.btn-action-flyer.btn-download-pdf:hover {
+    background: #1d4ed8;
+}
+
+.btn-action-flyer.btn-upload {
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+}
+.btn-action-flyer.btn-upload:hover {
+    opacity: 0.95;
+    transform: translateY(-1px);
+}
+
+/* Live Preview Bounding Box */
+.flyer-preview-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-xl);
+    background: var(--gray-50);
+    padding: 1.5rem;
+    box-sizing: border-box;
+    align-items: center;
+}
+
+.flyer-preview-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.flyer-preview-header h4 {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--gray-800);
+}
+
+.edit-mode-indicator {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #b45309;
+    background: #fef3c7;
+    padding: 0.25rem 0.625rem;
+    border-radius: 4px;
+    border: 1px solid #fcd34d;
+}
+
+.flyer-canvas-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem 0;
+    overflow-x: auto;
+}
+
+/* Base style for actual Flyer nodes */
+.flyer-preview-element {
+    position: relative;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    background: white;
+    overflow: hidden;
+    transform-origin: center center;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    font-family: 'Inter', 'Outfit', sans-serif;
+}
+
+/* Editable outlines in edit mode */
+.flyer-preview-element.editing-active [contenteditable="true"] {
+    outline: 1.5px dashed var(--primary-400);
+    outline-offset: 2px;
+    cursor: text;
+}
+
+.flyer-preview-element.editing-active [contenteditable="true"]:hover {
+    background: rgba(16, 185, 129, 0.05);
+}
+
+.flyer-preview-element.editing-active [contenteditable="true"]:focus {
+    outline: 2px solid var(--primary-500);
+    background: transparent;
+}
+
+.flyer-preview-element.editing-active .editable-image-container {
+    position: relative;
+    cursor: pointer;
+}
+
+.flyer-preview-element.editing-active .editable-image-container::after {
+    content: 'Click to Swop Image';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.flyer-preview-element.editing-active .editable-image-container:hover::after {
+    opacity: 1;
+}
+
+/* --------------------------------------------
+   Template 1: Modern Summit (Square 1080x1080)
+   -------------------------------------------- */
+.flyer-preview-element.template-summit {
+    width: 600px;
+    height: 600px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #f8fafc;
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.flyer-preview-element.template-summit::before {
+    content: '';
+    position: absolute;
+    top: -50px; right: -50px;
+    width: 250px; height: 250px;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.flyer-preview-element.template-summit .summit-badge {
+    align-self: flex-start;
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 0.375rem 0.875rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-radius: 20px;
+}
+
+.flyer-preview-element.template-summit .summit-title-block {
+    margin: 1.5rem 0;
+}
+
+.flyer-preview-element.template-summit .summit-main-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0 0 0.75rem;
+    background: linear-gradient(135deg, #ffffff 50%, #34d399 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.flyer-preview-element.template-summit .summit-subtitle {
+    font-size: 1.125rem;
+    color: #94a3b8;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.flyer-preview-element.template-summit .summit-details-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 1.5rem;
+}
+
+.flyer-preview-element.template-summit .summit-detail-box h5 {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: #34d399;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 0.375rem 0;
+}
+
+.flyer-preview-element.template-summit .summit-detail-box p {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: #e2e8f0;
+    margin: 0;
+}
+
+.flyer-preview-element.template-summit .summit-footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 1.25rem;
+}
+
+.flyer-preview-element.template-summit .summit-branding {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #64748b;
+    letter-spacing: 0.03em;
+}
+
+.flyer-preview-element.template-summit .summit-link {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #10b981;
+}
+
+/* --------------------------------------------
+   Template 2: Speaker Spotlight (Portrait 1080x1920)
+   -------------------------------------------- */
+.flyer-preview-element.template-speaker {
+    width: 450px;
+    height: 800px;
+    background: linear-gradient(180deg, #0b0f19 0%, #111827 100%);
+    color: #f3f4f6;
+    padding: 2.5rem 2rem 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.flyer-preview-element.template-speaker .speaker-header {
+    text-align: center;
+}
+
+.flyer-preview-element.template-speaker .speaker-header h5 {
+    color: #8b5cf6;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0 0 0.25rem 0;
+}
+
+.flyer-preview-element.template-speaker .speaker-header h4 {
+    color: white;
+    font-size: 1.125rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: 0.02em;
+}
+
+.flyer-preview-element.template-speaker .speaker-avatar-container {
+    align-self: center;
+    margin: 2rem 0;
+    position: relative;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    border: 4px solid #8b5cf6;
+    box-shadow: 0 0 25px rgba(139, 92, 246, 0.35);
+    background: #1f2937;
+    overflow: hidden;
+}
+
+.flyer-preview-element.template-speaker .speaker-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.flyer-preview-element.template-speaker .speaker-profile {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.flyer-preview-element.template-speaker .speaker-name {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: white;
+    margin: 0 0 0.25rem;
+}
+
+.flyer-preview-element.template-speaker .speaker-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #a78bfa;
+    margin: 0 0 0.75rem;
+}
+
+.flyer-preview-element.template-speaker .speaker-bio {
+    font-size: 0.8125rem;
+    color: #9ca3af;
+    line-height: 1.5;
+    margin: 0 auto;
+    max-width: 320px;
+}
+
+.flyer-preview-element.template-speaker .speaker-session-block {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.flyer-preview-element.template-speaker .speaker-session-heading {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #e5e7eb;
+    margin: 0 0 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding-bottom: 0.375rem;
+}
+
+.flyer-preview-element.template-speaker .speaker-session-points {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+}
+
+.flyer-preview-element.template-speaker .speaker-session-point {
+    font-size: 0.8125rem;
+    color: #d1d5db;
+    margin-bottom: 0.5rem;
+    position: relative;
+    padding-left: 1.25rem;
+    line-height: 1.4;
+}
+
+.flyer-preview-element.template-speaker .speaker-session-point:last-child {
+    margin-bottom: 0;
+}
+
+.flyer-preview-element.template-speaker .speaker-session-point::before {
+    content: '✦';
+    position: absolute;
+    left: 0;
+    color: #8b5cf6;
+}
+
+.flyer-preview-element.template-speaker .speaker-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 1rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.flyer-preview-element.template-speaker .speaker-footer strong {
+    color: #9ca3af;
+}
+
+/* --------------------------------------------
+   Template 3: Early Bird Passes (Square 1080x1080)
+   -------------------------------------------- */
+.flyer-preview-element.template-pricing {
+    width: 600px;
+    height: 600px;
+    background: linear-gradient(135deg, #064e3b 0%, #022c22 100%);
+    color: #ecfdf5;
+    padding: 3rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.flyer-preview-element.template-pricing .pricing-header {
+    text-align: center;
+}
+
+.flyer-preview-element.template-pricing .pricing-badge {
+    display: inline-block;
+    background: #f59e0b;
+    color: #78350f;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.375rem 1rem;
+    border-radius: 30px;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.25);
+}
+
+.flyer-preview-element.template-pricing .pricing-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
+    margin: 0 0 0.5rem;
+    line-height: 1.2;
+}
+
+.flyer-preview-element.template-pricing .pricing-subtitle {
+    font-size: 0.9375rem;
+    color: #a7f3d0;
+    margin: 0;
+}
+
+.flyer-preview-element.template-pricing .pricing-grid-preview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+}
+
+.flyer-preview-element.template-pricing .price-card-flyer {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.25rem 0.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 160px;
+    box-sizing: border-box;
+}
+
+.flyer-preview-element.template-pricing .price-card-flyer.featured {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: #34d399;
+    box-shadow: 0 4px 15px rgba(52, 211, 153, 0.15);
+}
+
+.flyer-preview-element.template-pricing .price-card-name {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #a7f3d0;
+    margin-bottom: 0.5rem;
+}
+
+.flyer-preview-element.template-pricing .price-card-original {
+    font-size: 0.8125rem;
+    color: #6ee7b7;
+    text-decoration: line-through;
+    opacity: 0.65;
+}
+
+.flyer-preview-element.template-pricing .price-card-current {
+    font-size: 1.625rem;
+    font-weight: 800;
+    color: white;
+    margin: 0.25rem 0;
+}
+
+.flyer-preview-element.template-pricing .price-card-save {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: #f59e0b;
+    background: rgba(245,158,11,0.1);
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+    display: inline-block;
+    align-self: center;
+}
+
+.flyer-preview-element.template-pricing .pricing-timer-box {
+    background: rgba(5, 150, 105, 0.3);
+    border: 1px solid rgba(52, 211, 153, 0.2);
+    border-radius: 8px;
+    padding: 0.75rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: white;
+    font-weight: 600;
+}
+
+.flyer-preview-element.template-pricing .pricing-timer-box span {
+    color: #f59e0b;
+    font-weight: 700;
+}
+
+.flyer-preview-element.template-pricing .pricing-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 1rem;
+    font-size: 0.75rem;
+    color: #6ee7b7;
+}
+
+.flyer-preview-element.template-pricing .pricing-footer strong {
+    color: white;
+}
+/* Centered Logo container at the top of the flyer canvas */
+.flyer-top-logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.flyer-top-logo-container .flyer-embedded-logo {
+    max-height: 40px;
+    max-width: 160px;
+    object-fit: contain;
+}
+
+/* ==========================================================================
+   10 Visual Themes Layout Overrides
+   ========================================================================== */
+
+/* 1. Summit Classic */
+.flyer-preview-element.template-summit-classic {
+    width: 600px;
+    height: 600px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #f8fafc;
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.flyer-preview-element.template-summit-classic::before {
+    content: '';
+    position: absolute;
+    top: -50px; right: -50px;
+    width: 250px; height: 250px;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+}
+.flyer-preview-element.template-summit-classic .summit-badge {
+    align-self: flex-start;
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 0.375rem 0.875rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-radius: 20px;
+}
+.flyer-preview-element.template-summit-classic .summit-title-block {
+    margin: 1.5rem 0;
+}
+.flyer-preview-element.template-summit-classic .summit-main-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0 0 0.75rem;
+    background: linear-gradient(135deg, #ffffff 50%, #34d399 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.flyer-preview-element.template-summit-classic .summit-subtitle {
+    font-size: 1.125rem;
+    color: #94a3b8;
+    margin: 0;
+    line-height: 1.4;
+}
+.flyer-preview-element.template-summit-classic .summit-details-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 1.5rem;
+}
+.flyer-preview-element.template-summit-classic .summit-detail-box h5 {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: #34d399;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 0.375rem 0;
+}
+.flyer-preview-element.template-summit-classic .summit-detail-box p {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: #e2e8f0;
+    margin: 0;
+}
+.flyer-preview-element.template-summit-classic .summit-footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 1.25rem;
+}
+.flyer-preview-element.template-summit-classic .summit-branding {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #64748b;
+    letter-spacing: 0.03em;
+}
+.flyer-preview-element.template-summit-classic .summit-link {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #10b981;
+}
+
+/* 2. Summit Neon */
+.flyer-preview-element.template-summit-neon {
+    width: 600px;
+    height: 600px;
+    background: linear-gradient(135deg, #180828 0%, #090214 100%);
+    color: #f3e8ff;
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.flyer-preview-element.template-summit-neon::before {
+    content: '';
+    position: absolute;
+    top: -50px; right: -50px;
+    width: 250px; height: 250px;
+    background: radial-gradient(circle, rgba(255, 0, 127, 0.2) 0%, transparent 70%);
+    pointer-events: none;
+}
+.flyer-preview-element.template-summit-neon .summit-badge {
+    align-self: flex-start;
+    background: rgba(255, 0, 127, 0.15);
+    color: #ff007f;
+    border: 1px solid rgba(255, 0, 127, 0.3);
+    padding: 0.375rem 0.875rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-radius: 20px;
+}
+.flyer-preview-element.template-summit-neon .summit-title-block {
+    margin: 1.5rem 0;
+}
+.flyer-preview-element.template-summit-neon .summit-main-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0 0 0.75rem;
+    background: linear-gradient(135deg, #00f0ff 0%, #ff007f 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.flyer-preview-element.template-summit-neon .summit-subtitle {
+    font-size: 1.125rem;
+    color: #c084fc;
+    margin: 0;
+    line-height: 1.4;
+}
+.flyer-preview-element.template-summit-neon .summit-details-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 1.5rem;
+}
+.flyer-preview-element.template-summit-neon .summit-detail-box h5 {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: #00f0ff;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 0.375rem 0;
+}
+.flyer-preview-element.template-summit-neon .summit-detail-box p {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: #e9d5ff;
+    margin: 0;
+}
+.flyer-preview-element.template-summit-neon .summit-footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 1.25rem;
+}
+.flyer-preview-element.template-summit-neon .summit-branding {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #a855f7;
+    letter-spacing: 0.03em;
+}
+.flyer-preview-element.template-summit-neon .summit-link {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #ff007f;
+}
+
+/* 3. Summit Light */
+.flyer-preview-element.template-summit-light {
+    width: 600px;
+    height: 600px;
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+    color: #1e293b;
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 1px solid #e2e8f0;
+}
+.flyer-preview-element.template-summit-light .summit-badge {
+    align-self: flex-start;
+    background: rgba(79, 70, 229, 0.08);
+    color: #4f46e5;
+    border: 1px solid rgba(79, 70, 229, 0.2);
+    padding: 0.375rem 0.875rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-radius: 20px;
+}
+.flyer-preview-element.template-summit-light .summit-title-block {
+    margin: 1.5rem 0;
+}
+.flyer-preview-element.template-summit-light .summit-main-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0 0 0.75rem;
+    background: linear-gradient(135deg, #1e293b 0%, #4f46e5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.flyer-preview-element.template-summit-light .summit-subtitle {
+    font-size: 1.125rem;
+    color: #64748b;
+    margin: 0;
+    line-height: 1.4;
+}
+.flyer-preview-element.template-summit-light .summit-details-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    padding-top: 1.5rem;
+}
+.flyer-preview-element.template-summit-light .summit-detail-box h5 {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: #4f46e5;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 0.375rem 0;
+}
+.flyer-preview-element.template-summit-light .summit-detail-box p {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #334155;
+    margin: 0;
+}
+.flyer-preview-element.template-summit-light .summit-footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    padding-top: 1.25rem;
+}
+.flyer-preview-element.template-summit-light .summit-branding {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #94a3b8;
+    letter-spacing: 0.03em;
+}
+.flyer-preview-element.template-summit-light .summit-link {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #4f46e5;
+}
+
+/* 4. Speaker Spotlight */
+.flyer-preview-element.template-speaker-spotlight {
+    width: 450px;
+    height: 800px;
+    background: linear-gradient(180deg, #0b0f19 0%, #111827 100%);
+    color: #f3f4f6;
+    padding: 2.5rem 2rem 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.flyer-preview-element.template-speaker-spotlight .speaker-header {
+    text-align: center;
+}
+.flyer-preview-element.template-speaker-spotlight .speaker-header h5 {
+    color: #8b5cf6;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0 0 0.25rem 0;
+}
+.flyer-preview-element.template-speaker-spotlight .speaker-header h4 {
+    color: white;
+    font-size: 1.125rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: 0.02em;
+}
+.flyer-preview-element.template-speaker-spotlight .speaker-avatar-container {
+    align-self: center;
+    margin: 2rem 0;
+    position: relative;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    border: 4px solid #8b5cf6;
+    box-shadow: 0 0 25px rgba(139, 92, 246, 0.35);
+    background: #1f2937;
+    overflow: hidden;
+}
+.flyer-preview-element.template-speaker-spotlight .speaker-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.flyer-preview-element.template-speaker-spotlight .speaker-profile {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+.flyer-preview-element.template-speaker-spotlight .speaker-name {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: white;
+    margin: 0 0 0.25rem;
+}
+.flyer-preview-element.template-speaker-spotlight .speaker-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #a78bfa;
+    margin: 0 0 0.75rem;
+}
+.flyer-preview-element.template-speaker-spotlight .speaker-bio {
+    font-size: 0.8125rem;
+    color: #9ca3af;
+    line-height: 1.5;
+    margin: 0 auto;
+    max-width: 320px;
+}
+.flyer-preview-element.template-speaker-spotlight .speaker-session-block {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 2rem;
+}
+.flyer-preview-element.template-speaker-spotlight .speaker-session-heading {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #e5e7eb;
+    margin: 0 0 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding-bottom: 0.375rem;
+}
+.flyer-preview-element.template-speaker-spotlight .speaker-session-points {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+}
+.flyer-preview-element.template-speaker-spotlight .speaker-session-point {
+    font-size: 0.8125rem;
+    color: #d1d5db;
+    margin-bottom: 0.5rem;
+    position: relative;
+    padding-left: 1.25rem;
+    line-height: 1.4;
+}
+.flyer-preview-element.template-speaker-spotlight .speaker-session-point::before {
+    content: '✦';
+    position: absolute;
+    left: 0;
+    color: #8b5cf6;
+}
+.flyer-preview-element.template-speaker-spotlight .speaker-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 1rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+/* 5. Speaker Academic */
+.flyer-preview-element.template-speaker-academic {
+    width: 450px;
+    height: 800px;
+    background: linear-gradient(180deg, #0f172a 0%, #1e3a8a 100%);
+    color: #f8fafc;
+    padding: 2.5rem 2rem 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.flyer-preview-element.template-speaker-academic .speaker-header {
+    text-align: center;
+}
+.flyer-preview-element.template-speaker-academic .speaker-header h5 {
+    color: #60a5fa;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0 0 0.25rem 0;
+}
+.flyer-preview-element.template-speaker-academic .speaker-header h4 {
+    color: white;
+    font-size: 1.125rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: 0.02em;
+}
+.flyer-preview-element.template-speaker-academic .speaker-avatar-container {
+    align-self: center;
+    margin: 2rem 0;
+    position: relative;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    border: 4px solid #3b82f6;
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.35);
+    background: #1e293b;
+    overflow: hidden;
+}
+.flyer-preview-element.template-speaker-academic .speaker-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.flyer-preview-element.template-speaker-academic .speaker-profile {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+.flyer-preview-element.template-speaker-academic .speaker-name {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: white;
+    margin: 0 0 0.25rem;
+}
+.flyer-preview-element.template-speaker-academic .speaker-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #93c5fd;
+    margin: 0 0 0.75rem;
+}
+.flyer-preview-element.template-speaker-academic .speaker-bio {
+    font-size: 0.8125rem;
+    color: #94a3b8;
+    line-height: 1.5;
+    margin: 0 auto;
+    max-width: 320px;
+}
+.flyer-preview-element.template-speaker-academic .speaker-session-block {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 2rem;
+}
+.flyer-preview-element.template-speaker-academic .speaker-session-heading {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin: 0 0 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding-bottom: 0.375rem;
+}
+.flyer-preview-element.template-speaker-academic .speaker-session-points {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+}
+.flyer-preview-element.template-speaker-academic .speaker-session-point {
+    font-size: 0.8125rem;
+    color: #cbd5e1;
+    margin-bottom: 0.5rem;
+    position: relative;
+    padding-left: 1.25rem;
+    line-height: 1.4;
+}
+.flyer-preview-element.template-speaker-academic .speaker-session-point::before {
+    content: '✦';
+    position: absolute;
+    left: 0;
+    color: #3b82f6;
+}
+.flyer-preview-element.template-speaker-academic .speaker-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 1rem;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+/* 6. Speaker Warm */
+.flyer-preview-element.template-speaker-warm {
+    width: 450px;
+    height: 800px;
+    background: linear-gradient(180deg, #1c1917 0%, #292524 100%);
+    color: #fafaf9;
+    padding: 2.5rem 2rem 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.flyer-preview-element.template-speaker-warm .speaker-header {
+    text-align: center;
+}
+.flyer-preview-element.template-speaker-warm .speaker-header h5 {
+    color: #f97316;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0 0 0.25rem 0;
+}
+.flyer-preview-element.template-speaker-warm .speaker-header h4 {
+    color: white;
+    font-size: 1.125rem;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: 0.02em;
+}
+.flyer-preview-element.template-speaker-warm .speaker-avatar-container {
+    align-self: center;
+    margin: 2rem 0;
+    position: relative;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    border: 4px solid #f97316;
+    box-shadow: 0 0 25px rgba(249, 115, 22, 0.35);
+    background: #292524;
+    overflow: hidden;
+}
+.flyer-preview-element.template-speaker-warm .speaker-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.flyer-preview-element.template-speaker-warm .speaker-profile {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+.flyer-preview-element.template-speaker-warm .speaker-name {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: white;
+    margin: 0 0 0.25rem;
+}
+.flyer-preview-element.template-speaker-warm .speaker-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #fdba74;
+    margin: 0 0 0.75rem;
+}
+.flyer-preview-element.template-speaker-warm .speaker-bio {
+    font-size: 0.8125rem;
+    color: #d6d3d1;
+    line-height: 1.5;
+    margin: 0 auto;
+    max-width: 320px;
+}
+.flyer-preview-element.template-speaker-warm .speaker-session-block {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 2rem;
+}
+.flyer-preview-element.template-speaker-warm .speaker-session-heading {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #f5f5f4;
+    margin: 0 0 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding-bottom: 0.375rem;
+}
+.flyer-preview-element.template-speaker-warm .speaker-session-points {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+}
+.flyer-preview-element.template-speaker-warm .speaker-session-point {
+    font-size: 0.8125rem;
+    color: #e7e5e4;
+    margin-bottom: 0.5rem;
+    position: relative;
+    padding-left: 1.25rem;
+    line-height: 1.4;
+}
+.flyer-preview-element.template-speaker-warm .speaker-session-point::before {
+    content: '✦';
+    position: absolute;
+    left: 0;
+    color: #f97316;
+}
+.flyer-preview-element.template-speaker-warm .speaker-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 1rem;
+    font-size: 0.75rem;
+    color: #78716c;
+}
+
+/* 7. Pricing Emerald */
+.flyer-preview-element.template-pricing-emerald {
+    width: 600px;
+    height: 600px;
+    background: linear-gradient(135deg, #064e3b 0%, #022c22 100%);
+    color: #ecfdf5;
+    padding: 3rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.flyer-preview-element.template-pricing-emerald .pricing-header {
+    text-align: center;
+}
+.flyer-preview-element.template-pricing-emerald .pricing-badge {
+    display: inline-block;
+    background: #f59e0b;
+    color: #78350f;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.375rem 1rem;
+    border-radius: 30px;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.25);
+}
+.flyer-preview-element.template-pricing-emerald .pricing-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
+    margin: 0 0 0.5rem;
+    line-height: 1.2;
+}
+.flyer-preview-element.template-pricing-emerald .pricing-subtitle {
+    font-size: 0.9375rem;
+    color: #a7f3d0;
+    margin: 0;
+}
+.flyer-preview-element.template-pricing-emerald .pricing-grid-preview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+}
+.flyer-preview-element.template-pricing-emerald .price-card-flyer {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.25rem 0.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 160px;
+    box-sizing: border-box;
+}
+.flyer-preview-element.template-pricing-emerald .price-card-flyer.featured {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: #34d399;
+    box-shadow: 0 4px 15px rgba(52, 211, 153, 0.15);
+}
+.flyer-preview-element.template-pricing-emerald .price-card-name {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #a7f3d0;
+    margin-bottom: 0.5rem;
+}
+.flyer-preview-element.template-pricing-emerald .price-card-original {
+    font-size: 0.8125rem;
+    color: #6ee7b7;
+    text-decoration: line-through;
+    opacity: 0.65;
+}
+.flyer-preview-element.template-pricing-emerald .price-card-current {
+    font-size: 1.625rem;
+    font-weight: 800;
+    color: white;
+    margin: 0.25rem 0;
+}
+.flyer-preview-element.template-pricing-emerald .price-card-save {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: #f59e0b;
+    background: rgba(245,158,11,0.1);
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+    display: inline-block;
+    align-self: center;
+}
+.flyer-preview-element.template-pricing-emerald .pricing-timer-box {
+    background: rgba(5, 150, 105, 0.3);
+    border: 1px solid rgba(52, 211, 153, 0.2);
+    border-radius: 8px;
+    padding: 0.75rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: white;
+    font-weight: 600;
+}
+.flyer-preview-element.template-pricing-emerald .pricing-timer-box span {
+    color: #f59e0b;
+    font-weight: 700;
+}
+.flyer-preview-element.template-pricing-emerald .pricing-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 1rem;
+    font-size: 0.75rem;
+    color: #6ee7b7;
+}
+
+/* 8. Pricing Corporate */
+.flyer-preview-element.template-pricing-corporate {
+    width: 600px;
+    height: 600px;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    color: #f1f5f9;
+    padding: 3rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.flyer-preview-element.template-pricing-corporate .pricing-header {
+    text-align: center;
+}
+.flyer-preview-element.template-pricing-corporate .pricing-badge {
+    display: inline-block;
+    background: #3b82f6;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.375rem 1rem;
+    border-radius: 30px;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.25);
+}
+.flyer-preview-element.template-pricing-corporate .pricing-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
+    margin: 0 0 0.5rem;
+    line-height: 1.2;
+}
+.flyer-preview-element.template-pricing-corporate .pricing-subtitle {
+    font-size: 0.9375rem;
+    color: #93c5fd;
+    margin: 0;
+}
+.flyer-preview-element.template-pricing-corporate .pricing-grid-preview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+}
+.flyer-preview-element.template-pricing-corporate .price-card-flyer {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 1.25rem 0.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 160px;
+    box-sizing: border-box;
+}
+.flyer-preview-element.template-pricing-corporate .price-card-flyer.featured {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: #60a5fa;
+    box-shadow: 0 4px 15px rgba(96, 165, 250, 0.15);
+}
+.flyer-preview-element.template-pricing-corporate .price-card-name {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #93c5fd;
+    margin-bottom: 0.5rem;
+}
+.flyer-preview-element.template-pricing-corporate .price-card-original {
+    font-size: 0.8125rem;
+    color: #93c5fd;
+    text-decoration: line-through;
+    opacity: 0.65;
+}
+.flyer-preview-element.template-pricing-corporate .price-card-current {
+    font-size: 1.625rem;
+    font-weight: 800;
+    color: white;
+    margin: 0.25rem 0;
+}
+.flyer-preview-element.template-pricing-corporate .price-card-save {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: #3b82f6;
+    background: rgba(59,130,246,0.1);
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+    display: inline-block;
+    align-self: center;
+}
+.flyer-preview-element.template-pricing-corporate .pricing-timer-box {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(96, 165, 250, 0.2);
+    border-radius: 8px;
+    padding: 0.75rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: white;
+    font-weight: 600;
+}
+.flyer-preview-element.template-pricing-corporate .pricing-timer-box span {
+    color: #60a5fa;
+    font-weight: 700;
+}
+.flyer-preview-element.template-pricing-corporate .pricing-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 1rem;
+    font-size: 0.75rem;
+    color: #93c5fd;
+}
+
+/* 9. Pricing Gradient */
+.flyer-preview-element.template-pricing-gradient {
+    width: 600px;
+    height: 600px;
+    background: linear-gradient(135deg, #311005 0%, #7c2d12 100%);
+    color: #ffedd5;
+    padding: 3rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.flyer-preview-element.template-pricing-gradient .pricing-header {
+    text-align: center;
+}
+.flyer-preview-element.template-pricing-gradient .pricing-badge {
+    display: inline-block;
+    background: #f97316;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.375rem 1rem;
+    border-radius: 30px;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 4px 10px rgba(249, 115, 22, 0.25);
+}
+.flyer-preview-element.template-pricing-gradient .pricing-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
+    margin: 0 0 0.5rem;
+    line-height: 1.2;
+}
+.flyer-preview-element.template-pricing-gradient .pricing-subtitle {
+    font-size: 0.9375rem;
+    color: #fdba74;
+    margin: 0;
+}
+.flyer-preview-element.template-pricing-gradient .pricing-grid-preview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+}
+.flyer-preview-element.template-pricing-gradient .price-card-flyer {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 1.25rem 0.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 160px;
+    box-sizing: border-box;
+}
+.flyer-preview-element.template-pricing-gradient .price-card-flyer.featured {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: #f97316;
+    box-shadow: 0 4px 15px rgba(249, 115, 22, 0.15);
+}
+.flyer-preview-element.template-pricing-gradient .price-card-name {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #fdba74;
+    margin-bottom: 0.5rem;
+}
+.flyer-preview-element.template-pricing-gradient .price-card-original {
+    font-size: 0.8125rem;
+    color: #fdb574;
+    text-decoration: line-through;
+    opacity: 0.65;
+}
+.flyer-preview-element.template-pricing-gradient .price-card-current {
+    font-size: 1.625rem;
+    font-weight: 800;
+    color: white;
+    margin: 0.25rem 0;
+}
+.flyer-preview-element.template-pricing-gradient .price-card-save {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: #f97316;
+    background: rgba(249,115,22,0.1);
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+    display: inline-block;
+    align-self: center;
+}
+.flyer-preview-element.template-pricing-gradient .pricing-timer-box {
+    background: rgba(124, 45, 18, 0.4);
+    border: 1px solid rgba(249, 115, 22, 0.2);
+    border-radius: 8px;
+    padding: 0.75rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: white;
+    font-weight: 600;
+}
+.flyer-preview-element.template-pricing-gradient .pricing-timer-box span {
+    color: #fdba74;
+    font-weight: 700;
+}
+.flyer-preview-element.template-pricing-gradient .pricing-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 1rem;
+    font-size: 0.75rem;
+    color: #fdba74;
+}
+
+/* 10. Minimal Clean */
+.flyer-preview-element.template-minimal-clean {
+    width: 600px;
+    height: 600px;
+    background: #ffffff;
+    color: #111827;
+    padding: 3.5rem 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 1px solid #e5e7eb;
+}
+.flyer-preview-element.template-minimal-clean .minimal-header {
+    border-bottom: 2px solid #111827;
+    padding-bottom: 1.5rem;
+}
+.flyer-preview-element.template-minimal-clean .minimal-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #4f46e5;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+.flyer-preview-element.template-minimal-clean .minimal-title {
+    font-size: 2rem;
+    font-weight: 900;
+    line-height: 1.2;
+    margin: 0;
+    color: #111827;
+}
+.flyer-preview-element.template-minimal-clean .minimal-body {
+    margin: 2rem 0;
+}
+.flyer-preview-element.template-minimal-clean .minimal-desc {
+    font-size: 0.9375rem;
+    color: #4b5563;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+.flyer-preview-element.template-minimal-clean .minimal-info-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.flyer-preview-element.template-minimal-clean .minimal-info-item {
+    font-size: 0.875rem;
+}
+.flyer-preview-element.template-minimal-clean .minimal-info-item strong {
+    color: #111827;
+    margin-right: 0.5rem;
+}
+.flyer-preview-element.template-minimal-clean .minimal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 1.5rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.flyer-embedded-logo {
+    display: inline-block;
+    object-fit: contain;
+    vertical-align: middle;
+}
+
+/* Custom flyer properties override dynamically */
+
+/* Summit template overrides */
+.flyer-preview-element.template-summit .summit-badge,
+.flyer-preview-element.template-summit-classic .summit-badge {
+    color: var(--flyer-primary, #34d399) !important;
+    border-color: var(--flyer-primary, rgba(16, 185, 129, 0.3)) !important;
+}
+.flyer-preview-element.template-summit-neon .summit-badge {
+    color: var(--flyer-primary, #ff007f) !important;
+    border-color: var(--flyer-primary, rgba(255, 0, 127, 0.3)) !important;
+}
+.flyer-preview-element.template-summit-light .summit-badge {
+    color: var(--flyer-primary, #4f46e5) !important;
+    border-color: var(--flyer-primary, rgba(79, 70, 229, 0.2)) !important;
+}
+
+.flyer-preview-element.template-summit .summit-main-title,
+.flyer-preview-element.template-summit-classic .summit-main-title {
+    background: linear-gradient(135deg, #ffffff 50%, var(--flyer-primary, #34d399) 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+}
+.flyer-preview-element.template-summit-neon .summit-main-title {
+    background: linear-gradient(135deg, var(--flyer-secondary, #00f0ff) 0%, var(--flyer-primary, #ff007f) 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+}
+.flyer-preview-element.template-summit-light .summit-main-title {
+    background: linear-gradient(135deg, #1e293b 0%, var(--flyer-primary, #4f46e5) 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+}
+
+.flyer-preview-element.template-summit .summit-detail-box h5,
+.flyer-preview-element.template-summit-classic .summit-detail-box h5 {
+    color: var(--flyer-primary, #34d399) !important;
+}
+.flyer-preview-element.template-summit-neon .summit-detail-box h5 {
+    color: var(--flyer-secondary, #00f0ff) !important;
+}
+.flyer-preview-element.template-summit-light .summit-detail-box h5 {
+    color: var(--flyer-primary, #4f46e5) !important;
+}
+
+.flyer-preview-element.template-summit .summit-link,
+.flyer-preview-element.template-summit-classic .summit-link {
+    color: var(--flyer-primary, #10b981) !important;
+}
+.flyer-preview-element.template-summit-neon .summit-link {
+    color: var(--flyer-primary, #ff007f) !important;
+}
+.flyer-preview-element.template-summit-light .summit-link {
+    color: var(--flyer-primary, #4f46e5) !important;
+}
+
+/* Speaker template overrides */
+.flyer-preview-element.template-speaker .speaker-header h5,
+.flyer-preview-element.template-speaker-spotlight .speaker-header h5 {
+    color: var(--flyer-primary, #8b5cf6) !important;
+}
+.flyer-preview-element.template-speaker-academic .speaker-header h5 {
+    color: var(--flyer-primary, #60a5fa) !important;
+}
+.flyer-preview-element.template-speaker-warm .speaker-header h5 {
+    color: var(--flyer-primary, #f97316) !important;
+}
+
+.flyer-preview-element.template-speaker .speaker-avatar-container,
+.flyer-preview-element.template-speaker-spotlight .speaker-avatar-container {
+    border-color: var(--flyer-primary, #8b5cf6) !important;
+    box-shadow: 0 0 25px var(--flyer-primary, rgba(139, 92, 246, 0.35)) !important;
+}
+.flyer-preview-element.template-speaker-academic .speaker-avatar-container {
+    border-color: var(--flyer-primary, #3b82f6) !important;
+    box-shadow: 0 0 25px var(--flyer-primary, rgba(59, 130, 246, 0.35)) !important;
+}
+.flyer-preview-element.template-speaker-warm .speaker-avatar-container {
+    border-color: var(--flyer-primary, #f97316) !important;
+    box-shadow: 0 0 25px var(--flyer-primary, rgba(249, 115, 22, 0.35)) !important;
+}
+
+.flyer-preview-element.template-speaker .speaker-title,
+.flyer-preview-element.template-speaker-spotlight .speaker-title {
+    color: var(--flyer-secondary, #a78bfa) !important;
+}
+.flyer-preview-element.template-speaker-academic .speaker-title {
+    color: var(--flyer-secondary, #93c5fd) !important;
+}
+.flyer-preview-element.template-speaker-warm .speaker-title {
+    color: var(--flyer-secondary, #fdba74) !important;
+}
+
+.flyer-preview-element.template-speaker .speaker-session-point::before,
+.flyer-preview-element.template-speaker-spotlight .speaker-session-point::before {
+    color: var(--flyer-primary, #8b5cf6) !important;
+}
+.flyer-preview-element.template-speaker-academic .speaker-session-point::before {
+    color: var(--flyer-primary, #3b82f6) !important;
+}
+.flyer-preview-element.template-speaker-warm .speaker-session-point::before {
+    color: var(--flyer-primary, #f97316) !important;
+}
+
+/* Pricing template overrides */
+.flyer-preview-element.template-pricing .pricing-badge,
+.flyer-preview-element.template-pricing-emerald .pricing-badge {
+    background: var(--flyer-secondary, #f59e0b) !important;
+    color: #78350f !important;
+    box-shadow: 0 4px 10px var(--flyer-secondary, rgba(245, 158, 11, 0.25)) !important;
+}
+.flyer-preview-element.template-pricing-corporate .pricing-badge {
+    background: var(--flyer-secondary, #3b82f6) !important;
+    color: white !important;
+    box-shadow: 0 4px 10px var(--flyer-secondary, rgba(59, 130, 246, 0.25)) !important;
+}
+.flyer-preview-element.template-pricing-gradient .pricing-badge {
+    background: var(--flyer-secondary, #f97316) !important;
+    color: white !important;
+    box-shadow: 0 4px 10px var(--flyer-secondary, rgba(249, 115, 22, 0.25)) !important;
+}
+
+.flyer-preview-element.template-pricing .price-card-flyer.featured,
+.flyer-preview-element.template-pricing-emerald .price-card-flyer.featured {
+    border-color: var(--flyer-primary, #34d399) !important;
+    box-shadow: 0 4px 15px var(--flyer-primary, rgba(52, 211, 153, 0.15)) !important;
+}
+.flyer-preview-element.template-pricing-corporate .price-card-flyer.featured {
+    border-color: var(--flyer-primary, #60a5fa) !important;
+    box-shadow: 0 4px 15px var(--flyer-primary, rgba(96, 165, 250, 0.15)) !important;
+}
+.flyer-preview-element.template-pricing-gradient .price-card-flyer.featured {
+    border-color: var(--flyer-primary, #f97316) !important;
+    box-shadow: 0 4px 15px var(--flyer-primary, rgba(249, 115, 22, 0.15)) !important;
+}
+
+.flyer-preview-element.template-pricing .price-card-save,
+.flyer-preview-element.template-pricing-emerald .price-card-save {
+    color: var(--flyer-secondary, #f59e0b) !important;
+}
+.flyer-preview-element.template-pricing-corporate .price-card-save {
+    color: var(--flyer-secondary, #3b82f6) !important;
+}
+.flyer-preview-element.template-pricing-gradient .price-card-save {
+    color: var(--flyer-secondary, #f97316) !important;
+}
+
+.flyer-preview-element.template-pricing .pricing-timer-box,
+.flyer-preview-element.template-pricing-emerald .pricing-timer-box {
+    border-color: var(--flyer-primary, rgba(52, 211, 153, 0.2)) !important;
+}
+.flyer-preview-element.template-pricing-corporate .pricing-timer-box {
+    border-color: var(--flyer-primary, rgba(96, 165, 250, 0.2)) !important;
+}
+.flyer-preview-element.template-pricing-gradient .pricing-timer-box {
+    border-color: var(--flyer-primary, rgba(249, 115, 22, 0.2)) !important;
+}
+
+
+
+

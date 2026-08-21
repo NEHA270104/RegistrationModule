@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventReg Platform Super Admin</title>
+    <link rel="stylesheet" href="/super-admin/css/super-admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-container">
+            <div class="login-header">
+                <div class="login-logo">
+                    <span class="logo-icon">&#9878;</span>
+                    <h1>EventReg Platform</h1>
+                    <p class="login-subtitle">Super Admin Panel</p>
+                </div>
+            </div>
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" placeholder="admin@eventregplatform.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter password" required>
+                </div>
+                <div id="loginError" class="login-error" style="display:none;"></div>
+                <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
+                    <span class="btn-text">Sign In</span>
+                    <span class="btn-loader" style="display:none;"></span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard" class="dashboard" style="display:none;">
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <span class="sidebar-logo-icon">&#9878;</span>
+                <div class="sidebar-brand">
+                    <h2>EventReg Platform</h2>
+                    <span class="sidebar-badge">Super Admin</span>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">&#9776;</button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-section="overview">
+                    <span class="nav-icon">&#9632;</span>
+                    <span class="nav-label">Overview</span>
+                </a>
+                <a href="#" class="nav-item" data-section="tenants">
+                    <span class="nav-icon">&#9881;</span>
+                    <span class="nav-label">Tenants</span>
+                </a>
+                <a href="#" class="nav-item" data-section="subscriptions">
+                    <span class="nav-icon">&#9733;</span>
+                    <span class="nav-label">Subscriptions</span>
+                </a>
+                <a href="#" class="nav-item" data-section="global-stats">
+                    <span class="nav-icon">&#9883;</span>
+                    <span class="nav-label">Global Stats</span>
+                </a>
+                <a href="#" class="nav-item" data-section="rebrand-requests" style="position:relative;">
+                    <span class="nav-icon">&#9998;</span>
+                    <span class="nav-label">Rebrand Requests</span>
+                    <span class="notification-badge" id="rebrandBadge" style="display:none;">0</span>
+                </a>
+                <a href="#" class="nav-item" data-section="referrals">
+                    <span class="nav-icon">&#128279;</span>
+                    <span class="nav-label">Referrals</span>
+                </a>
+                <a href="#" class="nav-item" data-section="notifications" style="position:relative;">
+                    <span class="nav-icon">&#128276;</span>
+                    <span class="nav-label">Notifications</span>
+                    <span class="notification-badge" id="notifBadge" style="display:none;">0</span>
+                </a>
+                <a href="#" class="nav-item" data-section="analytics">
+                    <span class="nav-icon">&#128200;</span>
+                    <span class="nav-label">Analytics</span>
+                </a>
+                <a href="#" class="nav-item" data-section="audit-log">
+                    <span class="nav-icon">&#128221;</span>
+                    <span class="nav-label">Audit Log</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <span class="user-avatar" id="userAvatar">SA</span>
+                    <div class="user-info">
+                        <span class="user-name" id="userName">Super Admin</span>
+                        <span class="user-role">Administrator</span>
+                    </div>
+                </div>
+                <button class="btn-logout" id="logoutBtn" title="Logout">&#10149;</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <button class="mobile-menu-btn" id="mobileMenuBtn">&#9776;</button>
+                <h1 class="page-title" id="pageTitle">Overview</h1>
+                <div class="header-actions">
+                    <span class="header-date" id="headerDate"></span>
+                </div>
+            </header>
+
+            <div class="content-area" id="contentArea">
+
+                <!-- Overview Section -->
+                <section id="sectionOverview" class="section">
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-icon metric-icon-tenants">&#9881;</div>
+                            <div class="metric-body">
+                                <span class="metric-value" id="metricTotalTenants">--</span>
+                                <span class="metric-label">Total Tenants</span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon metric-icon-active">&#10003;</div>
+                            <div class="metric-body">
+                                <span class="metric-value" id="metricActiveTenants">--</span>
+                                <span class="metric-label">Active Tenants</span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon metric-icon-mrr">&#8377;</div>
+                            <div class="metric-body">
+                                <span class="metric-value" id="metricMRR">--</span>
+                                <span class="metric-label">Monthly Recurring Revenue</span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon metric-icon-registrations">&#9998;</div>
+                            <div class="metric-body">
+                                <span class="metric-value" id="metricTotalRegistrations">--</span>
+                                <span class="metric-label">Total Registrations</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mt-lg">
+                        <div class="card-header">
+                            <h3>Recent Tenants</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tenant</th>
+                                            <th>Plan</th>
+                                            <th>Status</th>
+                                            <th>Created</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentTenantsBody">
+                                        <tr><td colspan="4" class="table-empty">Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tenants Section -->
+                <section id="sectionTenants" class="section" style="display:none;">
+                    <div class="section-toolbar">
+                        <div class="search-box">
+                            <input type="text" id="tenantSearch" placeholder="Search tenants..." class="search-input">
+                        </div>
+                        <div class="filter-group">
+                            <select id="tenantStatusFilter" class="filter-select">
+                                <option value="">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="trial">Trial</option>
+                                <option value="suspended">Suspended</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="tenants-grid" id="tenantsGrid">
+                        <div class="loading-placeholder">Loading tenants...</div>
+                    </div>
+                </section>
+
+                <!-- Subscriptions Section -->
+                <section id="sectionSubscriptions" class="section" style="display:none;">
+                    <div class="section-toolbar">
+                        <div class="search-box">
+                            <input type="text" id="subscriptionSearch" placeholder="Search subscriptions..." class="search-input">
+                        </div>
+                        <div class="filter-group">
+                            <select id="subscriptionStatusFilter" class="filter-select">
+                                <option value="">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="trial">Trial</option>
+                                <option value="past_due">Past Due</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tenant</th>
+                                            <th>Plan</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                            <th>Start Date</th>
+                                            <th>Next Billing</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="subscriptionsBody">
+                                        <tr><td colspan="7" class="table-empty">Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Global Stats Section -->
+                <section id="sectionGlobalStats" class="section" style="display:none;">
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-icon metric-icon-registrations">&#9998;</div>
+                            <div class="metric-body">
+                                <span class="metric-value" id="statTotalRegistrations">--</span>
+                                <span class="metric-label">All-Time Registrations</span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon metric-icon-mrr">&#8377;</div>
+                            <div class="metric-body">
+                                <span class="metric-value" id="statTotalRevenue">--</span>
+                                <span class="metric-label">Total Platform Revenue</span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon metric-icon-tenants">&#9881;</div>
+                            <div class="metric-body">
+                                <span class="metric-value" id="statAvgRegistrations">--</span>
+                                <span class="metric-label">Avg Registrations / Tenant</span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon metric-icon-active">&#10003;</div>
+                            <div class="metric-body">
+                                <span class="metric-value" id="statConversionRate">--</span>
+                                <span class="metric-label">Trial-to-Paid Conversion</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid mt-lg">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Registrations by Tenant</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Tenant</th>
+                                                <th>Registrations</th>
+                                                <th>Revenue</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="statsByTenantBody">
+                                            <tr><td colspan="4" class="table-empty">Loading...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Rebrand Requests Section -->
+                <section id="sectionRebrandRequests" class="section" style="display:none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Rebrand Requests</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tenant</th>
+                                            <th>Brand Name</th>
+                                            <th>Domain</th>
+                                            <th>Status</th>
+                                            <th>Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="rebrandRequestsBody">
+                                        <tr><td colspan="6" class="table-empty">Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Referrals Section -->
+                <section id="sectionReferrals" class="section" style="display:none;">
+                    <div class="metrics-grid" id="referralMetrics"></div>
+                    <div class="card mt-lg">
+                        <div class="card-header">
+                            <h3>All Referrals</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Referrer</th>
+                                            <th>Referred</th>
+                                            <th>Commission %</th>
+                                            <th>Earned</th>
+                                            <th>Paid</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="referralsBody">
+                                        <tr><td colspan="6" class="table-empty">Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mt-lg">
+                        <div class="card-header">
+                            <h3>Pending Payouts</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tenant</th>
+                                            <th>Pending Amount</th>
+                                            <th>Entries</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="payoutsBody">
+                                        <tr><td colspan="4" class="table-empty">Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Notifications Section -->
+                <section id="sectionNotifications" class="section" style="display:none;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <h3>Notifications</h3>
+                        <button class="btn btn-sm btn-secondary" id="markAllReadBtn">Mark All Read</button>
+                    </div>
+                    <div id="notificationsList" class="notifications-list">
+                        <div class="loading-placeholder">Loading...</div>
+                    </div>
+                </section>
+
+                <!-- Analytics Section -->
+                <section id="sectionAnalytics" class="section" style="display:none;">
+                    <div class="metrics-grid" id="analyticsMetrics">
+                        <div class="loading-placeholder">Loading analytics...</div>
+                    </div>
+                    <div class="stats-grid mt-lg" id="analyticsDetails"></div>
+                </section>
+
+                <!-- Audit Log Section -->
+                <section id="sectionAuditLog" class="section" style="display:none;">
+                    <div class="section-toolbar" style="margin-bottom:16px;">
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <select id="auditActionFilter" class="filter-select">
+                                <option value="">All Actions</option>
+                                <option value="create">Create</option>
+                                <option value="read">Read</option>
+                                <option value="update">Update</option>
+                                <option value="delete">Delete</option>
+                                <option value="cancel">Cancel</option>
+                            </select>
+                            <select id="auditResourceFilter" class="filter-select">
+                                <option value="">All Resources</option>
+                                <option value="registration">Registration</option>
+                                <option value="guest">Guest</option>
+                                <option value="setting">Setting</option>
+                                <option value="subscription">Subscription</option>
+                                <option value="tenant">Tenant</option>
+                            </select>
+                            <input type="date" id="auditDateFrom" class="filter-select" title="From date">
+                            <input type="date" id="auditDateTo" class="filter-select" title="To date">
+                            <button class="btn btn-sm btn-primary" id="auditFilterBtn">Filter</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Time</th>
+                                            <th>Tenant</th>
+                                            <th>Actor</th>
+                                            <th>Action</th>
+                                            <th>Resource</th>
+                                            <th>ID</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="auditLogBody">
+                                        <tr><td colspan="6" class="table-empty">Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;margin-top:12px;">
+                                <button class="btn btn-sm btn-secondary" id="auditPrevBtn" disabled>Previous</button>
+                                <span id="auditPageInfo" style="color:var(--text-muted);">Page 1</span>
+                                <button class="btn btn-sm btn-secondary" id="auditNextBtn">Next</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Tenant Detail Modal -->
+    <div class="modal-overlay" id="tenantDetailModal" style="display:none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTenantName">Tenant Details</h2>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <div class="loading-placeholder">Loading tenant details...</div>
+            </div>
+            <div class="modal-footer" id="modalFooter">
+                <button class="btn btn-secondary" id="modalCloseBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div class="modal-overlay" id="alertModal" style="display:none;">
+        <div class="modal modal-sm">
+            <div class="modal-header">
+                <h2 class="modal-title" id="alertTitle">Alert</h2>
+                <button class="modal-close" id="alertClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="alertMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="alertOkBtn">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/super-admin/js/super-admin.js"></script>
+</body>
+</html>

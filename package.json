@@ -1,0 +1,31 @@
+{
+  "name": "ai-msme-summit-registration",
+  "version": "1.0.0",
+  "description": "AI for MSME Business Summit Registration System",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail -n \"backend,frontend\" -c \"blue,green\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npx serve -l 5173",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "build": "cd backend && npm run build && cp .env dist/ 2>/dev/null || copy .env dist\\",
+    "start": "cd backend && node dist/index.js"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "serve": "^14.2.1"
+  },
+  "keywords": [
+    "summit",
+    "registration",
+    "razorpay",
+    "supabase"
+  ],
+  "author": "BRTNeura",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.108.2",
+    "dotenv": "^17.2.3",
+    "razorpay": "^2.9.6"
+  }
+}

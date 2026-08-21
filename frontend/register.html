@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Registration</title>
+    <meta name="description" content="Register for this event and secure your pass.">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+    <link rel="stylesheet" href="/dashboard/css/dashboard.css?v=2.0.0">
+    <style>
+        :root {
+            --event-accent: #00f5ff;
+        }
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        .register-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .event-hero-card {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(9, 13, 22, 0.95) 100%);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: 24px;
+            padding: 36px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 30px rgba(56, 189, 248, 0.1);
+            margin-bottom: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+        .event-hero-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, var(--event-accent), #ec4899);
+        }
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 32px;
+            align-items: start;
+        }
+        @media (max-width: 860px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+            .register-container {
+                padding: 20px 14px;
+            }
+            .event-hero-card {
+                padding: 24px 18px;
+            }
+        }
+        .meta-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+        .speaker-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .speaker-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+        .speaker-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--event-accent);
+            background: rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .form-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: var(--shadow-lg);
+            position: sticky;
+            top: 24px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--event-accent);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .pass-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+        .pass-option {
+            padding: 12px 8px;
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .pass-option.active {
+            border-color: var(--event-accent);
+            background: rgba(56, 189, 248, 0.1);
+            box-shadow: 0 0 14px rgba(56, 189, 248, 0.2);
+        }
+        .pass-option strong {
+            display: block;
+            font-size: 13px;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+        .pass-option span {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .pass-option.active strong {
+            color: var(--event-accent);
+        }
+        .ticket-confirmed-card {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(56, 189, 248, 0.1) 100%);
+            border: 1.5px solid rgba(16, 185, 129, 0.4);
+            border-radius: 20px;
+            padding: 28px;
+            text-align: center;
+            animation: fadeIn 0.4s ease forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="register-container">
+        
+        <!-- Org / Tenant Bar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div id="org-logo" style="width: 42px; height: 42px; border-radius: 10px; background: linear-gradient(135deg, #38bdf8, #ec4899); display: flex; align-items: center; justify-content: center; overflow: hidden; font-weight: 800; font-size: 18px; color: #fff;">
+                    <i data-lucide="calendar-check" style="width: 22px; height: 22px;"></i>
+                </div>
+                <div>
+                    <h4 id="org-name" style="margin: 0; font-size: 15px; font-weight: 700; color: #fff;">BizFlow Events</h4>
+                    <span style="font-size: 11.5px; color: var(--text-muted);">Official Public Event Registration Portal</span>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 11px; padding: 4px 10px;">
+                    <i data-lucide="shield-check" style="width: 12px; height: 12px; margin-right: 4px;"></i> Verified Event
+                </span>
+            </div>
+        </div>
+
+        <!-- Event Hero Card -->
+        <div class="event-hero-card">
+            <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 4px 12px; border-radius: 20px; margin-bottom: 14px;">
+                <span id="event-badge" style="font-size: 11px; font-weight: 800; color: var(--event-accent); text-transform: uppercase; letter-spacing: 0.08em;">EXCLUSIVE SUMMIT 2026</span>
+            </div>
+            
+            <h1 id="event-title" style="font-size: 32px; font-weight: 900; line-height: 1.25; margin: 0 0 12px; color: #fff; letter-spacing: -0.5px;">
+                Event Title Loading…
+            </h1>
+            
+            <p id="event-subheading" style="font-size: 15px; color: #94a3b8; line-height: 1.6; margin: 0 0 24px; max-width: 800px;">
+                Event details are being loaded from the secure server…
+            </p>
+
+            <!-- Metadata Pills -->
+            <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+                <div class="meta-pill">
+                    <i data-lucide="calendar" style="width: 15px; height: 15px; color: var(--event-accent);"></i>
+                    <span id="event-date">Loading Date…</span>
+                </div>
+                <div class="meta-pill">
+                    <i data-lucide="clock" style="width: 15px; height: 15px; color: #ec4899;"></i>
+                    <span id="event-time">10:00 AM – 5:00 PM</span>
+                </div>
+                <div class="meta-pill">
+                    <i data-lucide="map-pin" style="width: 15px; height: 15px; color: #10b981;"></i>
+                    <span id="event-venue">Loading Venue…</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Grid Layout -->
+        <div class="grid-layout">
+            
+            <!-- Left Column: Details, Speakers, Agenda -->
+            <div style="display: flex; flex-direction: column; gap: 28px;">
+                
+                <!-- Speakers Section -->
+                <div id="speakers-section">
+                    <h3 style="font-size: 17px; font-weight: 800; color: #fff; margin: 0 0 14px; display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="mic" style="width: 18px; height: 18px; color: var(--event-accent);"></i>
+                        Featured Guest Speakers &amp; Keynotes
+                    </h3>
+                    <div id="speakers-list" style="display: grid; grid-template-columns: 1fr; gap: 10px;">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Agenda Section -->
+                <div id="agenda-section">
+                    <h3 style="font-size: 17px; font-weight: 800; color: #fff; margin: 0 0 14px; display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="list-ordered" style="width: 18px; height: 18px; color: #ec4899;"></i>
+                        Event Schedule &amp; Agenda
+                    </h3>
+                    <div id="agenda-list" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 18px 24px; display: flex; flex-direction: column; gap: 12px;">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Perks Section -->
+                <div id="perks-section">
+                    <h3 style="font-size: 17px; font-weight: 800; color: #fff; margin: 0 0 14px; display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="gift" style="width: 18px; height: 18px; color: #10b981;"></i>
+                        What's Included &amp; Attendee Perks
+                    </h3>
+                    <div id="perks-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Registration Form Sticky -->
+            <div>
+                <div class="form-card" id="form-card-container">
+                    
+                    <div id="registration-form-box">
+                        <div style="margin-bottom: 20px;">
+                            <h3 style="font-size: 20px; font-weight: 800; color: #fff; margin: 0 0 6px;">Register For Your Pass</h3>
+                            <p style="font-size: 13px; color: var(--text-light); margin: 0;">Fill in your attendee details below to instantly claim your event ticket.</p>
+                        </div>
+
+                        <form id="public-registration-form">
+                            
+                            <!-- Pass Selector -->
+                            <label style="display: block; font-size: 11.5px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px;">Select Pass Type</label>
+                            <div class="pass-selector">
+                                <div class="pass-option" data-pass="Basic">
+                                    <strong>Basic Pass</strong>
+                                    <span>General Access</span>
+                                </div>
+                                <div class="pass-option active" data-pass="Standard">
+                                    <strong>Standard</strong>
+                                    <span>Full Session</span>
+                                </div>
+                                <div class="pass-option" data-pass="VIP">
+                                    <strong>VIP Pass</strong>
+                                    <span>All Access</span>
+                                </div>
+                            </div>
+                            <input type="hidden" id="selected-pass-type" value="Standard">
+
+                            <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;">
+                                <div>
+                                    <label style="display: block; font-size: 12px; font-weight: 600; color: #cbd5e1; margin-bottom: 5px;">Full Name <span style="color: #ef4444;">*</span></label>
+                                    <input type="text" id="reg-name" required class="form-input" placeholder="e.g. John Doe">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 12px; font-weight: 600; color: #cbd5e1; margin-bottom: 5px;">Email Address <span style="color: #ef4444;">*</span></label>
+                                    <input type="email" id="reg-email" required class="form-input" placeholder="e.g. you@company.com">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 12px; font-weight: 600; color: #cbd5e1; margin-bottom: 5px;">Phone / WhatsApp <span style="color: #ef4444;">*</span></label>
+                                    <input type="tel" id="reg-phone" required class="form-input" placeholder="e.g. +91 98765 43210">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 12px; font-weight: 600; color: #cbd5e1; margin-bottom: 5px;">Company / Organization (Optional)</label>
+                                    <input type="text" id="reg-company" class="form-input" placeholder="e.g. Acme Innovations">
+                                </div>
+                            </div>
+
+                            <div id="form-error-alert" style="display: none; padding: 10px 14px; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; border-radius: 8px; font-size: 12.5px; color: #fca5a5; margin-bottom: 14px;"></div>
+
+                            <button type="submit" id="btn-submit-registration" class="btn btn-primary btn-block" style="padding: 14px; font-size: 15px; font-weight: 800; background: linear-gradient(135deg, var(--event-accent) 0%, #38bdf8 50%, #ec4899 100%); border: none; color: #06060f; box-shadow: 0 0 24px rgba(56, 189, 248, 0.4); display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                <span id="submit-btn-text">Confirm &amp; Claim Ticket</span>
+                                <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
+                            </button>
+
+                            <p style="font-size: 11px; color: var(--text-muted); text-align: center; margin: 12px 0 0;">
+                                <i data-lucide="lock" style="width: 11px; height: 11px; vertical-align: middle;"></i> 256-bit Encrypted &amp; Synced directly to Event Organizer Database
+                            </p>
+                        </form>
+                    </div>
+
+                    <!-- Confirmation Box (Shown upon success) -->
+                    <div id="registration-success-box" style="display: none;" class="ticket-confirmed-card">
+                        <div style="width: 54px; height: 54px; border-radius: 50%; background: #10b981; color: #fff; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);">
+                            <i data-lucide="check" style="width: 30px; height: 30px;"></i>
+                        </div>
+                        <h3 style="font-size: 22px; font-weight: 900; color: #fff; margin: 0 0 6px;">You're Registered!</h3>
+                        <p style="font-size: 13.5px; color: #cbd5e1; margin: 0 0 18px;">Your pass is confirmed and synced with the event organizer database.</p>
+                        
+                        <div style="background: rgba(0,0,0,0.3); border: 1px dashed rgba(255,255,255,0.2); border-radius: 12px; padding: 14px; margin-bottom: 20px; text-align: left;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                                <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Ticket Reference:</span>
+                                <strong id="confirmed-ticket-code" style="font-size: 13px; color: var(--event-accent);">REG-2026-X</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                                <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Attendee:</span>
+                                <strong id="confirmed-attendee-name" style="font-size: 13px; color: #fff;">Name</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Pass Tier:</span>
+                                <span id="confirmed-pass-tier" class="badge" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8;">Standard Pass</span>
+                            </div>
+                        </div>
+
+                        <button onclick="window.print()" class="btn btn-outline btn-block" style="gap: 6px; padding: 10px; font-size: 13px; font-weight: 700; margin-bottom: 8px;">
+                            <i data-lucide="printer" style="width: 14px; height: 14px;"></i> Print / Save Pass Receipt
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/register.js"></script>
+</body>
+</html>

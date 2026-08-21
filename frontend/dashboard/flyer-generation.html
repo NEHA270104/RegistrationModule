@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Flyer Studio - Tenant Dashboard</title>
+    <link rel="stylesheet" href="css/dashboard.css?v=1.0.1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+    <!-- html2canvas & jsPDF for high-resolution flyer export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 6px #10b981; }
+            50%       { box-shadow: 0 0 14px #10b981, 0 0 4px #10b981; }
+        }
+        .quiz-step-panel {
+            animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .quiz-option-card {
+            transition: all 0.25s ease;
+        }
+        .quiz-option-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 245, 255, 0.15);
+        }
+        .quiz-option-card.active {
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+        }
+        .logo-preview-box {
+            width: 52px; height: 52px; border-radius: 8px;
+            border: 1px dashed rgba(255,255,255,0.25);
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.03); overflow: hidden; flex-shrink: 0;
+        }
+        .guest-entry-card { transition: all 0.3s ease; }
+        .guest-entry-card:hover { border-color: rgba(56,189,248,0.3) !important; }
+        /* Dark-mode textarea & select */
+        textarea, select { outline: none; }
+        select option { background: #0c0c2a; color: #fff; }
+        /* Responsive: stack layout on mobile */
+        @media (max-width: 900px) {
+            #flyer-studio-layout { grid-template-columns: 1fr !important; }
+            #live-preview-panel  { position: static !important; }
+        }
+        /* Scrollbar inside json preview */
+        #json-schema-preview::-webkit-scrollbar { width: 4px; }
+        #json-schema-preview::-webkit-scrollbar-track { background: transparent; }
+        #json-schema-preview::-webkit-scrollbar-thumb { background: rgba(0,245,255,0.3); border-radius: 4px; }
+    </style>
+
+</head>
+<body>
+
+    <!-- Dashboard Shell -->
+    <div id="dashboard-shell" class="dashboard-shell">
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i data-lucide="calendar-check"></i>
+                </div>
+                <h2 id="sidebar-tenant-name">Dashboard</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/dashboard" class="nav-item" data-section="overview">
+                    <i data-lucide="layout-dashboard"></i><span>Overview</span>
+                </a>
+
+                <!-- Registration Hub -->
+                <div class="nav-group open">
+                    <div class="nav-group-header">
+                        <div class="nav-group-header-left">
+                            <i data-lucide="clipboard-list"></i><span>Registration Hub</span>
+                        </div>
+                        <i data-lucide="chevron-down" class="group-arrow"></i>
+                    </div>
+                    <div class="nav-group-items">
+                        <a href="/dashboard/events.html" class="nav-sub-item" data-section="events">
+                            <div class="nav-sub-item-left">
+                                <i data-lucide="calendar"></i><span>Events</span>
+                            </div>
+                        </a>
+                        <a href="/dashboard/flyer-generation.html" class="nav-sub-item active" data-section="flyers">
+                            <div class="nav-sub-item-left">
+                                <i data-lucide="image"></i><span>Flyer Generation</span>
+                            </div>
+                        </a>
+                        <a href="/dashboard/email-templates.html" class="nav-sub-item" data-section="email-templates">
+                            <div class="nav-sub-item-left">
+                                <i data-lucide="mail"></i><span>Email Templates</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <a href="/dashboard/subscription" class="nav-item" data-section="subscription">
+                    <i data-lucide="credit-card"></i><span>Subscription</span>
+                </a>
+                <a href="/dashboard/analytics" class="nav-item" data-section="analytics">
+                    <i data-lucide="trending-up"></i><span>Analytics</span>
+                </a>
+                <a href="/dashboard/activity-log" class="nav-item" data-section="activity-log">
+                    <i data-lucide="activity"></i><span>Activity Log</span>
+                </a>
+                <a href="/dashboard/admin-notifications" class="nav-item" id="nav-item-admin-notifications" style="display: none;" data-section="admin-notifications">
+                    <i data-lucide="bell-ring"></i><span>Admin Alerts</span>
+                </a>
+                <a href="/dashboard/settings.html" class="nav-item" data-section="settings">
+                    <i data-lucide="settings"></i><span>Settings</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-wrapper">
+            <!-- Top Header -->
+            <header class="top-header">
+                <button id="sidebar-toggle" class="sidebar-toggle">
+                    <i data-lucide="menu"></i>
+                </button>
+                <div class="header-right" style="display: flex; align-items: center; gap: 12px;">
+                    <button id="clean-slate-btn" class="btn btn-sm btn-outline" style="border-color: rgba(244,63,94,0.35); color: #fda4af; background: rgba(244,63,94,0.06); gap: 5px;" title="Reset all test data and restart onboarding">
+                        <i data-lucide="rotate-ccw" style="width:13px;height:13px;"></i> Reset Data
+                    </button>
+
+                    <!-- Theme Switcher Pill -->
+                    <div class="theme-switcher-pill" id="theme-switcher-pill" title="Switch dashboard theme" aria-label="Theme switcher">
+                        <span class="theme-dot" id="theme-dot" style="background: linear-gradient(135deg, #38bdf8, #ec4899);"></span>
+                        <span class="theme-pill-label" id="theme-pill-label">Theme</span>
+                        <div class="theme-switcher-dropdown" id="theme-switcher-dropdown" role="listbox" aria-label="Select theme">
+                            <div class="theme-dd-option" data-theme="dark" role="option">
+                                <span class="theme-dd-swatch" style="background: linear-gradient(135deg, #020617, #38bdf8);"></span>
+                                Dark High-Tech
+                            </div>
+                            <div class="theme-dd-option" data-theme="light" role="option">
+                                <span class="theme-dd-swatch" style="background: linear-gradient(135deg, #f1f5f9, #4f46e5);"></span>
+                                Light Clean
+                            </div>
+                            <div class="theme-dd-option" data-theme="neon" role="option">
+                                <span class="theme-dd-swatch" style="background: linear-gradient(135deg, #f0abfc, #818cf8, #00f5ff);"></span>
+                                Vibrant Neon
+                            </div>
+                        </div>
+                    </div>
+
+                    <span class="header-user" id="header-user-name">
+                        <i data-lucide="circle-user"></i> <span></span>
+                    </span>
+                    <button id="logout-btn" class="btn btn-sm btn-outline">Logout</button>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <main id="main-content" class="main-content">
+                <div class="container-fluid" style="padding: 24px; max-width: 1280px; margin: 0 auto;">
+
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h1 style="font-size: 28px; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.5px;">Interactive Flyer Generator Studio</h1>
+                            <p style="color: var(--text-light); font-size: 14px; margin-top: 4px;">Follow the step-by-step questionnaire to craft an exclusive, high-converting event flyer</p>
+                        </div>
+                        <span class="badge badge-success">
+                            <i data-lucide="sparkles" style="width: 12px; height: 12px; margin-right: 4px;"></i> Interactive Studio Active
+                        </span>
+                    </div>
+
+                    <!-- 5-STEP PROGRESSIVE QUIZ + LIVE PREVIEW LAYOUT -->
+                    <div id="flyer-studio-layout" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+
+                        <!-- LEFT: QUIZ CONTAINER -->
+                        <div id="quiz-container" class="card" style="padding: 32px; border: 1px solid rgba(0,245,255,0.25); box-shadow: 0 0 40px rgba(0,245,255,0.06);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                <h2 style="font-size: 19px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 9px; margin: 0;">
+                                    <i data-lucide="wand-2" style="width: 20px; height: 20px; color: #00f5ff;"></i> Design Wizard
+                                </h2>
+                                <span id="quiz-step-badge" style="font-size: 11px; font-weight: 800; color: #00f5ff; background: rgba(0,245,255,0.12); border: 1px solid rgba(0,245,255,0.3); padding: 4px 12px; border-radius: 999px;">STEP 1 OF 5</span>
+                            </div>
+
+                            <!-- Step Dot Indicators -->
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+                                <div id="dot-1" style="width: 28px; height: 28px; border-radius: 50%; background: #00f5ff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; color: #06060f; transition: all 0.3s;">1</div>
+                                <div style="flex: 1; height: 2px; background: rgba(255,255,255,0.08);"><div id="line-1" style="height: 100%; width: 0%; background: #00f5ff; transition: width 0.4s ease;"></div></div>
+                                <div id="dot-2" style="width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; color: rgba(255,255,255,0.35); transition: all 0.3s;">2</div>
+                                <div style="flex: 1; height: 2px; background: rgba(255,255,255,0.08);"><div id="line-2" style="height: 100%; width: 0%; background: #00f5ff; transition: width 0.4s ease;"></div></div>
+                                <div id="dot-3" style="width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; color: rgba(255,255,255,0.35); transition: all 0.3s;">3</div>
+                                <div style="flex: 1; height: 2px; background: rgba(255,255,255,0.08);"><div id="line-3" style="height: 100%; width: 0%; background: #00f5ff; transition: width 0.4s ease;"></div></div>
+                                <div id="dot-4" style="width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; color: rgba(255,255,255,0.35); transition: all 0.3s;">4</div>
+                                <div style="flex: 1; height: 2px; background: rgba(255,255,255,0.08);"><div id="line-4" style="height: 100%; width: 0%; background: #00f5ff; transition: width 0.4s ease;"></div></div>
+                                <div id="dot-5" style="width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; color: rgba(255,255,255,0.35); transition: all 0.3s;">5</div>
+                            </div>
+
+                            <!-- Animated Progress Bar -->
+                            <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; margin-bottom: 28px;">
+                                <div id="quiz-progress-bar" style="width: 20%; height: 100%; background: linear-gradient(90deg, #00f5ff, #ec4899); transition: width 0.4s ease;"></div>
+                            </div>
+
+                            <!-- â”€â”€ STEP 1: Event Core & Metadata â”€â”€ -->
+                            <div id="quiz-step-1" class="quiz-step-panel">
+                                <div style="margin-bottom: 20px;">
+                                    <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(0,245,255,0.08); border: 1px solid rgba(0,245,255,0.25); padding: 3px 10px; border-radius: 6px; margin-bottom: 10px;">
+                                        <i data-lucide="tag" style="width:12px;height:12px;color:#00f5ff;"></i>
+                                        <span style="font-size:10px;font-weight:800;color:#00f5ff;text-transform:uppercase;letter-spacing:0.1em;">Step 1 â€” Event Core &amp; Metadata</span>
+                                    </div>
+                                    <h3 style="font-size: 18px; font-weight: 800; color: #fff; margin: 0 0 6px;">What's your event called?</h3>
+                                    <p style="font-size: 13px; color: var(--text-light); margin: 0;">Give your event a powerful identity â€” badge text, headline, and sub-heading.</p>
+                                </div>
+
+                                <div style="display: flex; flex-direction: column; gap: 18px; margin-bottom: 28px;">
+                                    <div class="form-group" style="margin: 0;">
+                                        <label for="q-badge-text" style="display:block;font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Badge / Label Text <span style="color:#ec4899;">*</span></label>
+                                        <input type="text" id="q-badge-text" placeholder="e.g. EXCLUSIVE INVITE Â· AI SUMMIT 2026" value="EXCLUSIVE INVITE Â· AI SUMMIT 2026" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:13px;font-weight:600;box-sizing:border-box;">
+                                        <p style="font-size:11px;color:var(--text-muted);margin:5px 0 0;">Short label shown at top of flyer (e.g. "EXCLUSIVE Â· TECH SUMMIT")</p>
+                                    </div>
+                                    <div class="form-group" style="margin: 0;">
+                                        <label for="q-main-heading" style="display:block;font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Main Event Headline <span style="color:#ec4899;">*</span></label>
+                                        <input type="text" id="q-main-heading" placeholder="e.g. CYBERPUNK NEXTGEN TECH SUMMIT 2026" value="CYBERPUNK NEXTGEN TECH SUMMIT 2026" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:13px;font-weight:600;box-sizing:border-box;">
+                                    </div>
+                                    <div class="form-group" style="margin: 0;">
+                                        <label for="q-sub-heading" style="display:block;font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Sub-Heading / Tagline</label>
+                                        <textarea id="q-sub-heading" placeholder="e.g. Exclusive C-Suite gathering shaping key market moves and high-ticket opportunities." rows="2" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:13px;font-weight:500;resize:vertical;box-sizing:border-box;">Exclusive C-Suite gathering shaping key market moves and high-ticket opportunities.</textarea>
+                                    </div>
+
+                                    <!-- Theme Vibe Selection -->
+                                    <div>
+                                        <label style="display:block;font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">Flyer Visual Theme</label>
+                                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                                            <button type="button" class="quiz-option-card active" data-quiz="vibe" data-val="cyberpunk" style="padding:12px 14px;background:rgba(0,245,255,0.1);border:1.5px solid #00f5ff;border-radius:10px;text-align:left;cursor:pointer;">
+                                                <div style="font-size:13px;font-weight:800;color:#00f5ff;">âš¡ Cyberpunk Tech</div>
+                                                <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Neon grid aesthetic</div>
+                                            </button>
+                                            <button type="button" class="quiz-option-card" data-quiz="vibe" data-val="executive" style="padding:12px 14px;background:rgba(255,255,255,0.03);border:1.5px solid rgba(255,255,255,0.08);border-radius:10px;text-align:left;cursor:pointer;">
+                                                <div style="font-size:13px;font-weight:800;color:#f59e0b;">ðŸ‘‘ Executive Gala</div>
+                                                <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Gold prestige style</div>
+                                            </button>
+                                            <button type="button" class="quiz-option-card" data-quiz="vibe" data-val="glass" style="padding:12px 14px;background:rgba(255,255,255,0.03);border:1.5px solid rgba(255,255,255,0.08);border-radius:10px;text-align:left;cursor:pointer;">
+                                                <div style="font-size:13px;font-weight:800;color:#e2e8f0;">âœ¨ Minimalist Glass</div>
+                                                <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Glassmorphic clean</div>
+                                            </button>
+                                            <button type="button" class="quiz-option-card" data-quiz="vibe" data-val="creative" style="padding:12px 14px;background:rgba(255,255,255,0.03);border:1.5px solid rgba(255,255,255,0.08);border-radius:10px;text-align:left;cursor:pointer;">
+                                                <div style="font-size:13px;font-weight:800;color:#a855f7;">ðŸŽ¨ Creative Studio</div>
+                                                <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Vibrant artistic</div>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="button" id="quiz-next-1" class="btn btn-primary btn-block" style="gap:8px;padding:13px;font-weight:800;">
+                                    Next: Logistics &amp; Timing <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+                                </button>
+                            </div>
+
+                            <!-- â”€â”€ STEP 2: Logistics & Timing â”€â”€ -->
+                            <div id="quiz-step-2" class="quiz-step-panel" style="display:none;">
+                                <div style="margin-bottom: 20px;">
+                                    <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,245,255,0.08);border:1px solid rgba(0,245,255,0.25);padding:3px 10px;border-radius:6px;margin-bottom:10px;">
+                                        <i data-lucide="calendar-clock" style="width:12px;height:12px;color:#00f5ff;"></i>
+                                        <span style="font-size:10px;font-weight:800;color:#00f5ff;text-transform:uppercase;letter-spacing:0.1em;">Step 2 â€” Logistics &amp; Timing</span>
+                                    </div>
+                                    <h3 style="font-size: 18px; font-weight: 800; color: #fff; margin: 0 0 6px;">When and where is it happening?</h3>
+                                    <p style="font-size: 13px; color: var(--text-light); margin: 0;">Set the essential timeline and location details for your event flyer.</p>
+                                </div>
+
+                                <div style="display:flex;flex-direction:column;gap:18px;margin-bottom:28px;">
+                                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                                        <div class="form-group" style="margin:0;">
+                                            <label for="q-event-date" style="display:block;font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Event Date <span style="color:#ec4899;">*</span></label>
+                                            <input type="text" id="q-event-date" placeholder="e.g. OCTOBER 24, 2026" value="OCTOBER 24, 2026" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:13px;font-weight:600;box-sizing:border-box;">
+                                        </div>
+                                        <div class="form-group" style="margin:0;">
+                                            <label for="q-event-time" style="display:block;font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Event Time <span style="color:#ec4899;">*</span></label>
+                                            <input type="text" id="q-event-time" placeholder="e.g. 10:00 AM â€“ 5:00 PM IST" value="10:00 AM â€“ 5:00 PM IST" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:13px;font-weight:600;box-sizing:border-box;">
+                                        </div>
+                                    </div>
+                                    <div class="form-group" style="margin:0;">
+                                        <label for="q-event-venue" style="display:block;font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Venue / Location <span style="color:#ec4899;">*</span></label>
+                                        <input type="text" id="q-event-venue" placeholder="e.g. Grand Hyatt Convention Center, Mumbai" value="Grand Hyatt Convention Center, Mumbai" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:13px;font-weight:600;box-sizing:border-box;">
+                                    </div>
+                                    <!-- Color Palette -->
+                                    <div>
+                                        <label style="display:block;font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">Accent Color</label>
+                                        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">
+                                            <button type="button" class="quiz-color-card active" data-color="#00f5ff" style="height:42px;border-radius:8px;background:#00f5ff;border:2px solid #fff;cursor:pointer;box-shadow:0 0 14px rgba(0,245,255,0.4);"></button>
+                                            <button type="button" class="quiz-color-card" data-color="#ec4899" style="height:42px;border-radius:8px;background:#ec4899;border:2px solid transparent;cursor:pointer;"></button>
+                                            <button type="button" class="quiz-color-card" data-color="#f59e0b" style="height:42px;border-radius:8px;background:#f59e0b;border:2px solid transparent;cursor:pointer;"></button>
+                                            <button type="button" class="quiz-color-card" data-color="#10b981" style="height:42px;border-radius:8px;background:#10b981;border:2px solid transparent;cursor:pointer;"></button>
+                                            <button type="button" class="quiz-color-card" data-color="#8b5cf6" style="height:42px;border-radius:8px;background:#8b5cf6;border:2px solid transparent;cursor:pointer;"></button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="display:flex;gap:12px;">
+                                    <button type="button" id="quiz-prev-2" class="btn btn-outline" style="flex:1;padding:12px;"><i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back</button>
+                                    <button type="button" id="quiz-next-2" class="btn btn-primary" style="flex:2;gap:8px;padding:12px;font-weight:800;">
+                                        Next: Guests &amp; Speakers <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- â”€â”€ STEP 3: Guests & Speakers â”€â”€ -->
+                            <div id="quiz-step-3" class="quiz-step-panel" style="display:none;">
+                                <div style="margin-bottom: 20px;">
+                                    <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,245,255,0.08);border:1px solid rgba(0,245,255,0.25);padding:3px 10px;border-radius:6px;margin-bottom:10px;">
+                                        <i data-lucide="users" style="width:12px;height:12px;color:#00f5ff;"></i>
+                                        <span style="font-size:10px;font-weight:800;color:#00f5ff;text-transform:uppercase;letter-spacing:0.1em;">Step 3 â€” Guests &amp; Speakers</span>
+                                    </div>
+                                    <h3 style="font-size: 18px; font-weight: 800; color: #fff; margin: 0 0 6px;">Who's speaking at your event?</h3>
+                                    <p style="font-size: 13px; color: var(--text-light); margin: 0;">Add 1â€“4+ speakers with their photo, title, name, and role badge.</p>
+                                </div>
+
+                                <!-- Guests List Container -->
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                                    <label style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin:0;">Featured Speakers Roster</label>
+                                    <button type="button" id="add-guest-btn" class="btn btn-outline btn-sm" style="gap:6px;border-color:rgba(0,245,255,0.4);color:#00f5ff;padding:5px 12px;font-size:12px;">
+                                        <i data-lucide="plus-circle" style="width:14px;height:14px;"></i> Add Speaker
+                                    </button>
+                                </div>
+                                <div id="guests-list-container" style="display:flex;flex-direction:column;gap:14px;margin-bottom:24px;">
+                                    <!-- Default Guest Card -->
+                                    <div class="guest-entry-card" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:16px;position:relative;">
+                                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                                            <span class="guest-badge-num" style="font-size:11px;font-weight:800;color:#00f5ff;text-transform:uppercase;letter-spacing:0.08em;">Speaker / Guest #1</span>
+                                            <button type="button" class="remove-guest-btn" style="background:none;border:none;color:#fda4af;cursor:pointer;font-size:12px;display:none;" title="Remove Guest">
+                                                <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
+                                            </button>
+                                        </div>
+                                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+                                            <div>
+                                                <label style="display:block;font-size:11px;color:var(--text-light);margin-bottom:4px;">Guest Name *</label>
+                                                <input type="text" class="guest-name-input" placeholder="e.g. Dr. Rajesh Sharma" value="" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;font-size:13px;box-sizing:border-box;">
+                                            </div>
+                                            <div>
+                                                <label style="display:block;font-size:11px;color:var(--text-light);margin-bottom:4px;">Title / Role *</label>
+                                                <input type="text" class="guest-title-input" placeholder="e.g. CTO &amp; Lead AI Architect" value="" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;font-size:13px;box-sizing:border-box;">
+                                            </div>
+                                        </div>
+                                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                                            <div>
+                                                <label style="display:block;font-size:11px;color:var(--text-light);margin-bottom:4px;">Photo / Avatar URL</label>
+                                                <input type="url" class="guest-avatar-input" placeholder="https://..." style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;font-size:12px;box-sizing:border-box;">
+                                            </div>
+                                            <div>
+                                                <label style="display:block;font-size:11px;color:var(--text-light);margin-bottom:4px;">Role Badge Label</label>
+                                                <input type="text" class="guest-badge-input" placeholder="e.g. Keynote Speaker" value="Keynote Speaker" style="width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;font-size:12px;box-sizing:border-box;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="display:flex;gap:12px;">
+                                    <button type="button" id="quiz-prev-3" class="btn btn-outline" style="flex:1;padding:12px;"><i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back</button>
+                                    <button type="button" id="quiz-next-3" class="btn btn-primary" style="flex:2;gap:8px;padding:12px;font-weight:800;">
+                                        Next: Agenda &amp; Perks <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- â”€â”€ STEP 4: Agenda & Perks â”€â”€ -->
+                            <div id="quiz-step-4" class="quiz-step-panel" style="display:none;">
+                                <div style="margin-bottom: 20px;">
+                                    <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,245,255,0.08);border:1px solid rgba(0,245,255,0.25);padding:3px 10px;border-radius:6px;margin-bottom:10px;">
+                                        <i data-lucide="list-checks" style="width:12px;height:12px;color:#00f5ff;"></i>
+                                        <span style="font-size:10px;font-weight:800;color:#00f5ff;text-transform:uppercase;letter-spacing:0.1em;">Step 4 â€” Agenda &amp; Perks</span>
+                                    </div>
+                                    <h3 style="font-size: 18px; font-weight: 800; color: #fff; margin: 0 0 6px;">What will attendees experience?</h3>
+                                    <p style="font-size: 13px; color: var(--text-light); margin: 0;">Add session highlights and attendee benefits to drive registrations.</p>
+                                </div>
+
+                                <div style="display:flex;flex-direction:column;gap:18px;margin-bottom:28px;">
+                                    <div>
+                                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                                            <label style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;">Agenda / Session Highlights</label>
+                                            <button type="button" id="add-agenda-btn" class="btn btn-outline btn-sm" style="gap:5px;border-color:rgba(0,245,255,0.3);color:#00f5ff;padding:4px 10px;font-size:11px;">
+                                                <i data-lucide="plus" style="width:12px;height:12px;"></i> Add Session
+                                            </button>
+                                        </div>
+                                        <div id="agenda-list" style="display:flex;flex-direction:column;gap:8px;">
+                                            <div class="agenda-row" style="display:flex;gap:8px;align-items:center;">
+                                                <input type="text" class="agenda-input" placeholder="e.g. AI Keynote: Next-Gen Autonomous Workflows" value="AI Keynote: Next-Gen Autonomous Workflows" style="flex:1;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;font-size:12.5px;box-sizing:border-box;">
+                                                <button type="button" class="remove-agenda-btn" style="background:none;border:none;color:#fda4af;cursor:pointer;padding:4px;" title="Remove"><i data-lucide="x" style="width:14px;height:14px;"></i></button>
+                                            </div>
+                                            <div class="agenda-row" style="display:flex;gap:8px;align-items:center;">
+                                                <input type="text" class="agenda-input" placeholder="e.g. Live Panel: Future of Enterprise AI" value="Live Panel: Future of Enterprise AI" style="flex:1;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;font-size:12.5px;box-sizing:border-box;">
+                                                <button type="button" class="remove-agenda-btn" style="background:none;border:none;color:#fda4af;cursor:pointer;padding:4px;" title="Remove"><i data-lucide="x" style="width:14px;height:14px;"></i></button>
+                                            </div>
+                                            <div class="agenda-row" style="display:flex;gap:8px;align-items:center;">
+                                                <input type="text" class="agenda-input" placeholder="e.g. Networking &amp; Investor Meetups" value="Networking &amp; Investor Meetups" style="flex:1;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;font-size:12.5px;box-sizing:border-box;">
+                                                <button type="button" class="remove-agenda-btn" style="background:none;border:none;color:#fda4af;cursor:pointer;padding:4px;" title="Remove"><i data-lucide="x" style="width:14px;height:14px;"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                                            <label style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;">Perks &amp; What's Included</label>
+                                            <button type="button" id="add-perk-btn" class="btn btn-outline btn-sm" style="gap:5px;border-color:rgba(168,85,247,0.4);color:#a855f7;padding:4px 10px;font-size:11px;">
+                                                <i data-lucide="plus" style="width:12px;height:12px;"></i> Add Perk
+                                            </button>
+                                        </div>
+                                        <div id="perks-list" style="display:flex;flex-direction:column;gap:8px;">
+                                            <div class="perk-row" style="display:flex;gap:8px;align-items:center;">
+                                                <input type="text" class="perk-input" placeholder="e.g. Free Certificate of Participation" value="Free Certificate of Participation" style="flex:1;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;font-size:12.5px;box-sizing:border-box;">
+                                                <button type="button" class="remove-perk-btn" style="background:none;border:none;color:#fda4af;cursor:pointer;padding:4px;" title="Remove"><i data-lucide="x" style="width:14px;height:14px;"></i></button>
+                                            </div>
+                                            <div class="perk-row" style="display:flex;gap:8px;align-items:center;">
+                                                <input type="text" class="perk-input" placeholder="e.g. Exclusive Networking Lounge Access" value="Exclusive Networking Lounge Access" style="flex:1;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;font-size:12.5px;box-sizing:border-box;">
+                                                <button type="button" class="remove-perk-btn" style="background:none;border:none;color:#fda4af;cursor:pointer;padding:4px;" title="Remove"><i data-lucide="x" style="width:14px;height:14px;"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Logo Upload -->
+                                    <div>
+                                        <label style="display:block;font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Event / Org Logo (Optional)</label>
+                                        <div style="display:flex;align-items:center;gap:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);padding:12px;border-radius:10px;">
+                                            <div class="logo-preview-box" id="quiz-logo-preview">
+                                                <i data-lucide="image" style="width:20px;height:20px;color:var(--text-muted);"></i>
+                                            </div>
+                                            <div style="flex:1;">
+                                                <input type="file" id="quiz-logo-file" accept="image/*" style="display:none;">
+                                                <button type="button" id="btn-trigger-logo-file" class="btn btn-outline btn-sm" style="gap:6px;border-color:rgba(56,189,248,0.4);color:#38bdf8;padding:7px 14px;">
+                                                    <i data-lucide="upload-cloud" style="width:14px;height:14px;"></i> Upload Logo
+                                                </button>
+                                                <span id="quiz-logo-status" style="font-size:11.5px;color:var(--text-muted);margin-left:10px;">No logo chosen</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="display:flex;gap:12px;">
+                                    <button type="button" id="quiz-prev-4" class="btn btn-outline" style="flex:1;padding:12px;"><i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back</button>
+                                    <button type="button" id="quiz-next-4" class="btn btn-primary" style="flex:2;gap:8px;padding:12px;font-weight:800;">
+                                        Next: Call to Action <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- â”€â”€ STEP 5: Call to Action â”€â”€ -->
+                            <div id="quiz-step-5" class="quiz-step-panel" style="display:none;">
+                                <div style="margin-bottom: 20px;">
+                                    <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,245,255,0.08);border:1px solid rgba(0,245,255,0.25);padding:3px 10px;border-radius:6px;margin-bottom:10px;">
+                                        <i data-lucide="megaphone" style="width:12px;height:12px;color:#00f5ff;"></i>
+                                        <span style="font-size:10px;font-weight:800;color:#00f5ff;text-transform:uppercase;letter-spacing:0.1em;">Step 5 â€” Call to Action</span>
+                                    </div>
+                                    <h3 style="font-size: 18px; font-weight: 800; color: #fff; margin: 0 0 6px;">How should people register?</h3>
+                                    <p style="font-size: 13px; color: var(--text-light); margin: 0;">Add conversion elements â€” CTA button label and contact phone for your flyer footer.</p>
+                                </div>
+
+                                <div style="display:flex;flex-direction:column;gap:18px;margin-bottom:28px;">
+                                    <div class="form-group" style="margin:0;">
+                                        <label for="q-cta-text" style="display:block;font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">CTA Button Text <span style="color:#ec4899;">*</span></label>
+                                        <input type="text" id="q-cta-text" placeholder="e.g. REGISTER NOW â€” LIMITED SEATS" value="REGISTER NOW â€” LIMITED SEATS" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:13px;font-weight:700;box-sizing:border-box;">
+                                        <p style="font-size:11px;color:var(--text-muted);margin:5px 0 0;">This becomes the primary call-to-action button label on your flyer</p>
+                                    </div>
+                                    <div class="form-group" style="margin:0;">
+                                        <label for="q-contact-phone" style="display:block;font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Contact / WhatsApp Number</label>
+                                        <input type="tel" id="q-contact-phone" placeholder="e.g. +91 98765 43210" value="+91 98765 43210" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:13px;font-weight:600;box-sizing:border-box;">
+                                    </div>
+                                    <div class="form-group" style="margin:0;">
+                                        <label for="q-format" style="display:block;font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Layout Aspect Ratio</label>
+                                        <select id="q-format" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;font-size:13px;font-weight:600;box-sizing:border-box;">
+                                            <option value="square">Square (1:1 / 1080Ã—1080 â€” Social &amp; Post)</option>
+                                            <option value="portrait">Portrait (9:16 / 1080Ã—1920 â€” Story &amp; Mobile)</option>
+                                            <option value="landscape">Landscape (16:9 / 1920Ã—1080 â€” Banner)</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Final JSON Schema Preview -->
+                                    <div style="background:rgba(0,0,0,0.35);border:1px solid rgba(0,245,255,0.15);border-radius:10px;padding:14px;">
+                                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                                            <span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#00f5ff;">ðŸ“¦ Serialized Flyer Payload</span>
+                                            <span style="font-size:10px;color:var(--text-muted);">Auto-generated from your answers</span>
+                                        </div>
+                                        <pre id="json-schema-preview" style="font-size:10px;color:rgba(180,220,255,0.75);white-space:pre-wrap;word-break:break-all;margin:0;max-height:140px;overflow-y:auto;"></pre>
+                                    </div>
+                                </div>
+
+                                <div style="display:flex;gap:12px;">
+                                    <button type="button" id="quiz-prev-5" class="btn btn-outline" style="flex:1;padding:12px;"><i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back</button>
+                                    <button type="button" id="quiz-synthesize-btn" class="btn btn-primary" style="flex:2;gap:8px;padding:13px;background:linear-gradient(135deg,#00f5ff,#ec4899);border:none;box-shadow:0 0 24px rgba(0,245,255,0.35);font-weight:900;color:#06060f;">
+                                        <i data-lucide="wand-2" style="width:18px;height:18px;"></i> Generate Flyer
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT: LIVE PREVIEW PANEL (always visible) -->
+                        <div id="live-preview-panel" class="card" style="padding: 24px; border: 1px solid rgba(56,189,248,0.2); position: sticky; top: 24px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                                <h3 style="font-size:14px;font-weight:800;color:#fff;display:flex;align-items:center;gap:7px;margin:0;">
+                                    <i data-lucide="eye" style="width:16px;height:16px;color:#38bdf8;"></i> Live Preview
+                                </h3>
+                                <div id="live-preview-sync-dot" style="display:flex;align-items:center;gap:5px;">
+                                    <div style="width:6px;height:6px;border-radius:50%;background:#10b981;box-shadow:0 0 6px #10b981;animation:pulse 2s infinite;"></div>
+                                    <span style="font-size:10px;color:#10b981;font-weight:700;">LIVE SYNC</span>
+                                </div>
+                            </div>
+                            <div id="flyer-preview" style="width:100%;"></div>
+
+                            <!-- Live Hosted Event Form Banner (Shown after generate) -->
+                            <div id="hosted-event-banner" style="display:none;margin-top:20px;padding:16px;background:linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(56,189,248,0.12) 100%);border:1.5px solid rgba(16,185,129,0.4);border-radius:14px;">
+                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                    <div style="width:20px;height:20px;border-radius:50%;background:#10b981;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:900;">✓</div>
+                                    <h4 style="font-size:13px;font-weight:800;color:#fff;margin:0;">Public Registration Page Hosted!</h4>
+                                </div>
+                                <p style="font-size:11.5px;color:#cbd5e1;margin:0 0 10px;">Attendees can now sign up on your live event form:</p>
+                                <div style="display:flex;gap:6px;margin-bottom:10px;">
+                                    <input type="text" id="hosted-event-url-input" readonly style="flex:1;padding:7px 10px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#38bdf8;font-size:11px;font-weight:600;">
+                                    <button type="button" id="btn-copy-hosted-url" class="btn btn-sm btn-primary" style="padding:6px 12px;font-size:11px;font-weight:700;gap:4px;">
+                                        <i data-lucide="copy" style="width:12px;height:12px;"></i> Copy
+                                    </button>
+                                </div>
+                                <div style="display:flex;gap:8px;">
+                                    <a id="btn-visit-hosted-form" href="#" target="_blank" class="btn btn-sm btn-outline" style="flex:1;padding:7px;font-size:11px;font-weight:700;text-decoration:none;border-color:rgba(56,189,248,0.4);color:#38bdf8;display:flex;align-items:center;justify-content:center;gap:4px;">
+                                        <i data-lucide="external-link" style="width:12px;height:12px;"></i> Open Live Form
+                                    </a>
+                                    <a href="/dashboard/events.html" class="btn btn-sm btn-outline" style="flex:1;padding:7px;font-size:11px;font-weight:700;text-decoration:none;border-color:rgba(16,185,129,0.4);color:#10b981;display:flex;align-items:center;justify-content:center;gap:4px;">
+                                        <i data-lucide="users" style="width:12px;height:12px;"></i> Events Hub
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Post-generate actions (hidden until generated) -->
+                            <div id="canvas-actions" style="display:none;margin-top:20px;padding-top:16px;border-top:1px solid var(--border-light);">
+                                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                    <button type="button" id="add-to-email-btn" class="btn btn-outline" style="gap:6px;border-color:rgba(168,85,247,0.5);color:#a855f7;font-weight:800;padding:9px 14px;flex:1;">
+                                        <i data-lucide="mail" style="width:14px;height:14px;"></i> Add to Email
+                                    </button>
+                                    <button type="button" id="download-png-btn" class="btn btn-primary" style="gap:6px;background:linear-gradient(135deg,#00f5ff,#38bdf8);border:none;color:#06060f;font-weight:900;padding:9px 14px;flex:1;">
+                                        <i data-lucide="image" style="width:14px;height:14px;"></i> PNG
+                                    </button>
+                                    <button type="button" id="download-pdf-btn" class="btn btn-outline" style="gap:6px;border-color:rgba(236,72,153,0.5);color:#ec4899;font-weight:800;padding:9px 14px;flex:1;">
+                                        <i data-lucide="file-text" style="width:14px;height:14px;"></i> PDF
+                                    </button>
+                                </div>
+                                <button type="button" id="btn-retake-quiz" class="btn btn-outline btn-block" style="margin-top:10px;gap:6px;border-color:rgba(0,245,255,0.3);color:#00f5ff;">
+                                    <i data-lucide="rotate-ccw" style="width:14px;height:14px;"></i> Re-take Questionnaire
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Mobile-only canvas container (shown after generate on mobile) -->
+                    <div id="canvas-container" style="display:none;"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="js/dashboard-auth.js"></script>
+    <script src="js/plan-permissions.js"></script>
+    <script src="js/flyer-generation.js"></script>
+    <script src="js/flyers.js"></script>
+</body>
+</html>

@@ -1,0 +1,328 @@
+{
+  "info": {
+    "name": "AI for MSME Summit Registration API",
+    "description": "API collection for testing the registration system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "adminApiKey",
+      "value": "your-admin-api-key",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health & Status",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health",
+            "description": "Check if the API is running"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Seats",
+      "item": [
+        {
+          "name": "Get All Seats",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/seats",
+            "description": "Get current seat availability for all tiers"
+          }
+        },
+        {
+          "name": "Get Tier Availability",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/seats/standard",
+            "description": "Get specific tier availability"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Registration",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/create-order",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tier\": \"standard\",\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"phone\": \"9876543210\",\n  \"business_name\": \"Test Company\",\n  \"industry\": \"Technology\",\n  \"revenue_range\": \"10L-50L\"\n}"
+            },
+            "description": "Create a new payment order"
+          }
+        },
+        {
+          "name": "Verify Payment",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/verify-payment",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"razorpay_order_id\": \"order_xxxxxxxxxxxxx\",\n  \"razorpay_payment_id\": \"pay_xxxxxxxxxxxxx\",\n  \"razorpay_signature\": \"signature_here\"\n}"
+            },
+            "description": "Verify payment after Razorpay checkout"
+          }
+        },
+        {
+          "name": "Get Registration",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/registration/BF-2026-000001",
+            "description": "Get registration by booking ID"
+          }
+        },
+        {
+          "name": "Check Email Registration",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/registration/check",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\"\n}"
+            },
+            "description": "Check if email is already registered"
+          }
+        },
+        {
+          "name": "Get Payment Status",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/payment-status/order_xxxxxxxxxxxxx",
+            "description": "Get payment status by order ID"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Waitlist",
+      "item": [
+        {
+          "name": "Join Waitlist",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/waitlist",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Waitlist User\",\n  \"email\": \"waitlist@example.com\",\n  \"phone\": \"9876543211\",\n  \"preferred_tier\": \"standard\",\n  \"purchase_livestream\": false\n}"
+            },
+            "description": "Add user to waitlist"
+          }
+        },
+        {
+          "name": "Get Waitlist Status",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/waitlist/status?email=waitlist@example.com",
+            "description": "Check waitlist status by email"
+          }
+        },
+        {
+          "name": "Get Waitlist Count",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/waitlist/count",
+            "description": "Get current waitlist count"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin/stats",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{adminApiKey}}"
+              }
+            ],
+            "description": "Get dashboard statistics"
+          }
+        },
+        {
+          "name": "Get All Registrations",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/admin/registrations?page=1&limit=20&sort_by=created_at&sort_order=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "registrations"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "sort_by", "value": "created_at" },
+                { "key": "sort_order", "value": "desc" },
+                { "key": "tier", "value": "", "disabled": true },
+                { "key": "payment_status", "value": "", "disabled": true },
+                { "key": "search", "value": "", "disabled": true }
+              ]
+            },
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{adminApiKey}}"
+              }
+            ],
+            "description": "Get all registrations with filters"
+          }
+        },
+        {
+          "name": "Get Registration Details",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin/registrations/BF-2026-000001",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{adminApiKey}}"
+              }
+            ],
+            "description": "Get full registration details (admin)"
+          }
+        },
+        {
+          "name": "Export Registrations CSV",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/admin/export?payment_status=confirmed",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "export"],
+              "query": [
+                { "key": "payment_status", "value": "confirmed" },
+                { "key": "tier", "value": "", "disabled": true }
+              ]
+            },
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{adminApiKey}}"
+              }
+            ],
+            "description": "Export registrations as CSV"
+          }
+        },
+        {
+          "name": "Get Waitlist Entries",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin/waitlist?page=1&limit=50",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{adminApiKey}}"
+              }
+            ],
+            "description": "Get all waitlist entries"
+          }
+        },
+        {
+          "name": "Get Seat Inventory",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin/seats",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{adminApiKey}}"
+              }
+            ],
+            "description": "Get seat inventory status"
+          }
+        },
+        {
+          "name": "Resend Confirmation",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/admin/registrations/BF-2026-000001/resend",
+            "header": [
+              {
+                "key": "X-API-Key",
+                "value": "{{adminApiKey}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"email\"\n}"
+            },
+            "description": "Resend confirmation email"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhook",
+      "item": [
+        {
+          "name": "Razorpay Webhook (Test)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/webhook/razorpay",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Razorpay-Signature",
+                "value": "test-signature"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"entity\": \"event\",\n  \"account_id\": \"acc_xxxxx\",\n  \"event\": \"payment.captured\",\n  \"contains\": [\"payment\"],\n  \"payload\": {\n    \"payment\": {\n      \"entity\": {\n        \"id\": \"pay_xxxxx\",\n        \"amount\": 149900,\n        \"currency\": \"INR\",\n        \"status\": \"captured\",\n        \"order_id\": \"order_xxxxx\",\n        \"email\": \"test@example.com\"\n      }\n    }\n  },\n  \"created_at\": 1640000000\n}"
+            },
+            "description": "Test webhook endpoint (requires valid signature in production)"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onboarding Success</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+        }
+        h1 {
+            color: #38bdf8;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        p {
+            color: #94a3b8;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #38bdf8;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Onboarding Complete!</h1>
+        <p>Redirecting to dashboard...</p>
+        <div class="spinner"></div>
+    </div>
+    <script>
+        setTimeout(() => {
+            window.location.href = '/dashboard/';
+        }, 3000);
+    </script>
+</body>
+</html>

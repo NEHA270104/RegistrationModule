@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Admin Dashboard | AI Summit for MSME Business Owners 2026</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/images/BizflowLogo.png">
+    <link rel="apple-touch-icon" href="/images/BizflowLogo.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/admin/css/admin.css">
+    <link rel="stylesheet" href="/css/flyer.css">
+</head>
+<body>
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="auth-screen">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <img src="/images/BizflowLogo.png" alt="BizFlowAI" class="auth-bizflow-logo">
+                <span class="auth-by">by EventReg Platform</span>
+                <div class="auth-event-name">
+                    <span class="logo-text">AI Summit for</span>
+                    <span class="logo-msme">MSME Business Owners</span>
+                </div>
+            </div>
+            <h1 class="auth-title">Admin Dashboard</h1>
+            <p class="auth-subtitle">Enter your API key to access the dashboard</p>
+            <form id="auth-form" class="auth-form">
+                <div class="form-group">
+                    <label for="api-key" class="form-label">API Key</label>
+                    <input type="password" id="api-key" name="api-key" class="form-input" placeholder="Enter admin API key" required>
+                    <span class="form-error" id="auth-error"></span>
+                </div>
+                <button type="submit" class="btn-auth">Access Dashboard</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="dashboard hidden">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <img src="/images/BizflowLogo.png" alt="BizFlowAI" class="header-bizflow-logo">
+                <div class="logo">
+                    <span class="logo-text">AI Summit for</span>
+                    <span class="logo-msme">MSME Business Owners</span>
+                </div>
+                <span class="header-badge">Admin</span>
+                <span class="failed-counter hidden" id="failed-call-counter" title="Failed registrations needing call">0</span>
+            </div>
+            <div class="header-right">
+                <span class="last-updated" id="last-updated">Last updated: --</span>
+                <button class="btn-refresh" id="btn-refresh" title="Refresh Data">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                    </svg>
+                    Refresh
+                </button>
+                <button class="btn-logout" id="btn-logout">Logout</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <!-- Stats Cards -->
+            <section class="stats-section">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon registrations">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Total Registrations</span>
+                            <span class="stat-value" id="stat-total">--</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon confirmed">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                                <polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Confirmed Payments</span>
+                            <span class="stat-value" id="stat-confirmed">--</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon revenue">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="1" x2="12" y2="23"/>
+                                <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Total Revenue</span>
+                            <span class="stat-value" id="stat-revenue">--</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon waitlist">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Waitlist Entries</span>
+                            <span class="stat-value" id="stat-waitlist">--</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seat Inventory -->
+            <section class="seats-section">
+                <div class="section-header">
+                    <h2 class="section-title">Seat Inventory</h2>
+                    <div class="section-actions">
+                        <button class="btn-resync" id="btn-resync-seats" title="Fix any mismatch between registrations and seat counts">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                            </svg>
+                            Resync Counts
+                        </button>
+                    </div>
+                </div>
+                <div class="seats-grid">
+                    <div class="seat-card vip">
+                        <div class="seat-header">
+                            <span class="seat-tier">Executive Experience</span>
+                            <span class="seat-tier-badge">VIP</span>
+                        </div>
+                        <div class="seat-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-vip" style="width: 0%"></div>
+                            </div>
+                            <div class="seat-numbers">
+                                <span><strong id="sold-vip">0</strong> Sold</span>
+                                <span><strong id="available-vip">0</strong> Available</span>
+                                <span><strong id="total-vip">0</strong> Total</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="seat-card standard">
+                        <div class="seat-header">
+                            <span class="seat-tier">Business Builder</span>
+                            <span class="seat-tier-badge">STANDARD</span>
+                        </div>
+                        <div class="seat-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-standard" style="width: 0%"></div>
+                            </div>
+                            <div class="seat-numbers">
+                                <span><strong id="sold-standard">0</strong> Sold</span>
+                                <span><strong id="available-standard">0</strong> Available</span>
+                                <span><strong id="total-standard">0</strong> Total</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="seat-card basic">
+                        <div class="seat-header">
+                            <span class="seat-tier">Growth Starter</span>
+                            <span class="seat-tier-badge">BASIC</span>
+                        </div>
+                        <div class="seat-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-basic" style="width: 0%"></div>
+                            </div>
+                            <div class="seat-numbers">
+                                <span><strong id="sold-basic">0</strong> Sold</span>
+                                <span><strong id="available-basic">0</strong> Available</span>
+                                <span><strong id="total-basic">0</strong> Total</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Registrations Table -->
+            <section class="registrations-section">
+                <div class="section-header">
+                    <h2 class="section-title">Registrations</h2>
+                    <div class="section-actions">
+                        <button class="btn-add" id="btn-add-registration" onclick="showAddRegistrationModal()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Add Registration
+                        </button>
+                        <button class="btn-export" id="btn-export">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            Export CSV
+                        </button>
+                        <button class="btn-delete-all" id="btn-delete-all-registrations">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            Delete All
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters-bar">
+                    <div class="filter-group">
+                        <label for="filter-search" class="filter-label">Search</label>
+                        <input type="text" id="filter-search" class="filter-input" placeholder="Name, Email, Phone, Booking ID...">
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-tier" class="filter-label">Tier</label>
+                        <select id="filter-tier" class="filter-select">
+                            <option value="">All Tiers</option>
+                            <option value="vip">Executive (VIP)</option>
+                            <option value="standard">Business (Standard)</option>
+                            <option value="basic">Growth (Basic)</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-status" class="filter-label">Status</label>
+                        <select id="filter-status" class="filter-select">
+                            <option value="">All Status</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="pending">Pending</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-date" class="filter-label">Date Range</label>
+                        <select id="filter-date" class="filter-select">
+                            <option value="">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">Last 7 Days</option>
+                            <option value="month">Last 30 Days</option>
+                        </select>
+                    </div>
+                    <button class="btn-clear-filters" id="btn-clear-filters">Clear</button>
+                </div>
+
+                <!-- Table -->
+                <div class="table-container">
+                    <table class="registrations-table">
+                        <thead>
+                            <tr>
+                                <th>Booking ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Business</th>
+                                <th>Tier</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="registrations-tbody">
+                            <tr class="loading-row">
+                                <td colspan="9">Loading registrations...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination">
+                    <div class="pagination-info">
+                        Showing <span id="page-start">0</span> - <span id="page-end">0</span> of <span id="page-total">0</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <button class="btn-page" id="btn-prev" disabled>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15 18 9 12 15 6"/>
+                            </svg>
+                            Previous
+                        </button>
+                        <span class="page-number">Page <span id="current-page">1</span></span>
+                        <button class="btn-page" id="btn-next">
+                            Next
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pending Registrations Section (Held Seats) -->
+            <section class="pending-section">
+                <div class="section-header">
+                    <h2 class="section-title">Pending Payments (Held Seats)</h2>
+                    <div class="section-actions">
+                        <button class="btn-cleanup" id="btn-cleanup-expired">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                                <line x1="10" y1="11" x2="10" y2="17"/>
+                                <line x1="14" y1="11" x2="14" y2="17"/>
+                            </svg>
+                            Cleanup Expired
+                        </button>
+                    </div>
+                </div>
+
+                <p class="section-desc">Users who started checkout but haven't completed payment. Seats are held for 1 hour.</p>
+
+                <!-- Pending Table -->
+                <div class="table-container">
+                    <table class="registrations-table pending-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Contact</th>
+                                <th>Business</th>
+                                <th>Tier</th>
+                                <th>Amount</th>
+                                <th>Time Left</th>
+                                <th>Started</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pending-registrations-tbody">
+                            <tr class="loading-row">
+                                <td colspan="8">Loading pending registrations...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Payment Abandonments Section -->
+            <section class="abandonments-section">
+                <div class="section-header">
+                    <h2 class="section-title">Payment Abandonments</h2>
+                    <div class="section-actions">
+                        <button class="btn-export" id="btn-export-abandonments">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            Export CSV
+                        </button>
+                        <button class="btn-delete-all" id="btn-delete-all-abandonments">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            Delete All
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Abandonment Stats -->
+                <div class="abandonment-stats">
+                    <div class="mini-stat abandoned">
+                        <span class="mini-stat-value" id="stat-abandoned-total">0</span>
+                        <span class="mini-stat-label">TOTAL ABANDONED</span>
+                    </div>
+                    <div class="mini-stat pending-followup">
+                        <span class="mini-stat-value" id="stat-abandoned-pending">0</span>
+                        <span class="mini-stat-label">PENDING FOLLOW-UP</span>
+                    </div>
+                    <div class="mini-stat converted">
+                        <span class="mini-stat-value" id="stat-abandoned-converted">0</span>
+                        <span class="mini-stat-label">RECOVERED</span>
+                    </div>
+                    <div class="mini-stat lost-revenue">
+                        <span class="mini-stat-value" id="stat-abandoned-revenue">&#8377;0</span>
+                        <span class="mini-stat-label">LOST REVENUE</span>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters-bar">
+                    <div class="filter-group">
+                        <label for="filter-abandonment-search" class="filter-label">Search</label>
+                        <input type="text" id="filter-abandonment-search" class="filter-input" placeholder="Name, Email, Phone...">
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-abandonment-type" class="filter-label">Type</label>
+                        <select id="filter-abandonment-type" class="filter-select">
+                            <option value="">All Types</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="failed">Failed</option>
+                            <option value="timeout">Timeout</option>
+                            <option value="converted">Converted</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filter-followup-status" class="filter-label">Status</label>
+                        <select id="filter-followup-status" class="filter-select">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="email_sent">Email Sent</option>
+                            <option value="contacted">Contacted</option>
+                            <option value="converted">Converted</option>
+                            <option value="declined">Declined</option>
+                            <option value="unresponsive">Unresponsive</option>
+                        </select>
+                    </div>
+                    <button class="btn-clear-filters" id="btn-clear-abandonment-filters">Clear</button>
+                </div>
+
+                <!-- Table -->
+                <div class="table-container">
+                    <table class="registrations-table abandonments-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Contact</th>
+                                <th>Business</th>
+                                <th>Tier</th>
+                                <th>Amount</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="abandonments-tbody">
+                            <tr class="loading-row">
+                                <td colspan="9">Loading abandonments...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination">
+                    <div class="pagination-info">
+                        Showing <span id="abandonment-page-start">0</span> - <span id="abandonment-page-end">0</span> of <span id="abandonment-page-total">0</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <button class="btn-page" id="btn-abandonment-prev" disabled>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15 18 9 12 15 6"/>
+                            </svg>
+                            Previous
+                        </button>
+                        <span class="page-number">Page <span id="abandonment-current-page">1</span></span>
+                        <button class="btn-page" id="btn-abandonment-next">
+                            Next
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Abandonment Detail Modal -->
+            <div id="abandonment-modal" class="modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Abandonment Details</h3>
+                        <button class="modal-close" id="close-abandonment-modal">&times;</button>
+                    </div>
+                    <div class="modal-body" id="abandonment-modal-body">
+                        <!-- Content filled dynamically -->
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" id="btn-close-modal">Close</button>
+                        <button class="btn btn-primary" id="btn-send-recovery-email">Send Recovery Email</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Registration Modal -->
+            <div id="add-registration-modal" class="modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Add Manual Registration</h3>
+                        <button class="modal-close" onclick="hideAddRegistrationModal()">&times;</button>
+                    </div>
+                    <form id="add-registration-form" onsubmit="createManualRegistration(event)">
+                        <div class="modal-body">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label" for="reg-name">Full Name *</label>
+                                    <input type="text" id="reg-name" name="name" class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="reg-email">Email *</label>
+                                    <input type="email" id="reg-email" name="email" class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="reg-phone">Phone *</label>
+                                    <input type="tel" id="reg-phone" name="phone" class="form-input" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="reg-business">Business Name</label>
+                                    <input type="text" id="reg-business" name="business_name" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="reg-industry">Industry</label>
+                                    <select id="reg-industry" name="industry" class="form-input">
+                                        <option value="">Select Industry</option>
+                                        <option value="manufacturing">Manufacturing</option>
+                                        <option value="it_services">IT Services</option>
+                                        <option value="retail">Retail/Trade</option>
+                                        <option value="food">Food & Beverage</option>
+                                        <option value="healthcare">Healthcare</option>
+                                        <option value="education">Education</option>
+                                        <option value="finance">Finance</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="reg-tier">Tier *</label>
+                                    <select id="reg-tier" name="tier" class="form-input" required>
+                                        <option value="vip">Executive Experience (VIP)</option>
+                                        <option value="standard">Business Builder (Standard)</option>
+                                        <option value="basic">Growth Starter (Basic)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="reg-amount">Amount Paid (INR)</label>
+                                    <input type="number" id="reg-amount" name="amount_paid" class="form-input" value="0" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="reg-status">Payment Status</label>
+                                    <select id="reg-status" name="payment_status" class="form-input">
+                                        <option value="confirmed">Confirmed</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="failed">Failed</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="hideAddRegistrationModal()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Create Registration</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Settings Section -->
+            <section class="settings-section">
+                <div class="section-header">
+                    <h2 class="section-title">Site Settings</h2>
+                    <div class="section-actions">
+                        <span class="settings-status" id="settings-status"></span>
+                        <button class="btn-save-settings" id="btn-save-settings">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                                <polyline points="17 21 17 13 7 13 7 21"/>
+                                <polyline points="7 3 7 8 15 8"/>
+                            </svg>
+                            Save All Changes
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Settings Tabs -->
+                <div class="settings-tabs">
+                    <button class="settings-tab active" data-tab="offer">Offer Settings</button>
+                    <button class="settings-tab" data-tab="pricing">Tier Pricing</button>
+                    <button class="settings-tab" data-tab="event">Event Details</button>
+                    <button class="settings-tab" data-tab="support">Support Info</button>
+                    <button class="settings-tab" data-tab="registration">Registration</button>
+                    <button class="settings-tab" data-tab="guests">Guest Details</button>
+                    <button class="settings-tab" data-tab="msme-benefits">MSME Benefits</button>
+                    <button class="settings-tab" data-tab="flyer">Flyer Generation</button>
+                </div>
+
+                <!-- Offer Settings -->
+                <div class="settings-panel active" id="panel-offer">
+                    <div class="settings-card">
+                        <h3 class="settings-card-title">Early Bird Offer Configuration</h3>
+                        <p class="settings-card-desc">Control the 3-day early bird offer period and discount.</p>
+
+                        <div class="settings-grid">
+                            <div class="setting-item">
+                                <label class="setting-label">Offer Status</label>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="setting-offer-active" checked>
+                                    <label for="setting-offer-active">
+                                        <span class="toggle-on">Active</span>
+                                        <span class="toggle-off">Inactive</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="setting-offer-start">Offer Start Date</label>
+                                <input type="datetime-local" id="setting-offer-start" class="setting-input">
+                                <span class="setting-hint">When the early bird offer begins</span>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="setting-offer-duration">Duration (Days)</label>
+                                <input type="number" id="setting-offer-duration" class="setting-input" min="1" max="30" value="3">
+                                <span class="setting-hint">How many days the offer runs</span>
+                            </div>
+                        </div>
+
+                        <!-- Offer Messaging -->
+                        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--gray-200);">
+                            <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--gray-700); margin-bottom: 1rem;">Offer Banner Messaging</h4>
+                            <p style="font-size: 0.8125rem; color: var(--gray-500); margin-bottom: 1rem;">Customize the offer banner text shown in the registration modal.</p>
+                            <div class="settings-grid">
+                                <div class="setting-item">
+                                    <label class="setting-label" for="setting-offer-label">Offer Label</label>
+                                    <input type="text" id="setting-offer-label" class="setting-input" placeholder="e.g., Valentine's Day Special!" maxlength="60">
+                                    <span class="setting-hint">Banner title (e.g., "Early Bird Special!", "Valentine's Day Special!")</span>
+                                </div>
+                                <div class="setting-item">
+                                    <label class="setting-label" for="setting-offer-description">Offer Description</label>
+                                    <input type="text" id="setting-offer-description" class="setting-input" placeholder="e.g., Save on all passes" maxlength="120">
+                                    <span class="setting-hint">Short text shown below the offer label</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="offer-preview">
+                            <h4>Preview</h4>
+                            <div class="preview-box">
+                                <span class="preview-label">Offer ends:</span>
+                                <span class="preview-value" id="offer-end-preview">--</span>
+                            </div>
+                        </div>
+
+                        <!-- Hero Promo Section -->
+                        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--gray-200);">
+                            <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--gray-700); margin-bottom: 0.5rem;">Hero Promo Section</h4>
+                            <p style="font-size: 0.8125rem; color: var(--gray-500); margin-bottom: 1rem;">Promotional block shown in the hero area of the registration page. Toggle on for special campaigns.</p>
+
+                            <div class="settings-grid">
+                                <div class="setting-item">
+                                    <label class="setting-label" for="setting-promo-enabled">
+                                        <input type="checkbox" id="setting-promo-enabled" style="margin-right: 0.5rem;">
+                                        Show Promo in Hero
+                                    </label>
+                                    <span class="setting-hint">Toggle the promotional section on/off</span>
+                                </div>
+                            </div>
+
+                            <!-- AI Suggest -->
+                            <div style="margin-top: 0.75rem; padding: 0.75rem; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                    <input type="text" id="promo-ai-occasion" class="setting-input" placeholder="e.g., Valentine's Day, Republic Day, New Year Launch" style="flex: 1; min-width: 200px; margin: 0;">
+                                    <button type="button" id="promo-ai-suggest-btn" onclick="generatePromoAiSuggestions()" style="padding: 0.5rem 1rem; background: var(--primary-500, #10b981); color: white; border: none; border-radius: 6px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                                        AI Suggest
+                                    </button>
+                                </div>
+                                <span style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem; display: block;">Enter an occasion/theme and click AI Suggest to auto-fill promo fields</span>
+                                <div id="promo-ai-suggestions" style="display: none; margin-top: 0.75rem;"></div>
+                            </div>
+
+                            <div class="settings-grid" style="margin-top: 0.75rem;">
+                                <div class="setting-item" style="grid-column: 1 / -1;">
+                                    <label class="setting-label" for="setting-promo-value-prop">Value Proposition</label>
+                                    <textarea id="setting-promo-value-prop" class="setting-input" rows="2" maxlength="250" placeholder="e.g., Every attendee gets ₹72,998 worth of FREE AI tools — including a Voice AI Agent for YOUR business"></textarea>
+                                    <span class="setting-hint">Main promotional text shown prominently in the hero</span>
+                                </div>
+
+                                <div class="setting-item">
+                                    <label class="setting-label" for="setting-promo-whatsapp-keyword">WhatsApp Keyword</label>
+                                    <input type="text" id="setting-promo-whatsapp-keyword" class="setting-input" placeholder="e.g., VALENTINE" maxlength="30">
+                                    <span class="setting-hint">Pre-filled message when users click the WhatsApp button (uses Support WhatsApp number)</span>
+                                </div>
+
+                                <div class="setting-item">
+                                    <label class="setting-label" for="setting-promo-urgency-text">Urgency Text</label>
+                                    <input type="text" id="setting-promo-urgency-text" class="setting-input" placeholder="e.g., Offer expires: Feb 14, 11:59 PM | Only 150 seats total" maxlength="120">
+                                    <span class="setting-hint">Urgency/scarcity line shown below the WhatsApp button</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing Settings -->
+                <div class="settings-panel" id="panel-pricing">
+                    <div class="settings-card">
+                        <h3 class="settings-card-title">Tier Pricing</h3>
+                        <p class="settings-card-desc">Set original and offer prices for each tier.</p>
+
+                        <div class="pricing-grid">
+                            <!-- VIP -->
+                            <div class="pricing-tier vip">
+                                <h4>Executive Experience (VIP)</h4>
+                                <div class="pricing-inputs">
+                                    <div class="setting-item">
+                                        <label class="setting-label">Original Price</label>
+                                        <div class="input-prefix">
+                                            <span>&#8377;</span>
+                                            <input type="number" id="setting-vip-original" class="setting-input" min="0" step="100">
+                                        </div>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="setting-label">Offer Price</label>
+                                        <div class="input-prefix">
+                                            <span>&#8377;</span>
+                                            <input type="number" id="setting-vip-offer" class="setting-input" min="0" step="100">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Standard -->
+                            <div class="pricing-tier standard">
+                                <h4>Business Builder (Standard)</h4>
+                                <div class="pricing-inputs">
+                                    <div class="setting-item">
+                                        <label class="setting-label">Original Price</label>
+                                        <div class="input-prefix">
+                                            <span>&#8377;</span>
+                                            <input type="number" id="setting-standard-original" class="setting-input" min="0" step="100">
+                                        </div>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="setting-label">Offer Price</label>
+                                        <div class="input-prefix">
+                                            <span>&#8377;</span>
+                                            <input type="number" id="setting-standard-offer" class="setting-input" min="0" step="100">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Basic -->
+                            <div class="pricing-tier basic">
+                                <h4>Growth Starter (Basic)</h4>
+                                <div class="pricing-inputs">
+                                    <div class="setting-item">
+                                        <label class="setting-label">Original Price</label>
+                                        <div class="input-prefix">
+                                            <span>&#8377;</span>
+                                            <input type="number" id="setting-basic-original" class="setting-input" min="0" step="100">
+                                        </div>
+                                    </div>
+                                    <div class="setting-item">
+                                        <label class="setting-label">Offer Price</label>
+                                        <div class="input-prefix">
+                                            <span>&#8377;</span>
+                                            <input type="number" id="setting-basic-offer" class="setting-input" min="0" step="100">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Waitlist -->
+                            <div class="pricing-tier waitlist">
+                                <h4>Livestream Access</h4>
+                                <div class="pricing-inputs">
+                                    <div class="setting-item">
+                                        <label class="setting-label">Price</label>
+                                        <div class="input-prefix">
+                                            <span>&#8377;</span>
+                                            <input type="number" id="setting-waitlist-price" class="setting-input" min="0" step="100">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Event Settings -->
+                <div class="settings-panel" id="panel-event">
+                    <div class="settings-card">
+                        <h3 class="settings-card-title">Event Details</h3>
+                        <p class="settings-card-desc">Update event information displayed to users and in emails.</p>
+
+                        <div class="settings-grid">
+                            <div class="setting-item full-width">
+                                <label class="setting-label" for="setting-event-name">Event Name</label>
+                                <input type="text" id="setting-event-name" class="setting-input">
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="setting-event-date">Event Date</label>
+                                <input type="text" id="setting-event-date" class="setting-input" placeholder="e.g., 21st February 2026">
+                                <span class="setting-hint">Displayed on frontend and in confirmation emails</span>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="setting-event-time">Event Time</label>
+                                <input type="text" id="setting-event-time" class="setting-input" placeholder="e.g., 9:00 AM - 5:00 PM IST">
+                                <span class="setting-hint">Include timezone for clarity</span>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="setting-event-platform">Event Platform</label>
+                                <input type="text" id="setting-event-platform" class="setting-input" placeholder="e.g., Zoom, Google Meet, Offline">
+                                <span class="setting-hint">Platform name shown on registration page (e.g., "Zoom")</span>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label">Show Platform Info</label>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="setting-event-platform-visible" checked>
+                                    <label for="setting-event-platform-visible">
+                                        <span class="toggle-on">Visible</span>
+                                        <span class="toggle-off">Hidden</span>
+                                    </label>
+                                </div>
+                                <span class="setting-hint">Toggle "Live on [Platform]" visibility on registration page</span>
+                            </div>
+
+                            <div class="setting-item full-width">
+                                <label class="setting-label" for="setting-event-venue">Venue</label>
+                                <textarea id="setting-event-venue" class="setting-input setting-textarea" rows="2" placeholder="e.g., TBD soon or full address"></textarea>
+                                <span class="setting-hint">Full venue address or "TBD soon" if not finalized</span>
+                            </div>
+
+                            <div class="setting-item full-width">
+                                <label class="setting-label" for="setting-event-venue-map-link">Google Maps Link (Optional Override)</label>
+                                <input type="url" id="setting-event-venue-map-link" class="setting-input" placeholder="Leave empty to auto-generate from address">
+                                <span class="setting-hint">Optional. If empty, a Google Maps link is auto-generated from the venue address. Used as {{venue_map_link}} in email templates.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Support Settings -->
+                <div class="settings-panel" id="panel-support">
+                    <div class="settings-card">
+                        <h3 class="settings-card-title">Support Contact Information</h3>
+                        <p class="settings-card-desc">Contact details shown in emails and on the website for customer support.</p>
+
+                        <div class="settings-grid">
+                            <div class="setting-item">
+                                <label class="setting-label" for="setting-support-email">Support Email</label>
+                                <input type="email" id="setting-support-email" class="setting-input" placeholder="e.g., support@bizflowai.in">
+                                <span class="setting-hint">Email address for customer inquiries</span>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="setting-support-phone">Support Phone</label>
+                                <input type="text" id="setting-support-phone" class="setting-input" placeholder="e.g., +91 8188050895">
+                                <span class="setting-hint">Phone number with country code</span>
+                            </div>
+
+                            <div class="setting-item full-width">
+                                <label class="setting-label" for="setting-support-whatsapp">WhatsApp Number</label>
+                                <input type="text" id="setting-support-whatsapp" class="setting-input" placeholder="e.g., 918188050895">
+                                <span class="setting-hint">Digits only (country code + number, no spaces or +)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Registration Settings -->
+                <div class="settings-panel" id="panel-registration">
+                    <div class="settings-card">
+                        <h3 class="settings-card-title">Registration Controls</h3>
+                        <p class="settings-card-desc">Control registration availability and waitlist.</p>
+
+                        <div class="settings-grid">
+                            <div class="setting-item">
+                                <label class="setting-label">Registration Status</label>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="setting-reg-open" checked>
+                                    <label for="setting-reg-open">
+                                        <span class="toggle-on">Open</span>
+                                        <span class="toggle-off">Closed</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label">Waitlist</label>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="setting-waitlist-enabled" checked>
+                                    <label for="setting-waitlist-enabled">
+                                        <span class="toggle-on">Enabled</span>
+                                        <span class="toggle-off">Disabled</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="setting-reg-close">Registration Closes</label>
+                                <input type="datetime-local" id="setting-reg-close" class="setting-input">
+                                <span class="setting-hint">When registration automatically closes</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-card" style="margin-top: 1.5rem;">
+                        <h3 class="settings-card-title">Seat Capacity</h3>
+                        <p class="settings-card-desc">Set the total number of seats available per tier.</p>
+
+                        <div class="settings-grid">
+                            <div class="setting-item">
+                                <label class="setting-label" for="setting-seats-vip">VIP (Executive Experience)</label>
+                                <input type="number" id="setting-seats-vip" class="setting-input" min="0" step="1" placeholder="e.g. 30">
+                                <span class="setting-hint">Total VIP seats available</span>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="setting-seats-standard">Standard (Business Builder)</label>
+                                <input type="number" id="setting-seats-standard" class="setting-input" min="0" step="1" placeholder="e.g. 50">
+                                <span class="setting-hint">Total Standard seats available</span>
+                            </div>
+
+                            <div class="setting-item">
+                                <label class="setting-label" for="setting-seats-basic">Basic (Starter)</label>
+                                <input type="number" id="setting-seats-basic" class="setting-input" min="0" step="1" placeholder="e.g. 40">
+                                <span class="setting-hint">Total Basic seats available</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guest Details -->
+                <div class="settings-panel" id="panel-guests">
+                    <div class="settings-card">
+                        <h3 class="settings-card-title">Guest / Speaker Management</h3>
+                        <p class="settings-card-desc">Manage event speakers and guests. These appear in the "Your Mentors" section on the public site.</p>
+
+                        <div class="settings-grid" style="margin-bottom: 1.5rem;">
+                            <div class="setting-item" style="grid-column: 1 / -1;">
+                                <label class="setting-label" for="setting-guest-session-heading">Default Session Heading</label>
+                                <input type="text" id="setting-guest-session-heading" class="setting-input"
+                                    value="In this session, you'll learn:" placeholder="e.g., In this session, you'll learn:">
+                                <span class="setting-hint">Standard heading shown above session bullet points for all guests</span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h4 style="font-size: 0.875rem; font-weight: 600; color: var(--gray-700);">Guests</h4>
+                            <button class="btn-add-guest" id="btn-add-guest" onclick="showAddGuestForm()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <line x1="12" y1="5" x2="12" y2="19"/>
+                                    <line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                                Add Guest
+                            </button>
+                        </div>
+
+                        <div id="guests-list-container">
+                            <p class="history-empty" id="guests-empty-message">Loading guests...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MSME Benefits Panel -->
+                <div class="settings-panel" id="panel-msme-benefits">
+                    <div class="settings-card">
+                        <h3 class="settings-card-title">MSME Benefits Management</h3>
+                        <p class="settings-card-desc">Manage the "What MSME Owners Would Get" section on the public site.</p>
+
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+                            <button class="btn-add-guest" onclick="showAddBenefitForm()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                                Add Benefit
+                            </button>
+                            <button class="btn-add-guest" onclick="showCsvUploadModal()" style="background: var(--gray-100); color: var(--gray-700); border: 1px solid var(--gray-300);">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                                Upload CSV/Excel
+                            </button>
+                            <button class="btn-add-guest" onclick="showAiGenerateModal()" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                                </svg>
+                                AI Generate
+                            </button>
+                        </div>
+
+                        <div id="benefits-list-container">
+                            <p class="history-empty" id="benefits-empty-message">Loading benefits...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flyer Generation Panel -->
+                <div class="settings-panel" id="panel-flyer">
+                    <div id="flyer-generator-container"></div>
+                </div>
+
+                <!-- MSME Benefit Edit Modal -->
+                <div id="benefit-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="benefit-modal-title">Add Benefit</h3>
+                            <button class="modal-close" onclick="closeBenefitModal()">&times;</button>
+                        </div>
+                        <form id="benefit-form" onsubmit="saveBenefit(event)">
+                            <div class="modal-body">
+                                <div class="guest-form-group">
+                                    <label for="benefit-icon">Icon (emoji)</label>
+                                    <input type="text" id="benefit-icon" class="guest-form-input" maxlength="10" placeholder="e.g. &#x1F9F0;">
+                                </div>
+                                <div class="guest-form-group">
+                                    <label for="benefit-title">Title <span class="form-required">*</span></label>
+                                    <input type="text" id="benefit-title" class="guest-form-input" required maxlength="200" placeholder="e.g. AI Readiness Toolkit">
+                                </div>
+                                <div class="guest-form-group">
+                                    <label for="benefit-description">Description</label>
+                                    <textarea id="benefit-description" class="guest-form-input" rows="3" maxlength="500" placeholder="Brief description of this benefit..."></textarea>
+                                </div>
+                                <div class="guest-meta-row">
+                                    <div class="guest-form-group">
+                                        <label for="benefit-sort-order">Sort Order</label>
+                                        <input type="number" id="benefit-sort-order" class="guest-form-input" value="0" min="0">
+                                    </div>
+                                    <div class="guest-form-group">
+                                        <label>Status</label>
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" id="benefit-is-active" checked>
+                                            <label for="benefit-is-active">
+                                                <span class="toggle-on">Active</span>
+                                                <span class="toggle-off">Hidden</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="benefit-edit-id" value="">
+                            <div class="modal-footer">
+                                <button type="button" class="btn-secondary" onclick="closeBenefitModal()">Cancel</button>
+                                <button type="submit" class="btn-primary" id="benefit-save-btn">Save Benefit</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- CSV/Excel Upload Modal -->
+                <div id="csv-upload-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Upload CSV / Excel File</h3>
+                            <button class="modal-close" onclick="closeCsvUploadModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <p style="color: var(--gray-600); margin-bottom: 1rem; font-size: 0.875rem;">
+                                Upload a CSV or Excel file with columns: <strong>title</strong>, <strong>description</strong> (optional), <strong>icon</strong> (optional).
+                            </p>
+                            <div style="border: 2px dashed var(--gray-300); border-radius: 8px; padding: 2rem; text-align: center; margin-bottom: 1rem;">
+                                <label style="cursor: pointer; display: block;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" stroke-width="2" width="36" height="36" style="margin: 0 auto 0.5rem; display: block;">
+                                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                        <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                                    </svg>
+                                    <p style="color: var(--gray-500);">Click to select file or drag &amp; drop</p>
+                                    <input type="file" id="csv-file-input" accept=".csv,.xlsx,.xls" style="display: none;" onchange="previewCsvFile(this)">
+                                </label>
+                            </div>
+                            <div id="csv-preview-container" class="hidden" style="max-height: 300px; overflow-y: auto;">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn-secondary" onclick="closeCsvUploadModal()">Cancel</button>
+                            <button type="button" class="btn-primary hidden" id="csv-import-btn" onclick="importCsvBenefits()">Import Items</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Generate Modal -->
+                <div id="ai-generate-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>AI-Generate Benefits</h3>
+                            <button class="modal-close" onclick="closeAiGenerateModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="guest-form-group">
+                                <label for="ai-theme">Theme / Topic <span class="form-required">*</span></label>
+                                <input type="text" id="ai-theme" class="guest-form-input" placeholder="e.g. AI tools for manufacturing MSMEs" required>
+                                <span class="setting-hint">Describe what kind of benefits to generate for MSME owners</span>
+                            </div>
+                            <div class="guest-form-group">
+                                <label for="ai-count">Number of suggestions</label>
+                                <input type="number" id="ai-count" class="guest-form-input" value="6" min="1" max="12">
+                            </div>
+                            <button type="button" class="btn-primary" onclick="generateAiBenefits()" id="ai-generate-btn" style="margin-bottom: 1rem;">
+                                Generate Suggestions
+                            </button>
+                            <div id="ai-suggestions-container" class="hidden">
+                                <h4 style="margin-bottom: 0.5rem; font-size: 0.875rem; font-weight: 600; color: var(--gray-700);">Review Suggestions</h4>
+                                <p style="font-size: 0.8125rem; color: var(--gray-500); margin-bottom: 0.75rem;">Uncheck any you don't want, then click "Save Selected".</p>
+                                <div id="ai-suggestions-list"></div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn-secondary" onclick="closeAiGenerateModal()">Cancel</button>
+                            <button type="button" class="btn-primary hidden" id="ai-save-btn" onclick="saveAiSuggestions()">Save Selected</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guest Edit Modal -->
+                <div id="guest-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="guest-modal-title">Add Guest</h3>
+                            <button class="modal-close" onclick="closeGuestModal()">&times;</button>
+                        </div>
+                        <form id="guest-form" onsubmit="saveGuest(event)">
+                            <div class="modal-body">
+
+                                <!-- Photo Upload -->
+                                <div class="guest-photo-section">
+                                    <div id="guest-photo-preview" class="guest-photo-preview-circle">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" stroke-width="1.5" width="36" height="36">
+                                            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                                            <circle cx="12" cy="7" r="4"/>
+                                        </svg>
+                                    </div>
+                                    <label class="btn-upload-photo">
+                                        Choose Photo
+                                        <input type="file" id="guest-photo-input" accept="image/jpeg,image/png,image/webp" style="display: none;" onchange="previewGuestPhoto(this)">
+                                    </label>
+                                    <p class="guest-photo-hint">JPEG, PNG or WebP. Max 2MB. Displayed as circle.</p>
+                                </div>
+
+                                <!-- Name & Title -->
+                                <div class="guest-form-row">
+                                    <div class="guest-form-group">
+                                        <label for="guest-name">Name <span class="form-required">*</span></label>
+                                        <input type="text" id="guest-name" class="guest-form-input" required maxlength="200" placeholder="e.g., Rajesh Kumar">
+                                    </div>
+                                    <div class="guest-form-group">
+                                        <label for="guest-title">Title / Credentials <span class="form-required">*</span></label>
+                                        <div class="input-with-ai">
+                                            <input type="text" id="guest-title" class="guest-form-input" required maxlength="300" placeholder="e.g., AI & Digital Transformation Expert">
+                                            <button type="button" class="btn-ai-enhance" onclick="showGuestAiActions('guest-title', 'title', this)" title="AI Enhance">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="M19 15l.75 2.25L22 18l-2.25.75L19 21l-.75-2.25L16 18l2.25-.75L19 15z" opacity=".6"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Bio -->
+                                <div class="guest-form-group">
+                                    <label for="guest-bio">Bio / Description <span class="form-required">*</span></label>
+                                    <div class="input-with-ai input-with-ai-textarea">
+                                        <textarea id="guest-bio" class="guest-form-input" required rows="3" maxlength="1000" placeholder="Brief description of the guest..."></textarea>
+                                        <button type="button" class="btn-ai-enhance" onclick="showGuestAiActions('guest-bio', 'bio', this)" title="AI Enhance">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="M19 15l.75 2.25L22 18l-2.25.75L19 21l-.75-2.25L16 18l2.25-.75L19 15z" opacity=".6"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Session Points -->
+                                <div class="guest-form-group">
+                                    <label>Session Points <span class="form-required">*</span></label>
+                                    <p class="guest-form-hint">Bullet points about what attendees will learn</p>
+                                    <div id="guest-session-points-container"></div>
+                                    <button type="button" class="btn-add-point" onclick="addSessionPointInput()">+ Add Point</button>
+                                </div>
+
+                                <!-- Sort Order & Active Toggle -->
+                                <div class="guest-meta-row">
+                                    <div class="guest-form-group">
+                                        <label for="guest-sort-order">Sort Order</label>
+                                        <input type="number" id="guest-sort-order" class="guest-form-input" value="0" min="0">
+                                    </div>
+                                    <div class="guest-form-group">
+                                        <label>Status</label>
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" id="guest-is-active" checked>
+                                            <label for="guest-is-active">
+                                                <span class="toggle-on">Active</span>
+                                                <span class="toggle-off">Hidden</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <input type="hidden" id="guest-edit-id" value="">
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn-secondary" onclick="closeGuestModal()">Cancel</button>
+                                <button type="submit" class="btn-primary" id="guest-save-btn">Save Guest</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- AI Enhance Dropdown (shared by all guest fields) -->
+                <div id="guest-ai-dropdown" class="ai-dropdown hidden">
+                    <div class="ai-dropdown-group">
+                        <div class="ai-dropdown-label">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+                            Shorten
+                        </div>
+                        <button type="button" class="ai-dropdown-item" onclick="enhanceGuestField('shorten', 1)">~1 line</button>
+                        <button type="button" class="ai-dropdown-item" onclick="enhanceGuestField('shorten', 2)">~2 lines</button>
+                        <button type="button" class="ai-dropdown-item" onclick="enhanceGuestField('shorten', 4)">~4 lines</button>
+                        <button type="button" class="ai-dropdown-item ai-dropdown-auto" onclick="enhanceGuestField('shorten')">AI decides</button>
+                    </div>
+                    <div class="ai-dropdown-divider"></div>
+                    <div class="ai-dropdown-group">
+                        <div class="ai-dropdown-label">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><line x1="5" y1="19" x2="19" y2="19"/></svg>
+                            Expand
+                        </div>
+                        <button type="button" class="ai-dropdown-item" onclick="enhanceGuestField('expand', 5)">~5 lines</button>
+                        <button type="button" class="ai-dropdown-item" onclick="enhanceGuestField('expand', 8)">~8 lines</button>
+                        <button type="button" class="ai-dropdown-item ai-dropdown-auto" onclick="enhanceGuestField('expand')">AI decides</button>
+                    </div>
+                </div>
+
+                <!-- Settings History -->
+                <div class="settings-history">
+                    <button class="btn-toggle-history" id="btn-toggle-history">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        View Change History
+                    </button>
+                    <div class="history-panel hidden" id="history-panel">
+                        <div class="history-list" id="history-list">
+                            <p class="history-empty">No changes recorded.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Waitlist Section -->
+            <section class="waitlist-section">
+                <div class="section-header">
+                    <h2 class="section-title">Waitlist Entries</h2>
+                    <button class="btn-export" id="btn-export-waitlist">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Export Waitlist
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table class="registrations-table">
+                        <thead>
+                            <tr>
+                                <th>Position</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Business</th>
+                                <th>Livestream</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="waitlist-tbody">
+                            <tr class="loading-row">
+                                <td colspan="7">Loading waitlist...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="dashboard-footer">
+            <p>&copy; 2026 AI Summit for MSME Business Owners | EventReg Platform Technology LLP. Admin Dashboard v1.0</p>
+        </footer>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="modal hidden">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3 id="confirm-modal-title">Confirm Action</h3>
+                <button class="modal-close" onclick="closeConfirmModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-modal-message">Are you sure you want to proceed?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+                <button class="btn btn-primary" id="confirm-modal-ok">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div id="alert-modal" class="modal hidden">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3 id="alert-modal-title">Notice</h3>
+                <button class="modal-close" onclick="closeAlertModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="alert-modal-message"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeAlertModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loader">
+            <div class="loader-spinner"></div>
+            <p class="loader-text">Loading...</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="/js/config.js"></script>
+    <script src="/dashboard/js/dashboard-auth.js"></script>
+    <script src="/dashboard/js/dashboard.js"></script>
+    <script src="/admin/js/admin.js"></script>
+</body>
+</html>

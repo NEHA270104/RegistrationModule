@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EventReg Platform - Launch Event Registrations in Minutes</title>
+  <meta name="description" content="Create beautiful, branded event registration pages. Accept payments, manage attendees, and scale your events effortlessly.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/landing/css/landing.css">
+</head>
+<body>
+
+<!-- Maintenance Banner -->
+<div id="maintenanceBanner" style="display: none; background: #ef4444; color: white; text-align: center; padding: 0.75rem 1rem; font-weight: 600; font-size: 0.95rem; z-index: 1000; position: relative;">
+  ⚠️ MAINTENANCE MODE: The platform is currently undergoing scheduled maintenance. New registrations are temporarily disabled.
+</div>
+
+<!-- ============ NAVBAR ============ -->
+<nav class="navbar">
+  <div class="container nav-container">
+    <a href="/" class="nav-logo">EventReg <span>Platform</span></a>
+    <div class="nav-links" id="navLinks">
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <div class="nav-actions">
+      <a href="/dashboard" class="btn btn-ghost">Login</a>
+      <a href="/onboarding" class="btn btn-primary">Get Started Free</a>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="container hero-container">
+    <div class="hero-content">
+      <div class="hero-badge">Trusted by event organizers across India</div>
+      <h1>Launch Event Registrations <span class="gradient-text">in Minutes</span></h1>
+      <p class="hero-subtitle">Create branded registration pages, accept payments via Razorpay, manage attendees, and grow your events. No coding required.</p>
+      <div class="hero-cta">
+        <a href="/onboarding" class="btn btn-primary btn-lg">Create Your Event Free</a>
+        <a href="#how-it-works" class="btn btn-outline btn-lg">See How It Works</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat">
+          <div class="stat-value">500+</div>
+          <div class="stat-label">Events Created</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">50K+</div>
+          <div class="stat-label">Registrations</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">99.9%</div>
+          <div class="stat-label">Uptime</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-mockup">
+        <div class="mockup-header">
+          <div class="mockup-dots"><span></span><span></span><span></span></div>
+          <div class="mockup-url">yourcompany.bizflowai.in/t/your-event</div>
+        </div>
+        <div class="mockup-body">
+          <div class="mockup-title">Annual Tech Summit 2026</div>
+          <div class="mockup-subtitle">By Acme Events</div>
+          <div class="mockup-tiers">
+            <div class="mockup-tier">
+              <div class="tier-label">General</div>
+              <div class="tier-price">Rs. 999</div>
+            </div>
+            <div class="mockup-tier featured">
+              <div class="tier-label">VIP</div>
+              <div class="tier-price">Rs. 2,499</div>
+            </div>
+            <div class="mockup-tier">
+              <div class="tier-label">Premium</div>
+              <div class="tier-price">Rs. 4,999</div>
+            </div>
+          </div>
+          <div class="mockup-btn">Register Now</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FEATURES ============ -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="section-header">
+      <h2>Everything You Need to Run Successful Events</h2>
+      <p>From registration to payments to attendee management - all in one platform.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">&#9998;</div>
+        <h3>Custom Registration Forms</h3>
+        <p>Create branded registration pages with your logo, colors, and custom ticket tiers. No design skills needed.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#8377;</div>
+        <h3>Integrated Payments</h3>
+        <p>Accept payments instantly via Razorpay. UPI, cards, net banking - all payment methods supported out of the box.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128202;</div>
+        <h3>Real-time Dashboard</h3>
+        <p>Track registrations, revenue, and seat availability in real time. Export data anytime as CSV or Excel.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128231;</div>
+        <h3>Automated Emails</h3>
+        <p>Confirmation emails, payment receipts, and reminders sent automatically. Keep attendees informed effortlessly.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#127912;</div>
+        <h3>White-Label Branding</h3>
+        <p>Your brand, your domain. Customize every touchpoint so attendees see your brand, not ours.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128274;</div>
+        <h3>Secure & Reliable</h3>
+        <p>Enterprise-grade security with Supabase. 99.9% uptime guaranteed. Your data is always safe.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section class="how-it-works" id="how-it-works">
+  <div class="container">
+    <div class="section-header">
+      <h2>Go Live in 3 Simple Steps</h2>
+      <p>From sign-up to accepting registrations in under 5 minutes.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h3>Sign Up & Configure</h3>
+        <p>Create your account, set up your company profile, and configure your first event with ticket tiers and pricing.</p>
+      </div>
+      <div class="step-arrow">&rarr;</div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h3>Customize & Brand</h3>
+        <p>Add your logo, choose your brand colors, set up guest speakers, and tailor the registration experience.</p>
+      </div>
+      <div class="step-arrow">&rarr;</div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h3>Share & Collect</h3>
+        <p>Share your registration link. Accept payments, track registrations, and manage your event from the dashboard.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRICING ============ -->
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="section-header">
+      <h2>Simple, Transparent Pricing</h2>
+      <p>Start free. Upgrade when you're ready to scale.</p>
+    </div>
+
+    <div class="pricing-toggle">
+      <span class="toggle-label active" id="monthlyLabel">Monthly</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="pricingToggle">
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="toggle-label" id="yearlyLabel">Yearly</span>
+      <span class="save-badge">Save 17%</span>
+    </div>
+
+    <div class="pricing-grid" id="pricingGrid">
+      <!-- Basic -->
+      <div class="pricing-card">
+        <div class="pricing-name">Basic</div>
+        <div class="pricing-price">
+          <span class="price-currency">&#8377;</span>
+          <span class="price-amount" data-monthly="1" data-yearly="10">1</span>
+          <span class="price-period">/month</span>
+        </div>
+        <div class="pricing-desc" style="color: var(--primary); font-weight: 600;">3 events + email templates</div>
+        <ul class="pricing-features">
+          <li>3 events</li>
+          <li>Email templates studio</li>
+          <li>Up to 500 registrations</li>
+          <li>Basic attendee database</li>
+          <li>Standard support</li>
+        </ul>
+        <a href="/onboarding" class="btn btn-outline btn-block">Get Started</a>
+      </div>
+
+      <!-- Standard -->
+      <div class="pricing-card popular">
+        <div class="popular-ribbon">Most Popular</div>
+        <div class="pricing-name">Standard</div>
+        <div class="pricing-price">
+          <span class="price-currency">&#8377;</span>
+          <span class="price-amount" data-monthly="5" data-yearly="50">5</span>
+          <span class="price-period">/month</span>
+        </div>
+        <div class="pricing-desc" style="color: var(--primary); font-weight: 600;">10 events + email templates + advanced analytics</div>
+        <ul class="pricing-features">
+          <li>10 events</li>
+          <li>Email templates studio</li>
+          <li>Advanced analytics &amp; exports</li>
+          <li>Up to 5,000 registrations</li>
+          <li>Priority attendee sync</li>
+        </ul>
+        <a href="/onboarding" class="btn btn-primary btn-block">Get Started</a>
+      </div>
+
+      <!-- Premium -->
+      <div class="pricing-card">
+        <div class="pricing-name">Premium</div>
+        <div class="pricing-price">
+          <span class="price-currency">&#8377;</span>
+          <span class="price-amount" data-monthly="10" data-yearly="100">10</span>
+          <span class="price-period">/month</span>
+        </div>
+        <div class="pricing-desc" style="color: var(--primary); font-weight: 600;">50 events + email templates + advanced analytics + dynamic flyer generations</div>
+        <ul class="pricing-features">
+          <li>50 events</li>
+          <li>Email templates studio</li>
+          <li>Advanced analytics &amp; exports</li>
+          <li>Dynamic flyer generations</li>
+          <li>VIP concierge support</li>
+        </ul>
+        <a href="/onboarding" class="btn btn-outline btn-block">Get Started</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="faq" id="faq">
+  <div class="container">
+    <div class="section-header">
+      <h2>Frequently Asked Questions</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-question">What payment methods are supported?</button>
+        <div class="faq-answer">
+          <p>We support all major payment methods via Razorpay: UPI, credit/debit cards, net banking, wallets, and more. Payments are processed securely and settled directly to your Razorpay account.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">Can I use my own domain?</button>
+        <div class="faq-answer">
+          <p>Yes! With ScaleUp Pro, you can connect your custom domain. Your registration page will be fully white-labeled with your branding and domain name.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">How quickly can I set up an event?</button>
+        <div class="faq-answer">
+          <p>Most users go live in under 5 minutes. Our guided onboarding wizard walks you through company setup, event configuration, and ticket tier creation step by step.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">Is there a free trial?</button>
+        <div class="faq-answer">
+          <p>Yes! The Starter plan is completely free with up to 50 registrations. No credit card required. Upgrade to a paid plan anytime when you need more capacity.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">Can I export my registration data?</button>
+        <div class="faq-answer">
+          <p>Absolutely. You can export all registration data as CSV or Excel from your dashboard at any time. Your data belongs to you.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">What happens if I exceed my registration limit?</button>
+        <div class="faq-answer">
+          <p>You'll receive a notification when approaching your limit. You can upgrade your plan at any time to increase capacity. No registrations are lost.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<section class="cta-section">
+  <div class="container">
+    <h2>Ready to Launch Your Next Event?</h2>
+    <p>Join hundreds of event organizers who trust EventReg Platform to manage their registrations.</p>
+    <div class="cta-buttons">
+      <a href="/onboarding" class="btn btn-white btn-lg">Get Started Free</a>
+      <a href="/dashboard" class="btn btn-ghost-white btn-lg">Login to Dashboard</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">EventReg <span>Platform</span></div>
+        <p>A product by EventReg Platform Technology LLP. Helping businesses create seamless event registration experiences.</p>
+      </div>
+      <div class="footer-links">
+        <h4>Product</h4>
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">FAQ</a>
+        <a href="/onboarding">Get Started</a>
+      </div>
+      <div class="footer-links">
+        <h4>Company</h4>
+        <a href="/terms">Terms of Service</a>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="mailto:support@bizflowai.in">Contact Us</a>
+      </div>
+      <div class="footer-links">
+        <h4>Support</h4>
+        <a href="mailto:support@bizflowai.in">support@bizflowai.in</a>
+        <a href="/dashboard">Login</a>
+        <a href="/admin-portal">Admin</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 EventReg Platform Technology LLP. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="/landing/js/landing.js"></script>
+</body>
+</html>

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Templates Studio - Tenant Dashboard</title>
+    <link rel="stylesheet" href="css/dashboard.css?v=1.0.1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+    <style>
+        .mail-client-window {
+            background: #090d16;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+        }
+        .mail-client-bar {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .mac-dots {
+            display: flex;
+            gap: 6px;
+        }
+        .mac-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .dot-red { background: #ef4444; }
+        .dot-yellow { background: #f59e0b; }
+        .dot-green { background: #10b981; }
+        .mail-header-info {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 14px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: 13px;
+        }
+        .var-chip {
+            transition: all 0.2s ease;
+        }
+        .var-chip:hover {
+            transform: scale(1.04);
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Dashboard Shell -->
+    <div id="dashboard-shell" class="dashboard-shell">
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i data-lucide="calendar-check"></i>
+                </div>
+                <h2 id="sidebar-tenant-name">Dashboard</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/dashboard" class="nav-item" data-section="overview">
+                    <i data-lucide="layout-dashboard"></i><span>Overview</span>
+                </a>
+
+                <!-- Registration Hub -->
+                <div class="nav-group open">
+                    <div class="nav-group-header">
+                        <div class="nav-group-header-left">
+                            <i data-lucide="clipboard-list"></i><span>Registration Hub</span>
+                        </div>
+                        <i data-lucide="chevron-down" class="group-arrow"></i>
+                    </div>
+                    <div class="nav-group-items">
+                        <a href="/dashboard/events.html" class="nav-sub-item" data-section="events">
+                            <div class="nav-sub-item-left">
+                                <i data-lucide="calendar"></i><span>Events</span>
+                            </div>
+                        </a>
+                        <a href="/dashboard/flyer-generation.html" class="nav-sub-item" data-section="flyers">
+                            <div class="nav-sub-item-left">
+                                <i data-lucide="image"></i><span>Flyer Generation</span>
+                            </div>
+                        </a>
+                        <a href="/dashboard/email-templates.html" class="nav-sub-item active" data-section="email-templates">
+                            <div class="nav-sub-item-left">
+                                <i data-lucide="mail"></i><span>Email Templates</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <a href="/dashboard/subscription" class="nav-item" data-section="subscription">
+                    <i data-lucide="credit-card"></i><span>Subscription</span>
+                </a>
+                <a href="/dashboard/analytics" class="nav-item" data-section="analytics">
+                    <i data-lucide="trending-up"></i><span>Analytics</span>
+                </a>
+                <a href="/dashboard/activity-log" class="nav-item" data-section="activity-log">
+                    <i data-lucide="activity"></i><span>Activity Log</span>
+                </a>
+                <a href="/dashboard/admin-notifications" class="nav-item" id="nav-item-admin-notifications" style="display: none;" data-section="admin-notifications">
+                    <i data-lucide="bell-ring"></i><span>Admin Alerts</span>
+                </a>
+                <a href="/dashboard/settings.html" class="nav-item" data-section="settings">
+                    <i data-lucide="settings"></i><span>Settings</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-wrapper">
+            <!-- Top Header -->
+            <header class="top-header">
+                <button id="sidebar-toggle" class="sidebar-toggle">
+                    <i data-lucide="menu"></i>
+                </button>
+                <div class="header-right" style="display: flex; align-items: center; gap: 12px;">
+                    <button id="clean-slate-btn" class="btn btn-sm btn-outline" style="border-color: rgba(244,63,94,0.35); color: #fda4af; background: rgba(244,63,94,0.06); gap: 5px;" title="Reset all test data and restart onboarding">
+                        <i data-lucide="rotate-ccw" style="width:13px;height:13px;"></i> Reset Data
+                    </button>
+
+                    <!-- Theme Switcher Pill -->
+                    <div class="theme-switcher-pill" id="theme-switcher-pill" title="Switch dashboard theme" aria-label="Theme switcher">
+                        <span class="theme-dot" id="theme-dot" style="background: linear-gradient(135deg, #38bdf8, #ec4899);"></span>
+                        <span class="theme-pill-label" id="theme-pill-label">Theme</span>
+                        <div class="theme-switcher-dropdown" id="theme-switcher-dropdown" role="listbox" aria-label="Select theme">
+                            <div class="theme-dd-option" data-theme="dark" role="option">
+                                <span class="theme-dd-swatch" style="background: linear-gradient(135deg, #020617, #38bdf8);"></span>
+                                Dark High-Tech
+                            </div>
+                            <div class="theme-dd-option" data-theme="light" role="option">
+                                <span class="theme-dd-swatch" style="background: linear-gradient(135deg, #f1f5f9, #4f46e5);"></span>
+                                Light Clean
+                            </div>
+                            <div class="theme-dd-option" data-theme="neon" role="option">
+                                <span class="theme-dd-swatch" style="background: linear-gradient(135deg, #f0abfc, #818cf8, #00f5ff);"></span>
+                                Vibrant Neon
+                            </div>
+                        </div>
+                    </div>
+
+                    <span class="header-user" id="header-user-name">
+                        <i data-lucide="circle-user"></i> <span></span>
+                    </span>
+                    <button id="logout-btn" class="btn btn-sm btn-outline">Logout</button>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <main id="main-content" class="main-content">
+                <div class="container-fluid" style="padding: 24px; max-width: 1180px; margin: 0 auto;">
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h1 style="font-size: 28px; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.5px;">Professional Email Studio</h1>
+                            <p style="color: var(--text-light); font-size: 14px; margin-top: 4px;">Dynamic templates with real-time browser preview & variable substitution</p>
+                        </div>
+                        <span class="badge badge-success">
+                            <i data-lucide="mail-check" style="width: 12px; height: 12px; margin-right: 4px;"></i> Enterprise Mail Active
+                        </span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1.1fr; gap: 24px; align-items: start;">
+                        
+                        <!-- Left Panel: Template Editor -->
+                        <div class="card" style="padding: 24px;">
+                            <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 20px; color: var(--text); display: flex; align-items: center; gap: 8px;">
+                                <i data-lucide="edit-3" style="width: 18px; height: 18px; color: var(--primary);"></i> Template Customization Editor
+                            </h2>
+                            <form id="template-form">
+                                <div class="form-group">
+                                    <label for="template-event-select">Select Event Context</label>
+                                    <select id="template-event-select" required>
+                                        <option value="default-event">Tech Innovation Summit 2026</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="template-type-select">Template Category / Preset</label>
+                                    <select id="template-type-select">
+                                        <option value="vip">👔 VIP Executive Invitation</option>
+                                        <option value="reminder">⏰ 24-Hour Urgent Reminder</option>
+                                        <option value="thanks">💬 Post-Event Thank You & Feedback</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="template-subject">Email Subject Line</label>
+                                    <input type="text" id="template-subject" required placeholder="Enter email subject line">
+                                </div>
+                                <div class="form-group">
+                                    <label for="template-body">Email Body (Rich HTML / Markdown)</label>
+                                    <textarea id="template-body" required placeholder="Write your email template body here..." style="min-height: 220px; font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; line-height: 1.55;"></textarea>
+                                </div>
+                                
+                                <div style="margin-bottom: 20px;">
+                                    <span style="font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; display: block; margin-bottom: 8px; letter-spacing: 0.5px;">Click Variable Chips to Insert</span>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 6px;" id="var-chips-container">
+                                        <span class="var-chip" data-var="[Guest Name]" style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25); padding: 4px 10px; border-radius: 6px; font-size: 11.5px; font-family: monospace; color: #38bdf8; cursor: pointer; user-select: none;">[Guest Name]</span>
+                                        <span class="var-chip" data-var="[Event Date]" style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25); padding: 4px 10px; border-radius: 6px; font-size: 11.5px; font-family: monospace; color: #38bdf8; cursor: pointer; user-select: none;">[Event Date]</span>
+                                        <span class="var-chip" data-var="[Venue]" style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25); padding: 4px 10px; border-radius: 6px; font-size: 11.5px; font-family: monospace; color: #38bdf8; cursor: pointer; user-select: none;">[Venue]</span>
+                                        <span class="var-chip" data-var="{{guest_name}}" style="background: rgba(56, 189, 248, 0.06); border: 1px dashed rgba(56, 189, 248, 0.2); padding: 4px 10px; border-radius: 6px; font-size: 11.5px; font-family: monospace; color: #38bdf8; cursor: pointer; user-select: none;">{{guest_name}}</span>
+                                        <span class="var-chip" data-var="{{event_name}}" style="background: rgba(56, 189, 248, 0.06); border: 1px dashed rgba(56, 189, 248, 0.2); padding: 4px 10px; border-radius: 6px; font-size: 11.5px; font-family: monospace; color: #38bdf8; cursor: pointer; user-select: none;">{{event_name}}</span>
+                                        <span class="var-chip" data-var="{{company_name}}" style="background: rgba(236, 72, 153, 0.1); border: 1px solid rgba(236, 72, 153, 0.25); padding: 4px 10px; border-radius: 6px; font-size: 11.5px; font-family: monospace; color: #ec4899; cursor: pointer; user-select: none;">{{company_name}}</span>
+                                        <span class="var-chip" data-var="{{ticket_code}}" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); padding: 4px 10px; border-radius: 6px; font-size: 11.5px; font-family: monospace; color: #f59e0b; cursor: pointer; user-select: none;">{{ticket_code}}</span>
+                                    </div>
+                                    <small style="font-size: 10px; color: var(--text-muted); display: block; margin-top: 6px;">Click any variable chip to insert directly into active field.</small>
+                                </div>
+
+                                <div style="display: flex; gap: 10px;">
+                                    <button type="button" id="btn-send-test-email" class="btn btn-outline" style="flex: 1; gap: 6px;">
+                                        <i data-lucide="send" style="width: 15px; height: 15px;"></i> Send Test
+                                    </button>
+                                    <button type="submit" class="btn btn-primary" style="flex: 2; gap: 6px;">
+                                        <i data-lucide="save" style="width: 16px; height: 16px;"></i> Save Template
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Right Panel: Desktop Email Client Simulation -->
+                        <div class="mail-client-window">
+                            <div class="mail-client-bar">
+                                <div class="mac-dots">
+                                    <div class="mac-dot dot-red"></div>
+                                    <div class="mac-dot dot-yellow"></div>
+                                    <div class="mac-dot dot-green"></div>
+                                </div>
+                                <div style="font-size: 11px; color: rgba(255,255,255,0.4); font-family: monospace;">mail-client // preview</div>
+                                <div style="font-size: 11px; color: #38bdf8; font-weight: 700;">LIVE RENDER</div>
+                            </div>
+
+                            <div class="mail-header-info" id="email-preview-header">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                                    <span style="color: var(--text-muted);">From: <strong id="email-preview-from" style="color: #fff;">Codtech &lt;events@eventreg.com&gt;</strong></span>
+                                    <span style="color: var(--text-muted); font-size: 11px;">Today, 09:00 AM</span>
+                                </div>
+                                <div style="margin-bottom: 8px;">
+                                    <span style="color: var(--text-muted);">To: <strong id="email-preview-to" style="color: #fff;">attendee@example.com (Mock Attendee)</strong></span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="color: var(--text-muted);">Subject:</span>
+                                    <span id="email-preview-subject" style="color: #38bdf8; font-weight: 700; font-size: 13.5px;"></span>
+                                </div>
+                            </div>
+
+                            <div style="padding: 24px; background: #070b14; min-height: 400px; display: flex; justify-content: center; align-items: flex-start;">
+                                <div id="email-preview-body" style="width: 100%;"></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="js/dashboard-auth.js"></script>
+    <script src="js/plan-permissions.js"></script>
+    <script src="js/email-templates.js"></script>
+</body>
+</html>

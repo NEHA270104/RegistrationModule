@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get Started - Onboarding</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/onboarding.css">
+  <!-- Razorpay Checkout -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+
+<div class="onboarding-wrapper">
+
+  <!-- Header -->
+  <div class="onboarding-header">
+    <div class="logo">EventReg <span>Platform</span></div>
+    <div class="tagline">Set up your event registration in minutes</div>
+  </div>
+
+  <!-- Stepper -->
+  <div class="stepper">
+    <div class="stepper-step active">
+      <div class="step-circle">1</div>
+      <div class="step-label">Company</div>
+    </div>
+    <div class="stepper-step">
+      <div class="step-circle">2</div>
+      <div class="step-label">Account</div>
+    </div>
+    <div class="stepper-step">
+      <div class="step-circle">3</div>
+      <div class="step-label">Plan &amp; Pay</div>
+    </div>
+  </div>
+
+  <!-- Wizard Card -->
+  <div class="wizard-card">
+    <div class="wizard-card-body">
+
+      <!-- ==================== STEP 1: Company Details ==================== -->
+      <div class="step-panel active" data-step="1">
+        <h2 class="step-title">Company Details</h2>
+        <p class="step-subtitle">Tell us about your organization.</p>
+
+        <div class="form-group">
+          <label for="companyName">Company / Organization Name <span class="required">*</span></label>
+          <input type="text" id="companyName" class="form-control" placeholder="e.g. Acme Events Pvt Ltd">
+          <div class="field-error">Company name is required</div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="contactName">Contact Person <span class="required">*</span></label>
+            <input type="text" id="contactName" class="form-control" placeholder="Full name">
+            <div class="field-error">Contact name is required</div>
+          </div>
+          <div class="form-group">
+            <label for="companyPhone">Phone <span class="required">*</span></label>
+            <input type="tel" id="companyPhone" class="form-control" placeholder="+91 98765 43210">
+            <div class="field-error">Valid phone number is required</div>
+            <!-- Inline duplicate-phone notification -->
+            <div id="phoneDuplicateBanner" class="duplicate-banner" style="display:none;" role="alert" aria-live="polite">
+              <span class="duplicate-banner__icon">⚠️</span>
+              <span class="duplicate-banner__text">This phone number is already registered. <a href="/" class="duplicate-banner__link">Log in instead →</a></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="companyEmail">Business Email <span class="required">*</span></label>
+          <input type="email" id="companyEmail" class="form-control" placeholder="you@company.com">
+          <div class="field-error">Valid email is required</div>
+          <!-- Inline duplicate-email notification with login quick-action -->
+          <div id="emailDuplicateBanner" class="duplicate-banner" style="display:none;" role="alert" aria-live="polite">
+            <span class="duplicate-banner__icon">⚠️</span>
+            <div class="duplicate-banner__body">
+              <strong>An account with this email is already registered.</strong>
+              <span class="duplicate-banner__sub">Please log in or use a different email.</span>
+              <a href="/" class="duplicate-banner__cta-btn">Log in to your account →</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="companyIndustry">Industry <span class="required">*</span></label>
+          <select id="companyIndustry" class="form-control" required>
+            <option value="" disabled selected>Select your industry</option>
+            <option value="School">School</option>
+            <option value="Hospital">Hospital</option>
+            <option value="Business">Business</option>
+            <option value="Corporate">Corporate</option>
+            <option value="College">College</option>
+          </select>
+          <div class="field-error">Please select an industry</div>
+        </div>
+
+        <div class="form-group">
+          <label for="companyWebsite">Website <span class="text-muted">(optional)</span></label>
+          <input type="url" id="companyWebsite" class="form-control" placeholder="https://www.example.com">
+        </div>
+      </div>
+
+      <!-- ==================== STEP 2: Create Account & Credentials ==================== -->
+      <div class="step-panel" data-step="2">
+        <h2 class="step-title">Create Your Account</h2>
+        <p class="step-subtitle">Set up your login credentials before selecting a plan.</p>
+
+        <div class="form-group">
+          <label for="accountEmail">Login Email Address <span class="required">*</span></label>
+          <input type="email" id="accountEmail" class="form-control" placeholder="you@company.com">
+          <div class="field-error">Valid email is required</div>
+          <div class="form-hint">This will be your primary dashboard login email</div>
+        </div>
+
+        <div class="form-group">
+          <label for="accountPassword">Password <span class="required">*</span></label>
+          <div class="password-input-container">
+            <input type="password" id="accountPassword" class="form-control" placeholder="Min 8 characters">
+            <button type="button" class="password-toggle-btn" tabindex="-1" aria-label="Toggle Password Visibility">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+          </div>
+          <div class="field-error">Password must be at least 8 characters</div>
+          <div class="password-strength">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+          </div>
+          <div id="passwordHint" class="password-hint"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="accountPasswordConfirm">Confirm Password <span class="required">*</span></label>
+          <div class="password-input-container">
+            <input type="password" id="accountPasswordConfirm" class="form-control" placeholder="Re-enter password">
+            <button type="button" class="password-toggle-btn" tabindex="-1" aria-label="Toggle Password Visibility">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+          </div>
+          <div class="field-error">Passwords do not match</div>
+        </div>
+
+        <div class="form-group">
+          <label>Profile Picture</label>
+          <div style="display: flex; align-items: center; gap: 16px; margin-top: 8px; margin-bottom: 8px;">
+            <img id="avatarPreview" src="/images/default-avatar.png" onerror="this.onerror=null; this.src='https://zoovfzgtnxzuaolibzgw.supabase.co/storage/v1/object/public/flyers/default-avatar.png'" style="width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border);">
+            <div>
+              <input type="file" id="avatarUpload" accept="image/*" style="display: none;">
+              <button type="button" class="btn-upload-avatar" id="btnUploadAvatar" style="background: none; border: 1.5px solid var(--primary); color: var(--primary); padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px;">Upload Photo</button>
+              <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">PNG, JPG up to 2MB</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="accountJobTitle">Job Title <span class="text-muted">(optional)</span></label>
+          <input type="text" id="accountJobTitle" class="form-control" placeholder="e.g. Event Director">
+        </div>
+
+        <div class="form-group">
+          <label for="accountWebsite">Company Website <span class="text-muted">(optional)</span></label>
+          <input type="url" id="accountWebsite" class="form-control" placeholder="https://www.example.com">
+        </div>
+
+        <div class="form-group">
+          <label for="accountBio">Bio / Description <span class="text-muted">(optional)</span></label>
+          <textarea id="accountBio" class="form-control" rows="3" placeholder="Tell us a bit about yourself..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <div class="checkbox-group">
+            <input type="checkbox" id="tosCheckbox">
+            <label for="tosCheckbox">I agree to the <a href="/legal/terms-of-service" target="_blank">Terms of Service</a> and <a href="/legal/privacy-policy" target="_blank">Privacy Policy</a></label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="checkbox-group">
+            <input type="checkbox" id="dpaCheckbox">
+            <label for="dpaCheckbox">I agree to the <a href="/legal/data-processing-agreement" target="_blank">Data Processing Agreement</a></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== STEP 3: Choose Plan & Payment Checkout ==================== -->
+      <div class="step-panel" data-step="3">
+        <h2 class="step-title">Choose Your Subscription Plan</h2>
+        <p class="step-subtitle">Pick the plan that fits your events. Upgrade anytime.</p>
+
+        <div class="plan-toggle">
+          <span id="labelMonthly" class="active-label">Monthly</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="billingToggle">
+            <span class="toggle-slider"></span>
+          </label>
+          <span id="labelYearly">Yearly</span>
+          <span id="saveBadge" class="save-badge">Save 17%</span>
+        </div>
+
+        <div class="plans-grid">
+          <!-- Basic -->
+          <div class="plan-card" data-plan="basic" data-plan-name="Basic">
+            <div class="plan-name">Basic</div>
+            <div class="plan-price">&#8377; 1</div>
+            <div class="plan-period">/month</div>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 6px 0 10px;">3 events + email templates</p>
+            <ul class="plan-features">
+              <li>3 events</li>
+              <li>Email templates studio</li>
+              <li>Up to 500 registrations</li>
+              <li>Basic attendee database</li>
+              <li>Standard support</li>
+            </ul>
+          </div>
+
+          <!-- Standard -->
+          <div class="plan-card selected active" data-plan="standard" data-plan-name="Standard">
+            <div class="popular-badge">Popular</div>
+            <div class="plan-name">Standard</div>
+            <div class="plan-price">&#8377; 5</div>
+            <div class="plan-period">/month</div>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 6px 0 10px;">10 events + email templates + advanced analytics</p>
+            <ul class="plan-features">
+              <li>10 events</li>
+              <li>Email templates studio</li>
+              <li>Advanced analytics &amp; export</li>
+              <li>Up to 5,000 registrations</li>
+              <li>Priority attendee sync</li>
+            </ul>
+          </div>
+
+          <!-- Premium -->
+          <div class="plan-card" data-plan="premium" data-plan-name="Premium">
+            <div class="plan-name">Premium</div>
+            <div class="plan-price">&#8377; 10</div>
+            <div class="plan-period">/month</div>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 6px 0 10px;">50 events + email templates + advanced analytics + dynamic flyer generations</p>
+            <ul class="plan-features">
+              <li>50 events</li>
+              <li>Email templates studio</li>
+              <li>Advanced analytics &amp; export</li>
+              <li>Dynamic flyer generations</li>
+              <li>VIP concierge support</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 20px;">
+          <label for="referralCode">Referral Code <span class="text-muted">(optional)</span></label>
+          <input type="text" id="referralCode" class="form-control" placeholder="Enter referral code if you have one">
+        </div>
+      </div>
+
+    </div>
+     </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="wizard-footer">
+      <button id="btnBack" class="btn btn-back" disabled>&larr; Back</button>
+      <button id="btnNext" class="btn btn-next">Continue &rarr;</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Alert Modal -->
+<div id="alertOverlay" class="alert-overlay">
+  <div class="alert-box">
+    <div id="alertIcon" class="alert-icon"></div>
+    <div id="alertTitle" class="alert-title"></div>
+    <div id="alertMessage" class="alert-message"></div>
+    <button id="alertCloseBtn" class="btn-alert-close">OK</button>
+  </div>
+</div>
+
+<script src="js/onboarding.js"></script>
+</body>
+</html>

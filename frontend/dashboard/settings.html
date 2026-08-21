@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Settings - Tenant Dashboard</title>
+    <link rel="stylesheet" href="css/dashboard.css?v=1.0.1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+
+    <!-- Dashboard Shell -->
+    <div id="dashboard-shell" class="dashboard-shell">
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i data-lucide="calendar-check"></i>
+                </div>
+                <h2 id="sidebar-tenant-name">Dashboard</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/dashboard" class="nav-item" data-section="overview">
+                    <i data-lucide="layout-dashboard"></i><span>Overview</span>
+                </a>
+
+                <!-- Registration Hub -->
+                <div class="nav-group open">
+                    <div class="nav-group-header">
+                        <div class="nav-group-header-left">
+                            <i data-lucide="clipboard-list"></i><span>Registration Hub</span>
+                        </div>
+                        <i data-lucide="chevron-down" class="group-arrow"></i>
+                    </div>
+                    <div class="nav-group-items">
+                        <a href="/dashboard/events.html" class="nav-sub-item" data-section="events">
+                            <div class="nav-sub-item-left">
+                                <i data-lucide="calendar"></i><span>Events</span>
+                            </div>
+                        </a>
+                        <a href="/dashboard/flyer-generation.html" class="nav-sub-item" data-section="flyers">
+                            <div class="nav-sub-item-left">
+                                <i data-lucide="image"></i><span>Flyer Generation</span>
+                            </div>
+                        </a>
+                        <a href="/dashboard/email-templates.html" class="nav-sub-item" data-section="email-templates">
+                            <div class="nav-sub-item-left">
+                                <i data-lucide="mail"></i><span>Email Templates</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <a href="/dashboard/subscription" class="nav-item" data-section="subscription">
+                    <i data-lucide="credit-card"></i><span>Subscription</span>
+                </a>
+                <a href="/dashboard/analytics" class="nav-item" data-section="analytics">
+                    <i data-lucide="trending-up"></i><span>Analytics</span>
+                </a>
+                <a href="/dashboard/activity-log" class="nav-item" data-section="activity-log">
+                    <i data-lucide="activity"></i><span>Activity Log</span>
+                </a>
+                <a href="/dashboard/admin-notifications" class="nav-item" id="nav-item-admin-notifications" style="display: none;" data-section="admin-notifications">
+                    <i data-lucide="bell-ring"></i><span>Admin Alerts</span>
+                </a>
+                <a href="/dashboard/settings.html" class="nav-item active" data-section="settings">
+                    <i data-lucide="settings"></i><span>Settings</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-wrapper">
+            <!-- Top Header -->
+            <header class="top-header">
+                <button id="sidebar-toggle" class="sidebar-toggle">
+                    <i data-lucide="menu"></i>
+                </button>
+                <div class="header-right" style="display: flex; align-items: center; gap: 12px;">
+                    <button id="clean-slate-btn" class="btn btn-sm btn-outline" style="border-color: rgba(244,63,94,0.35); color: #fda4af; background: rgba(244,63,94,0.06); gap: 5px;" title="Reset all test data and restart onboarding">
+                        <i data-lucide="rotate-ccw" style="width:13px;height:13px;"></i> Reset Data
+                    </button>
+
+                    <!-- Theme Switcher Pill -->
+                    <div class="theme-switcher-pill" id="theme-switcher-pill" title="Switch dashboard theme" aria-label="Theme switcher">
+                        <span class="theme-dot" id="theme-dot" style="background: linear-gradient(135deg, #38bdf8, #ec4899);"></span>
+                        <span class="theme-pill-label" id="theme-pill-label">Theme</span>
+                        <div class="theme-switcher-dropdown" id="theme-switcher-dropdown" role="listbox" aria-label="Select theme">
+                            <div class="theme-dd-option" data-theme="dark" role="option">
+                                <span class="theme-dd-swatch" style="background: linear-gradient(135deg, #020617, #38bdf8);"></span>
+                                Dark High-Tech
+                            </div>
+                            <div class="theme-dd-option" data-theme="light" role="option">
+                                <span class="theme-dd-swatch" style="background: linear-gradient(135deg, #f1f5f9, #4f46e5);"></span>
+                                Light Clean
+                            </div>
+                            <div class="theme-dd-option" data-theme="neon" role="option">
+                                <span class="theme-dd-swatch" style="background: linear-gradient(135deg, #f0abfc, #818cf8, #00f5ff);"></span>
+                                Vibrant Neon
+                            </div>
+                        </div>
+                    </div>
+
+                    <span class="header-user" id="header-user-name">
+                        <i data-lucide="circle-user"></i> <span></span>
+                    </span>
+                    <button id="logout-btn" class="btn btn-sm btn-outline">Logout</button>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <main id="main-content" class="main-content">
+                <div class="container-fluid" style="padding: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h1 style="font-size: 28px; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.5px;">Account & Organization Settings</h1>
+                            <p style="color: var(--text-light); font-size: 14px; margin-top: 4px;">Manage organization profile, contact details, domain, and brand themes</p>
+                        </div>
+                        <span class="badge badge-success">
+                            <i data-lucide="check-circle" style="width: 12px; height: 12px; margin-right: 4px;"></i> Profile Synced
+                        </span>
+                    </div>
+
+                    <div class="card"><div class="card-body">
+                        <form id="account-settings-form">
+                            <div class="settings-section">
+                                <h4 style="font-size: 14px; font-weight: 700; color: var(--text-light); text-transform: uppercase; margin-bottom: 12px;">Profile Picture</h4>
+                                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+                                    <img id="settings-avatar-preview" src="/images/default-avatar.png" style="width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border);">
+                                    <div>
+                                        <input type="file" id="settings-avatar-upload" accept="image/*" style="display: none;">
+                                        <button type="button" class="btn btn-outline btn-sm" id="btn-upload-avatar">Upload New Photo</button>
+                                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">PNG, JPG, WEBP up to 2MB</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="settings-section">
+                                <h4 style="font-size: 14px; font-weight: 700; color: var(--text-light); text-transform: uppercase; margin-bottom: 12px;">Tenant Information</h4>
+                                <div class="form-row">
+                                    <div class="form-group"><label>Company / Organization Name</label><input type="text" id="setting-company-name" name="company_name" required></div>
+                                    <div class="form-group"><label>Contact Person</label><input type="text" id="setting-name" name="name" required></div>
+                                </div>
+                                <div class="form-group"><label>Organization Slug</label><input type="text" id="setting-slug" readonly style="background: rgba(255,255,255,0.04); opacity: 0.8;"></div>
+                                <div class="form-row">
+                                    <div class="form-group"><label>Contact Email</label><input type="email" id="setting-email" name="email" required></div>
+                                    <div class="form-group"><label>Contact Phone</label><input type="tel" id="setting-phone" name="phone"></div>
+                                </div>
+                                <div class="form-group"><label>Website / Custom Domain</label><input type="text" id="setting-custom-domain" name="custom_domain" placeholder="e.g. events.mycompany.com"></div>
+                            </div>
+                            <div class="settings-section">
+                                <h4 style="font-size: 14px; font-weight: 700; color: var(--text-light); text-transform: uppercase; margin-bottom: 12px;">Professional Profile</h4>
+                                <div class="form-group"><label>Job Title</label><input type="text" id="setting-job-title" name="job_title" placeholder="e.g. Lead Event Director"></div>
+                                <div class="form-group"><label>Bio / Description</label><textarea id="setting-bio" name="bio" rows="3" placeholder="Tell us a bit about yourself or your organization..."></textarea></div>
+                            </div>
+                            <div class="settings-section">
+                                <h4 style="font-size: 14px; font-weight: 700; color: var(--text-light); text-transform: uppercase; margin-bottom: 4px;">Branding Accent Colors</h4>
+                                <div class="form-row">
+                                    <div class="form-group"><label>Primary Brand Color</label><input type="color" id="setting-primary-color" name="primary_color" value="#667eea"></div>
+                                    <div class="form-group"><label>Secondary Accent Color</label><input type="color" id="setting-secondary-color" name="secondary_color" value="#764ba2"></div>
+                                </div>
+                                <div class="form-group"><label>Logo URL</label><input type="url" id="setting-logo-url" name="logo_url" placeholder="https://..."></div>
+                            </div>
+
+                            <!-- ── Theme Customization ─────────────────────── -->
+                            <div class="settings-section" id="theme-settings-section">
+                                <h4 style="font-size: 14px; font-weight: 700; color: var(--text-light); text-transform: uppercase; margin-bottom: 4px;">Dashboard Theme</h4>
+                                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 0;">Choose how your dashboard looks. Your preference is saved and applied instantly across all pages.</p>
+                                <div class="theme-card-grid">
+
+                                    <!-- Dark High-Tech (default) -->
+                                    <div class="theme-card" data-theme="dark" role="button" tabindex="0" aria-label="Dark High-Tech theme" title="Dark High-Tech — Electric blue & magenta accents">
+                                        <div class="theme-card-preview preview-dark"></div>
+                                        <div class="theme-card-label">
+                                            <span>Dark High-Tech</span>
+                                            <span class="active-check" aria-hidden="true">✓</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Light Clean -->
+                                    <div class="theme-card" data-theme="light" role="button" tabindex="0" aria-label="Light Clean theme" title="Light Clean — Indigo & sky blue accents">
+                                        <div class="theme-card-preview preview-light"></div>
+                                        <div class="theme-card-label">
+                                            <span>Light Clean</span>
+                                            <span class="active-check" aria-hidden="true">✓</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Vibrant Neon -->
+                                    <div class="theme-card" data-theme="neon" role="button" tabindex="0" aria-label="Vibrant Neon theme" title="Vibrant Neon — Pink, purple &amp; electric blue accents">
+                                        <div class="theme-card-preview preview-neon"></div>
+                                        <div class="theme-card-label">
+                                            <span>Vibrant Neon</span>
+                                            <span class="active-check" aria-hidden="true">✓</span>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <!-- ── End Theme Customization ────────────────── -->
+
+                            <button type="submit" class="btn btn-primary" style="gap: 7px; margin-top: 10px;">
+                                <i data-lucide="save" style="width: 16px; height: 16px;"></i> Save Account Settings
+                            </button>
+                        </form>
+                    </div></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="js/dashboard-auth.js"></script>
+    <script src="js/plan-permissions.js"></script>
+    <script src="js/settings.js"></script>
+</body>
+</html>

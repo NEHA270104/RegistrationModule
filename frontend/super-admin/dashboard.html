@@ -1,0 +1,2232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventReg Platform - Super Admin Dashboard</title>
+    <link rel="stylesheet" href="/super-admin/css/super-admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-body: #0f0f13;
+            --bg-content: #0f0f13;
+            --bg-card: rgba(20, 20, 31, 0.45);
+            --border-color: rgba(255, 255, 255, 0.06);
+            --primary-gradient: linear-gradient(135deg, #d946ef 0%, #8b5cf6 50%, #3b82f6 100%);
+            --shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        body {
+            background-color: #0f0f13;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(217, 70, 239, 0.06) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(59, 130, 246, 0.06) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 0;
+        }
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1400px;
+            margin-left: 260px;
+            width: calc(100% - 260px);
+            box-sizing: border-box;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        /* Switch toggle styling */
+        .switch-toggle input:checked + .slider {
+            background: var(--primary-gradient);
+        }
+        .switch-toggle .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        .switch-toggle input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+        
+        /* Glassmorphism Header */
+        .header-gradient {
+            background: linear-gradient(135deg, rgba(217, 70, 239, 0.08) 0%, rgba(139, 92, 246, 0.08) 50%, rgba(59, 130, 246, 0.08) 100%) !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            padding: 2rem;
+            border-radius: var(--border-radius-lg);
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .header-gradient h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #d946ef 0%, #a855f7 50%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none !important;
+        }
+        .header-gradient p {
+            margin: 0.5rem 0 0 0;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        .logout-btn-header {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-white);
+            padding: 0.65rem 1.3rem;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            transition: all var(--transition-fast);
+        }
+        .logout-btn-header:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ff8a8a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+        }
+        
+        /* Glassmorphism Metric Cards */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .metric-card {
+            background: rgba(255, 255, 255, 0.03) !important;
+            backdrop-filter: blur(16px) saturate(120%);
+            -webkit-backdrop-filter: blur(16px) saturate(120%);
+            border: 1px solid rgba(255, 255, 255, 0.07) !important;
+            border-radius: var(--border-radius-lg) !important;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25) !important;
+        }
+        .metric-card:hover {
+            background: rgba(255, 255, 255, 0.06) !important;
+            border-color: rgba(255, 255, 255, 0.15) !important;
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(139, 92, 246, 0.2) !important;
+        }
+        .metric-icon {
+            width: 54px;
+            height: 54px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .metric-icon-tenants {
+            background: rgba(59, 130, 246, 0.1) !important;
+            color: #60a5fa !important;
+            border-color: rgba(59, 130, 246, 0.2) !important;
+        }
+        .metric-icon-mrr {
+            background: rgba(245, 158, 11, 0.1) !important;
+            color: #fbbf24 !important;
+            border-color: rgba(245, 158, 11, 0.2) !important;
+        }
+        .metric-icon-active {
+            background: rgba(34, 197, 94, 0.1) !important;
+            color: #4ade80 !important;
+            border-color: rgba(34, 197, 94, 0.2) !important;
+        }
+        .metric-value {
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.1;
+            letter-spacing: -0.5px;
+        }
+        .metric-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Glassmorphism Table Card */
+        .table-card {
+            background: rgba(255, 255, 255, 0.02) !important;
+            backdrop-filter: blur(16px) saturate(120%);
+            -webkit-backdrop-filter: blur(16px) saturate(120%);
+            border: 1px solid rgba(255, 255, 255, 0.06) !important;
+            border-radius: var(--border-radius-lg) !important;
+            padding: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25) !important;
+        }
+        .search-container {
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+        }
+        .search-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.03) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: #ffffff !important;
+            padding: 0.9rem 1.4rem;
+            border-radius: var(--border-radius) !important;
+            font-size: 0.95rem;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            transition: all 0.3s ease;
+        }
+        .search-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-color: rgba(139, 92, 246, 0.4) !important;
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
+        }
+        
+        /* Table enhancements */
+        .data-table th {
+            color: rgba(255, 255, 255, 0.5) !important;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            padding: 1.1rem 1.25rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.08) !important;
+        }
+        .data-table td {
+            padding: 1.1rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.9rem;
+        }
+        .data-table tbody tr {
+            transition: background 0.2s ease;
+        }
+        .data-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.02) !important;
+        }
+        
+        /* Glassmorphism Badge */
+        .badge {
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.25rem 0.75rem;
+            letter-spacing: 0.5px;
+            border-radius: 6px;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+        .badge-active {
+            background: rgba(34, 197, 94, 0.1) !important;
+            color: #4ade80 !important;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+        .badge-suspended {
+            background: rgba(245, 158, 11, 0.1) !important;
+            color: #fbbf24 !important;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+        
+        /* Action Buttons with soft glow */
+        .action-buttons {
+            display: flex;
+            gap: 0.6rem;
+        }
+        .btn-sm {
+            padding: 0.45rem 0.9rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+        .btn-view {
+            background: rgba(59, 130, 246, 0.08) !important;
+            color: #60a5fa !important;
+            border: 1px solid rgba(59, 130, 246, 0.25) !important;
+        }
+        .btn-view:hover {
+            background: rgba(59, 130, 246, 0.2) !important;
+            border-color: rgba(59, 130, 246, 0.4) !important;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+        }
+        .btn-suspend {
+            background: rgba(245, 158, 11, 0.08) !important;
+            color: #fbbf24 !important;
+            border: 1px solid rgba(245, 158, 11, 0.25) !important;
+        }
+        .btn-suspend:hover {
+            background: rgba(245, 158, 11, 0.2) !important;
+            border-color: rgba(245, 158, 11, 0.4) !important;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+        }
+        .btn-activate {
+            background: rgba(34, 197, 94, 0.08) !important;
+            color: #4ade80 !important;
+            border: 1px solid rgba(34, 197, 94, 0.25) !important;
+        }
+        .btn-activate:hover {
+            background: rgba(34, 197, 94, 0.2) !important;
+            border-color: rgba(34, 197, 94, 0.4) !important;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.2);
+        }
+        .btn-delete {
+            background: rgba(239, 68, 68, 0.08) !important;
+            color: #f87171 !important;
+            border: 1px solid rgba(239, 68, 68, 0.25) !important;
+        }
+        .btn-delete:hover {
+            background: rgba(239, 68, 68, 0.2) !important;
+            border-color: rgba(239, 68, 68, 0.4) !important;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+        }
+        
+        /* Modal Custom CSS */
+        .sa-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .sa-modal {
+            background: rgba(20, 20, 31, 0.8) !important;
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: var(--border-radius-lg) !important;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5) !important;
+            overflow: hidden;
+            animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes modalFadeIn {
+            from { transform: scale(0.95) translateY(10px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .sa-modal-header {
+            background: linear-gradient(135deg, rgba(217, 70, 239, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%) !important;
+            padding: 1.25rem 1.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .sa-modal-header h3 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        .sa-modal-close {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.75rem;
+            cursor: pointer;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+        .sa-modal-close:hover {
+            color: #ffffff;
+        }
+        .sa-modal-body {
+            padding: 2rem 1.75rem;
+        }
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 1.25rem;
+        }
+        .detail-label {
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            align-self: center;
+        }
+        .detail-val {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.95rem;
+            word-break: break-all;
+        }
+        .sa-modal-footer {
+            padding: 1.25rem 1.75rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            justify-content: flex-end;
+            background: rgba(255, 255, 255, 0.01) !important;
+        }
+        .toast-notify {
+            position: fixed;
+            bottom: 2.5rem;
+            right: 2.5rem;
+            padding: 1.1rem 1.75rem;
+            border-radius: var(--border-radius);
+            color: var(--text-white);
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .toast-success {
+            background: rgba(34, 197, 94, 0.9) !important;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+        .toast-error {
+            background: rgba(239, 68, 68, 0.9) !important;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        .toast-show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo-icon">🏢</div>
+                <div class="sidebar-brand">
+                    <h2>EventReg</h2>
+                    <span class="sidebar-badge">Super Admin</span>
+                </div>
+            </div>
+            <div class="sidebar-nav">
+                <a href="#" class="nav-item active" data-tab="tab-dashboard" id="nav-dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="tab-users" id="nav-users">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-text">Tenant Management</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="tab-notifications" id="nav-notifications">
+                    <span class="nav-icon">🔔</span>
+                    <span class="nav-text">Notifications</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="tab-coupons" id="nav-coupons">
+                    <span class="nav-icon">🏷️</span>
+                    <span class="nav-text">Coupons</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="tab-analytics" id="nav-analytics">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-text">Analytics</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="tab-subscriptions" id="nav-subscriptions">
+                    <span class="nav-icon">💳</span>
+                    <span class="nav-text">Subscriptions</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="tab-support" id="nav-support">
+                    <span class="nav-icon">💬</span>
+                    <span class="nav-text">Support</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="tab-system" id="nav-system">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-text">Settings</span>
+                </a>
+            </div>
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="user-avatar">SA</div>
+                    <div class="user-info">
+                        <span class="user-name" id="user-email-display">admin@eventregplatform.com</span>
+                        <span class="user-role">Super Admin</span>
+                    </div>
+                </div>
+                <button class="btn-logout" id="logoutBtn" title="Logout">🚪</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header-gradient">
+                <div>
+                    <h1 id="main-header-title">EventReg Platform</h1>
+                    <p id="main-header-subtitle">Super Admin Command Center</p>
+                </div>
+            </div>
+
+            <!-- Tab 1: Dashboard (Tenants) -->
+            <div id="tab-dashboard" class="tab-content active">
+                <!-- Top Stats Bar -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon metric-icon-tenants">🏢</div>
+                        <div class="metric-body">
+                            <div class="metric-value" id="stat-total-tenants">-</div>
+                            <div class="metric-label">Total Tenants</div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon metric-icon-mrr">💰</div>
+                        <div class="metric-body">
+                            <div class="metric-value" id="stat-total-revenue">-</div>
+                            <div class="metric-label">Total Revenue</div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon metric-icon-active">⚡</div>
+                        <div class="metric-body">
+                            <div class="metric-value" id="stat-active-sessions">-</div>
+                            <div class="metric-label">Active Sessions</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                    <div class="card" style="padding: 1.5rem; background: rgba(255, 255, 255, 0.02); border-radius: var(--border-radius-lg); border: 1px solid rgba(255, 255, 255, 0.06); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);">
+                        <h3 style="margin-top: 0; margin-bottom: 1.5rem; font-size: 1.15rem; color: #ffffff;">Plan Distribution</h3>
+                        <div style="position: relative; height: 300px; width: 100%; display: flex; align-items: center; justify-content: center;">
+                            <canvas id="planSplitChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card" style="padding: 1.5rem; background: rgba(255, 255, 255, 0.02); border-radius: var(--border-radius-lg); border: 1px solid rgba(255, 255, 255, 0.06); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);">
+                        <h3 style="margin-top: 0; margin-bottom: 1.5rem; font-size: 1.15rem; color: #ffffff;">Tenant Growth (Last 30 Days)</h3>
+                        <div style="position: relative; height: 300px; width: 100%;">
+                            <canvas id="growthChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Toolbar with Search and Add Tenant -->
+                <div class="search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+                    <input type="text" id="tenantSearch" class="search-input" style="flex: 1;" placeholder="Search tenants by name, slug, email, or company name...">
+                    <button class="btn btn-primary" id="openAddTenantBtn" style="padding: 0.9rem 1.5rem; font-weight:600; border-radius: var(--border-radius); font-family: inherit;">+ Add Tenant</button>
+                </div>
+
+                <!-- Table Card -->
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Slug</th>
+                                    <th>Email</th>
+                                    <th>Plan</th>
+                                    <th>Status</th>
+                                    <th style="width: 280px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tenantsTableBody">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading tenants...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: User & Tenant Management -->
+            <div id="tab-users" class="tab-content">
+                <div class="card" style="background: rgba(20, 20, 31, 0.8) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; box-shadow: var(--shadow-card); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.06); padding: 1.5rem 2rem;">
+                        <h3 style="margin: 0; font-size: 1.35rem; color: #ffffff;">Tenant Management</h3>
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <!-- View Toggle -->
+                            <div class="view-toggle-container" style="display: flex; background: rgba(255,255,255,0.03); padding: 0.25rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+                                <button class="btn btn-sm active-toggle" id="btn-view-table" style="background: rgba(255,255,255,0.1); border: none; color: #fff; font-weight: 600; padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.2s;">Table View</button>
+                                <button class="btn btn-sm" id="btn-view-graph" style="background: transparent; border: none; color: rgba(255,255,255,0.6); font-weight: 600; padding: 0.4rem 0.8rem; border-radius: 6px; margin-left: 4px; cursor: pointer; transition: all 0.2s;">Activity Graph</button>
+                            </div>
+                            <input type="text" id="regSearchInput" class="search-input" style="width: 300px; max-width: 100%; padding: 0.65rem 1rem;" placeholder="Search by ID, Name or Email...">
+                        </div>
+                    </div>
+                    <div class="card-body" style="padding: 2rem;">
+                        <!-- Table View Container -->
+                        <div id="user-table-container">
+                            <div class="table-responsive">
+                                <table class="data-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 40px;"></th>
+                                            <th>Tenant ID</th>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Subscription</th>
+                                            <th>Last Login / Active</th>
+                                            <th>Status</th>
+                                            <th style="text-align: right; width: 140px; padding-right: 1.5rem;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="registrationsTableBody">
+                                        <tr>
+                                            <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading tenant accounts...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Activity Graph Container -->
+                        <div id="user-graph-container" style="display: none; padding: 1.5rem; background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; margin-top: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                                <h4 style="margin: 0; color: #fff; font-size: 1.1rem;" id="graph-user-title">User Activity Trend</h4>
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <span style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Select Tenant:</span>
+                                    <select id="graphUserSelector" class="search-input" style="width: 250px; padding: 0.5rem 1rem; font-size: 0.9rem; background: rgba(20,20,31,0.85); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #fff;"></select>
+                                </div>
+                            </div>
+                            <div style="position: relative; height: 350px; width: 100%;">
+                                <canvas id="userActivityTrendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Subscription Settings -->
+            <div id="tab-subscriptions" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Subscription Plans</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Plan Name</th>
+                                        <th>Price (Monthly)</th>
+                                        <th>Features</th>
+                                        <th style="width: 120px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="plansTableBody">
+                                    <tr>
+                                        <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading subscription plans...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 4: System Settings -->
+            <div id="tab-system" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>System Configuration</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="systemSettingsForm">
+                            <div class="form-group" style="margin-bottom: 1.5rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; color: rgba(255,255,255,0.7); font-weight:600;">Maintenance Mode</label>
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <label class="switch-toggle" style="position: relative; display: inline-block; width: 50px; height: 26px;">
+                                        <input type="checkbox" id="maintenanceModeToggle" style="opacity: 0; width: 0; height: 0;">
+                                        <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: .4s; border-radius: 34px; border: 1px solid rgba(255,255,255,0.1);"></span>
+                                    </label>
+                                    <span id="maintenanceStatusLabel" style="color: rgba(255,255,255,0.5); font-size: 0.9rem;">Disabled</span>
+                                </div>
+                                <small style="display:block; margin-top:0.25rem; color:rgba(255,255,255,0.35);">When active, the public website displays a maintenance screen and blocks checkout.</small>
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 2rem;">
+                                <label for="supportEmailInput" style="display: block; margin-bottom: 0.5rem; color: rgba(255,255,255,0.7); font-weight:600;">Support Email Address</label>
+                                <input type="email" id="supportEmailInput" class="search-input" style="width: 100%; max-width: 450px;" placeholder="support@eventregplatform.com" required>
+                                <small style="display:block; margin-top:0.25rem; color:rgba(255,255,255,0.35);">Updates the support contact email dynamically across client portals.</small>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Save Settings</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Access Control Card -->
+                <div class="card" style="margin-top: 1.5rem;">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h3 style="margin:0;">🔐 Access Control</h3>
+                            <p style="margin: 0.25rem 0 0; font-size: 0.8rem; color: rgba(255,255,255,0.4);">Only emails listed here can log into the Super Admin portal.</p>
+                        </div>
+                        <span id="whitelistCount" style="font-size: 0.8rem; padding: 0.35rem 0.85rem; border-radius: 20px; background: rgba(124,58,237,0.12); border: 1px solid rgba(124,58,237,0.25); color: rgba(167,139,250,0.9); font-weight: 600;"></span>
+                    </div>
+                    <div class="card-body">
+
+                        <!-- Add email row -->
+                        <div style="display: flex; gap: 0.75rem; align-items: flex-end; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 260px;">
+                                <label style="display: block; margin-bottom: 0.45rem; font-size: 0.82rem; color: rgba(255,255,255,0.6); font-weight: 600;">Email Address</label>
+                                <input type="email" id="whitelistEmailInput" class="search-input" style="width: 100%;" placeholder="admin@example.com">
+                            </div>
+                            <button id="authorizeUserBtn" class="btn btn-primary" style="padding: 0.7rem 1.4rem; border-radius: 10px; font-weight: 600; background: linear-gradient(135deg, #7c3aed, #4f46e5); border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; white-space: nowrap;">
+                                ✚ Authorize User
+                            </button>
+                        </div>
+
+                        <!-- Whitelist table -->
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Email Address</th>
+                                        <th>Added</th>
+                                        <th style="text-align: center;">Role</th>
+                                        <th style="text-align: center;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="whitelistTableBody">
+                                    <tr>
+                                        <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                                            <div class="loading-spinner" style="display: inline-block;"></div> Loading...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 5: Notifications -->
+            <div id="tab-notifications" class="tab-content">
+                <!-- Compose Header Row -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h2 style="margin: 0; font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #a78bfa, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Notifications &amp; Broadcasts</h2>
+                        <p style="margin: 0.25rem 0 0; font-size: 0.85rem; color: rgba(255,255,255,0.45);">AI-powered messaging for tenants and platform announcements.</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span id="broadcastModeStatus" style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 0.35rem 0.85rem;">
+                            <span style="width: 7px; height: 7px; border-radius: 50%; background: #34d399; display: inline-block; box-shadow: 0 0 6px #34d399;"></span>
+                            Broadcast Mode: Global
+                        </span>
+                        <button id="openComposeModalBtn" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.65rem 1.4rem; border-radius: 10px; font-weight: 600; letter-spacing: 0.02em; background: linear-gradient(135deg, #7c3aed, #4f46e5); border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(124,58,237,0.35); transition: all 0.2s;">
+                            <span style="font-size: 1.1rem; line-height: 1;">&#43;</span> New Notification
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Sent Notifications Card -->
+                <div class="card">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin:0;">Sent &amp; System Notifications</h3>
+                        <button id="markAllReadBtn" class="btn btn-secondary" style="padding: 0.4rem 1rem; font-size: 0.8rem; border-radius: 8px;">Mark All Read</button>
+                    </div>
+                    <div class="card-body" style="padding: 0;">
+                        <div id="notificationsList" style="padding: 1rem 1.5rem;">
+                            <div class="loading-placeholder"><div class="loading-spinner"></div> Loading notifications...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 6: Coupons -->
+            <div id="tab-coupons" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Platform Coupons</h3>
+                    </div>
+                    <div class="card-body">
+                        <div style="margin-bottom: 2rem; padding: 1.5rem; background: rgba(255, 255, 255, 0.02); border-radius: var(--border-radius); border: 1px solid rgba(255, 255, 255, 0.05);">
+                            <h4 style="margin-top: 0; margin-bottom: 1rem; color: #ffffff;">Create Coupon</h4>
+                            <form id="createCouponForm" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="display:block; margin-bottom:0.5rem; color:rgba(255,255,255,0.7); font-size:0.85rem; font-weight:600;">Coupon Code</label>
+                                    <input type="text" id="couponCode" class="search-input" style="width: 100%; padding: 0.65rem 1rem;" placeholder="e.g. SAVE20" required>
+                                </div>
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="display:block; margin-bottom:0.5rem; color:rgba(255,255,255,0.7); font-size:0.85rem; font-weight:600;">Discount %</label>
+                                    <input type="number" id="couponDiscount" class="search-input" style="width: 100%; padding: 0.65rem 1rem;" placeholder="e.g. 20" min="1" max="100" required>
+                                </div>
+                                <div style="flex: 1; min-width: 200px;">
+                                    <label style="display:block; margin-bottom:0.5rem; color:rgba(255,255,255,0.7); font-size:0.85rem; font-weight:600;">Expiry Date</label>
+                                    <input type="date" id="couponExpiry" class="search-input" style="width: 100%; padding: 0.65rem 1rem;" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="padding: 0.75rem 1.5rem; border-radius: var(--border-radius); font-weight: 600;">Create</button>
+                            </form>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Discount %</th>
+                                        <th>Expiry Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="couponsTableBody">
+                                    <tr>
+                                        <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading coupons...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 7: Analytics -->
+            <div id="tab-analytics" class="tab-content">
+
+                <!-- Page Header -->
+                <div style="margin-bottom: 2rem;">
+                    <h2 style="margin: 0; font-size: 1.6rem; font-weight: 700; background: linear-gradient(135deg, #a78bfa, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Platform Analytics</h2>
+                    <p style="margin: 0.3rem 0 0; font-size: 0.875rem; color: rgba(255,255,255,0.4);">Revenue intelligence, tenant growth, and plan distribution — last 30 days.</p>
+                </div>
+
+                <!-- Metric Cards Row -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+
+                    <!-- Total Revenue -->
+                    <div style="background: linear-gradient(135deg, rgba(124,58,237,0.18), rgba(79,70,229,0.12)); border: 1px solid rgba(124,58,237,0.3); border-radius: 14px; padding: 1.5rem; position: relative; overflow: hidden;">
+                        <div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; border-radius: 50%; background: rgba(124,58,237,0.15); filter: blur(20px);"></div>
+                        <div style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; color: rgba(167,139,250,0.8); text-transform: uppercase; margin-bottom: 0.75rem;">💰 Total Revenue (30d)</div>
+                        <div id="analyticsRevenue" style="font-size: 2rem; font-weight: 800; color: #fff; letter-spacing: -0.02em;">—</div>
+                        <div style="font-size: 0.75rem; color: rgba(255,255,255,0.35); margin-top: 0.35rem;">Confirmed payments only</div>
+                    </div>
+
+                    <!-- Active Tenants -->
+                    <div style="background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(5,150,105,0.1)); border: 1px solid rgba(16,185,129,0.25); border-radius: 14px; padding: 1.5rem; position: relative; overflow: hidden;">
+                        <div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; border-radius: 50%; background: rgba(16,185,129,0.12); filter: blur(20px);"></div>
+                        <div style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; color: rgba(52,211,153,0.9); text-transform: uppercase; margin-bottom: 0.75rem;">🏢 Active Tenants</div>
+                        <div id="analyticsActiveTenants" style="font-size: 2rem; font-weight: 800; color: #fff; letter-spacing: -0.02em;">—</div>
+                        <div style="font-size: 0.75rem; color: rgba(255,255,255,0.35); margin-top: 0.35rem;">Across all subscription plans</div>
+                    </div>
+
+                    <!-- Conversion Rate -->
+                    <div style="background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(217,119,6,0.1)); border: 1px solid rgba(245,158,11,0.25); border-radius: 14px; padding: 1.5rem; position: relative; overflow: hidden;">
+                        <div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; border-radius: 50%; background: rgba(245,158,11,0.12); filter: blur(20px);"></div>
+                        <div style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; color: rgba(251,191,36,0.9); text-transform: uppercase; margin-bottom: 0.75rem;">📈 Conversion Rate</div>
+                        <div id="analyticsConversion" style="font-size: 2rem; font-weight: 800; color: #fff; letter-spacing: -0.02em;">—</div>
+                        <div style="font-size: 0.75rem; color: rgba(255,255,255,0.35); margin-top: 0.35rem;">Registrations confirmed</div>
+                    </div>
+
+                </div>
+
+                <!-- Charts Grid -->
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+
+                    <!-- Revenue Line Chart -->
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 1.75rem; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+                            <div>
+                                <h3 style="margin: 0; font-size: 1rem; font-weight: 700; color: #fff;">Revenue Trend</h3>
+                                <p style="margin: 0.2rem 0 0; font-size: 0.78rem; color: rgba(255,255,255,0.35);">Daily revenue over the last 30 days (INR)</p>
+                            </div>
+                            <span style="font-size: 0.72rem; padding: 0.3rem 0.75rem; border-radius: 20px; background: rgba(124,58,237,0.15); color: rgba(167,139,250,0.9); border: 1px solid rgba(124,58,237,0.2); font-weight: 600;">Last 30 Days</span>
+                        </div>
+                        <div style="position: relative; height: 280px; width: 100%;">
+                            <canvas id="analyticsRevenueChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Plan Distribution Doughnut -->
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 1.75rem; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+                        <div style="margin-bottom: 1.5rem;">
+                            <h3 style="margin: 0; font-size: 1rem; font-weight: 700; color: #fff;">Plan Distribution</h3>
+                            <p style="margin: 0.2rem 0 0; font-size: 0.78rem; color: rgba(255,255,255,0.35);">Active tenants by subscription tier</p>
+                        </div>
+                        <div style="position: relative; height: 280px; width: 100%; display: flex; align-items: center; justify-content: center;">
+                            <canvas id="analyticsPlanChart"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Registration Growth Full-Width -->
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 1.75rem; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+                        <div>
+                            <h3 style="margin: 0; font-size: 1rem; font-weight: 700; color: #fff;">Registration Growth</h3>
+                            <p style="margin: 0.2rem 0 0; font-size: 0.78rem; color: rgba(255,255,255,0.35);">Cumulative registrations over the last 30 days</p>
+                        </div>
+                        <span id="analyticsLoadingBadge" style="font-size: 0.72rem; padding: 0.3rem 0.75rem; border-radius: 20px; background: rgba(52,211,153,0.1); color: rgba(52,211,153,0.9); border: 1px solid rgba(52,211,153,0.2); font-weight: 600; display:none;">● Live</span>
+                    </div>
+                    <div style="position: relative; height: 240px; width: 100%;">
+                        <canvas id="analyticsGrowthChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Tab 8: Support -->
+            <div id="tab-support" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Support Helpdesk</h3>
+                    </div>
+                    <div class="card-body">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                            <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.02); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                                <h4 style="margin-top: 0; color: #ffffff;">Contact Information</h4>
+                                <p style="font-size: 0.95rem; color: rgba(255, 255, 255, 0.7); margin-bottom: 0.5rem;">Email support questions to:</p>
+                                <a href="mailto:support@eventregplatform.com" style="color: #60a5fa; font-weight: 600; text-decoration: none;">support@eventregplatform.com</a>
+                            </div>
+                            <div style="padding: 1.5rem; background: rgba(255, 255, 255, 0.02); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                                <h4 style="margin-top: 0; color: #ffffff;">System Status</h4>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem;">
+                                    <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #4ade80;"></span>
+                                    <span style="font-size: 0.95rem; color: rgba(255, 255, 255, 0.8);">All support queues are normal. Avg response time: 2h.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tenant Details Modal (Existing) -->
+    <div class="sa-modal-overlay" id="detailModalOverlay">
+        <div class="sa-modal">
+            <div class="sa-modal-header">
+                <h3 id="modalTitle">Tenant Details</h3>
+                <button class="sa-modal-close" id="modalCloseBtn">&times;</button>
+            </div>
+            <div class="sa-modal-body">
+                <div class="detail-grid" id="modalDetailsContent">
+                    <!-- Dynamic details -->
+                </div>
+            </div>
+            <div class="sa-modal-footer">
+                <button class="btn btn-secondary" id="modalCloseFooterBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Tenant Modal -->
+    <div class="sa-modal-overlay" id="addTenantModalOverlay">
+        <div class="sa-modal">
+            <div class="sa-modal-header">
+                <h3>Add New Tenant</h3>
+                <button class="sa-modal-close" id="closeAddTenantBtn1">&times;</button>
+            </div>
+            <form id="addTenantForm">
+                <div class="sa-modal-body">
+                    <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                        <div>
+                            <label style="display:block; margin-bottom:0.5rem; color:rgba(255,255,255,0.7); font-weight:600;">Tenant Name</label>
+                            <input type="text" id="addTenantName" class="search-input" style="width: 100%;" placeholder="e.g. Acme Corp" required>
+                        </div>
+                        <div>
+                            <label style="display:block; margin-bottom:0.5rem; color:rgba(255,255,255,0.7); font-weight:600;">Subdomain / Slug</label>
+                            <input type="text" id="addTenantSlug" class="search-input" style="width: 100%;" placeholder="e.g. acme" required>
+                            <small style="display:block; margin-top:0.25rem; color:rgba(255,255,255,0.35);">Only alphanumeric characters and hyphens allowed.</small>
+                        </div>
+                        <div>
+                            <label style="display:block; margin-bottom:0.5rem; color:rgba(255,255,255,0.7); font-weight:600;">Owner Email</label>
+                            <input type="email" id="addTenantEmail" class="search-input" style="width: 100%;" placeholder="owner@acme.com" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="sa-modal-footer">
+                    <button type="button" class="btn btn-secondary" id="closeAddTenantBtn2" style="margin-right:0.5rem;">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Tenant</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Plan Modal -->
+    <div class="sa-modal-overlay" id="editPlanModalOverlay">
+        <div class="sa-modal">
+            <div class="sa-modal-header">
+                <h3>Edit Subscription Plan</h3>
+                <button class="sa-modal-close" id="closeEditPlanBtn1">&times;</button>
+            </div>
+            <form id="editPlanForm">
+                <input type="hidden" id="editPlanId">
+                <div class="sa-modal-body">
+                    <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                        <div>
+                            <label style="display:block; margin-bottom:0.5rem; color:rgba(255,255,255,0.7); font-weight:600;">Plan Name</label>
+                            <input type="text" id="editPlanName" class="search-input" style="width: 100%; background: rgba(255,255,255,0.02) !important; color: rgba(255,255,255,0.5) !important;" readonly>
+                        </div>
+                        <div>
+                            <label style="display:block; margin-bottom:0.5rem; color:rgba(255,255,255,0.7); font-weight:600;">Monthly Price (INR)</label>
+                            <input type="number" id="editPlanPrice" class="search-input" style="width: 100%;" required>
+                        </div>
+                        <div>
+                            <label style="display:block; margin-bottom:0.5rem; color:rgba(255,255,255,0.7); font-weight:600;">Features (One feature per line)</label>
+                            <textarea id="editPlanFeatures" class="search-input" style="width: 100%; height: 140px; font-family: inherit; resize: vertical;" placeholder="1 event&#10;Up to 50 registrations" required></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="sa-modal-footer">
+                    <button type="button" class="btn btn-secondary" id="closeEditPlanBtn2" style="margin-right:0.5rem;">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Compose Notification Modal -->
+    <div class="sa-modal-overlay" id="composeNotificationModal" style="display:none;">
+        <div class="sa-modal" style="max-width: 620px; width: 95%;">
+            <div class="sa-modal-header">
+                <div>
+                    <h3 style="margin:0; background: linear-gradient(135deg,#a78bfa,#818cf8); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">&#128276; Compose Notification</h3>
+                    <p style="margin:0.25rem 0 0; font-size:0.8rem; color:rgba(255,255,255,0.4);">Use AI to craft high-converting messages or write your own.</p>
+                </div>
+                <button class="sa-modal-close" id="closeComposeModalBtn">&times;</button>
+            </div>
+            <div class="sa-modal-body" style="display:flex; flex-direction:column; gap:1.25rem;">
+
+                <!-- AI Prompt Area -->
+                <div style="background: rgba(124,58,237,0.08); border: 1px solid rgba(124,58,237,0.2); border-radius: 10px; padding: 1.25rem;">
+                    <label style="display:block; margin-bottom:0.6rem; color:rgba(255,255,255,0.8); font-weight:600; font-size:0.9rem;">
+                        &#129302; AI Prompt
+                        <span style="margin-left:0.5rem; font-weight:400; color:rgba(255,255,255,0.4); font-size:0.78rem;">Describe what you want to send</span>
+                    </label>
+                    <textarea id="aiPromptInput" class="search-input" rows="3"
+                        style="width:100%; resize:vertical; font-family:inherit; background:rgba(255,255,255,0.03) !important;"
+                        placeholder="e.g. Create a 20% Diwali discount offer for our Premium plan tenants..."></textarea>
+                    <button id="aiGenerateBtn" class="btn btn-primary" style="margin-top:0.75rem; width:100%; background: linear-gradient(135deg,#7c3aed,#4f46e5); border:none; padding:0.7rem; border-radius:8px; font-weight:600; letter-spacing:0.02em; cursor:pointer; transition:all 0.2s;">
+                        <span id="aiGenerateBtnText">&#10024; Generate with AI</span>
+                    </button>
+                </div>
+
+                <!-- Generated Title & Message -->
+                <div>
+                    <label style="display:block; margin-bottom:0.5rem; color:rgba(255,255,255,0.7); font-weight:600; font-size:0.85rem;">Notification Title</label>
+                    <input type="text" id="notifTitleInput" class="search-input" style="width:100%;" placeholder="e.g. 🎉 Diwali Special: 20% Off Premium Plan">
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:0.5rem; color:rgba(255,255,255,0.7); font-weight:600; font-size:0.85rem;">Message Body</label>
+                    <textarea id="notifMessageInput" class="search-input" rows="4"
+                        style="width:100%; resize:vertical; font-family:inherit;"
+                        placeholder="Craft a compelling message or let AI generate one above..."></textarea>
+                </div>
+
+                <!-- Target Tenant -->
+                <div>
+                    <label style="display:block; margin-bottom:0.5rem; color:rgba(255,255,255,0.7); font-weight:600; font-size:0.85rem;">Target Tenant</label>
+                    <select id="targetTenantSelect" class="search-input" style="width:100%; cursor:pointer;">
+                        <option value="">&#127760; Global Broadcast (All Tenants)</option>
+                    </select>
+                    <p style="margin:0.4rem 0 0; font-size:0.75rem; color:rgba(255,255,255,0.35);">Leave as "Global Broadcast" to send to all active tenants.</p>
+                </div>
+
+            </div>
+            <div class="sa-modal-footer" style="gap:0.75rem;">
+                <button id="cancelComposeBtn" class="btn btn-secondary" style="flex:1;">Cancel</button>
+                <button id="broadcastBtn" class="btn btn-primary" style="flex:2; background:linear-gradient(135deg,#7c3aed,#4f46e5); border:none; padding:0.75rem; border-radius:8px; font-weight:700; cursor:pointer; letter-spacing:0.02em;">
+                    <span id="broadcastBtnText">&#128228; Broadcast Now</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Toast -->
+    <div class="toast-notify" id="toast"></div>
+
+    <script src="/super-admin/js/super-admin.js"></script>
+    <script>
+        (function() {
+            'use strict';
+
+            const TOKEN_KEY = 'sa_token';
+            const USER_KEY = 'sa_user';
+
+            // Check authentication
+            const token = localStorage.getItem(TOKEN_KEY);
+            if (!token) {
+                if (window.SuperAdmin && typeof window.SuperAdmin.autoInit === 'function') {
+                    window.SuperAdmin.autoInit().then(success => {
+                        if (success) {
+                            window.location.reload();
+                        } else {
+                            window.location.href = '/super-admin/index.html';
+                        }
+                    }).catch(() => {
+                        window.location.href = '/super-admin/index.html';
+                    });
+                } else {
+                    window.location.href = '/super-admin/index.html';
+                }
+                return;
+            }
+
+            // Display user email
+            try {
+                const userObj = JSON.parse(localStorage.getItem(USER_KEY) || '{}');
+                const userEmail = userObj.email || 'admin@eventregplatform.com';
+                const el = document.getElementById('user-email-display');
+                if(el) el.textContent = userEmail;
+            } catch (e) {
+                console.error('Error parsing user email', e);
+            }
+
+            let tenants = [];
+            let registrations = [];
+            let plans = [];
+
+            // DOM elements
+            const tableBody = document.getElementById('tenantsTableBody');
+            const searchInput = document.getElementById('tenantSearch');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const detailModal = document.getElementById('detailModalOverlay');
+            const modalCloseBtn = document.getElementById('modalCloseBtn');
+            const modalCloseFooterBtn = document.getElementById('modalCloseFooterBtn');
+            const modalDetails = document.getElementById('modalDetailsContent');
+            const modalTitle = document.getElementById('modalTitle');
+            const toast = document.getElementById('toast');
+
+            // Tab navigation elements
+            const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            // Add Tenant Elements
+            const addTenantModal = document.getElementById('addTenantModalOverlay');
+            const openAddTenantBtn = document.getElementById('openAddTenantBtn');
+            const closeAddTenantBtn1 = document.getElementById('closeAddTenantBtn1');
+            const closeAddTenantBtn2 = document.getElementById('closeAddTenantBtn2');
+            const addTenantForm = document.getElementById('addTenantForm');
+
+            // Edit Plan Elements
+            const editPlanModal = document.getElementById('editPlanModalOverlay');
+            const closeEditPlanBtn1 = document.getElementById('closeEditPlanBtn1');
+            const closeEditPlanBtn2 = document.getElementById('closeEditPlanBtn2');
+            const editPlanForm = document.getElementById('editPlanForm');
+
+            // System Settings Elements
+            const systemSettingsForm = document.getElementById('systemSettingsForm');
+            const maintenanceModeToggle = document.getElementById('maintenanceModeToggle');
+            const maintenanceStatusLabel = document.getElementById('maintenanceStatusLabel');
+            const supportEmailInput = document.getElementById('supportEmailInput');
+
+            // Registration elements
+            const registrationsTableBody = document.getElementById('registrationsTableBody');
+            const regSearchInput = document.getElementById('regSearchInput');
+
+            // Plans table
+            const plansTableBody = document.getElementById('plansTableBody');
+
+            // Show toast message
+            function showToast(message, isSuccess = true) {
+                toast.textContent = message;
+                toast.className = `toast-notify toast-${isSuccess ? 'success' : 'error'} toast-show`;
+                setTimeout(() => {
+                    toast.classList.remove('toast-show');
+                }, 3000);
+            }
+
+            // API fetch wrapper
+            async function apiCall(method, path, body = null) {
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                };
+                const options = { method, headers };
+                if (body) {
+                    options.body = JSON.stringify(body);
+                }
+
+                const res = await fetch(`/api${path}`, options);
+                
+                if (res.status === 401 || res.status === 403) {
+                    localStorage.removeItem(TOKEN_KEY);
+                    localStorage.removeItem(USER_KEY);
+                    window.location.href = '/super-admin/index.html';
+                    throw new Error('Unauthorized');
+                }
+
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.message || (data.error && data.error.message) || 'Request failed');
+                }
+                return data;
+            }
+
+            // Tab switching logic
+            navItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetTab = item.getAttribute('data-tab');
+                    
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    item.classList.add('active');
+
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === targetTab) {
+                            content.classList.add('active');
+                        }
+                    });
+
+                    if (targetTab === 'tab-dashboard') {
+                        fetchStats();
+                        fetchTenants();
+                        fetchAnalytics();
+                    } else if (targetTab === 'tab-users') {
+                        fetchRegistrations();
+                    } else if (targetTab === 'tab-subscriptions') {
+                        fetchPlans();
+                    } else if (targetTab === 'tab-system') {
+                        fetchSystemSettings();
+                        fetchWhitelist();
+                    } else if (targetTab === 'tab-coupons') {
+                        fetchCoupons();
+                    } else if (targetTab === 'tab-analytics') {
+                        fetchAnalytics();
+                    }
+                });
+            });
+
+            // Fetch stats bar data
+            async function fetchStats() {
+                try {
+                    const res = await apiCall('GET', '/admin/stats');
+                    const stats = res.data || res;
+                    document.getElementById('stat-total-tenants').textContent = stats.total_tenants !== undefined ? stats.total_tenants : 0;
+                    const revenue = stats.total_revenue !== undefined ? stats.total_revenue : 0;
+                    document.getElementById('stat-total-revenue').textContent = `₹${revenue.toLocaleString('en-IN')}`;
+                    document.getElementById('stat-active-sessions').textContent = stats.active_sessions !== undefined ? stats.active_sessions : 0;
+                } catch (err) {
+                    console.error('Failed to load stats:', err);
+                }
+            }
+
+            // Fetch all tenants
+            async function fetchTenants() {
+                try {
+                    const res = await apiCall('GET', '/admin/tenants');
+                    tenants = res.data?.tenants || res.tenants || [];
+                    renderTable(tenants);
+                } catch (err) {
+                    console.error('Failed to load tenants:', err);
+                    tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--status-cancelled);">Failed to load tenants.</td></tr>`;
+                }
+            }
+
+            // Render table rows (Tenants)
+            function renderTable(list) {
+                if (list.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No tenants found</td></tr>`;
+                    return;
+                }
+                tableBody.innerHTML = list.map(t => {
+                    const isActive = t.is_active !== false;
+                    return `
+                        <tr>
+                            <td style="font-weight: 600; color: var(--text-white);">${escapeHtml(t.name)}</td>
+                            <td><code>${escapeHtml(t.slug)}</code></td>
+                            <td>${escapeHtml(t.email)}</td>
+                            <td><span class="badge badge-trial">${(t.subscription_plan || 'free').toUpperCase()}</span></td>
+                            <td><span class="badge badge-${isActive ? 'active' : 'suspended'}">${isActive ? 'Active' : 'Suspended'}</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-sm btn-view" onclick="viewDetails('${t.id}')">View Details</button>
+                                    ${isActive ? `<button class="btn btn-sm btn-suspend" onclick="toggleSuspend('${t.id}', true)">Suspend</button>` : `<button class="btn btn-sm btn-activate" onclick="toggleSuspend('${t.id}', false)">Activate</button>`}
+                                    <button class="btn btn-sm btn-delete" onclick="deleteTenant('${t.id}')">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            function escapeHtml(str) {
+                if (!str) return '--';
+                return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+            }
+
+            // Search filtering (Tenants)
+            searchInput.addEventListener('input', () => {
+                const query = searchInput.value.toLowerCase().trim();
+                const filtered = tenants.filter(t => (t.name && t.name.toLowerCase().includes(query)) || (t.slug && t.slug.toLowerCase().includes(query)) || (t.email && t.email.toLowerCase().includes(query)));
+                renderTable(filtered);
+            });
+
+            // Search filtering (Tenant Accounts / Logins)
+            if (regSearchInput) {
+                regSearchInput.addEventListener('input', () => {
+                    const query = regSearchInput.value.toLowerCase().trim();
+                    const filtered = registrations.filter(t => 
+                        (t.id && t.id.toLowerCase().includes(query)) ||
+                        (t.name && t.name.toLowerCase().includes(query)) ||
+                        (t.email && t.email.toLowerCase().includes(query))
+                    );
+                    renderRegistrationsTable(filtered);
+                });
+            }
+
+            window.viewDetails = async function(id) {
+                try {
+                    modalTitle.textContent = "Loading...";
+                    detailModal.style.display = 'flex';
+                    const res = await apiCall('GET', `/admin/tenant/${id}`);
+                    const t = res.data || res;
+                    modalTitle.textContent = `Tenant: ${escapeHtml(t.name)}`;
+                    modalDetails.innerHTML = `
+                        <div class="detail-label">Owner Name</div><div class="detail-val">${escapeHtml(t.name)}</div>
+                        <div class="detail-label">Owner Email</div><div class="detail-val">${escapeHtml(t.email)}</div>
+                    `;
+                } catch (err) {
+                    showToast(err.message, false);
+                    detailModal.style.display = 'none';
+                }
+            };
+
+            window.toggleSuspend = async function(id, suspend) {
+                try {
+                    await apiCall('POST', `/admin/tenant/${id}/${suspend ? 'suspend' : 'unsuspend'}`);
+                    showToast(`Tenant ${suspend ? 'suspended' : 'activated'}!`);
+                    fetchTenants();
+                } catch (err) { showToast(err.message, false); }
+            };
+
+            window.deleteTenant = async function(id) {
+                if (!confirm('Are you sure?')) return;
+                try { await apiCall('DELETE', `/admin/tenant/${id}`); fetchTenants(); } catch (err) { showToast(err.message, false); }
+            };
+
+            // Add Tenant Modal Control
+            openAddTenantBtn.addEventListener('click', () => { addTenantModal.style.display = 'flex'; });
+            function closeAddTenantModal() { addTenantModal.style.display = 'none'; }
+            closeAddTenantBtn1.addEventListener('click', closeAddTenantModal);
+            closeAddTenantBtn2.addEventListener('click', closeAddTenantModal);
+
+            addTenantForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                try {
+                    await apiCall('POST', '/admin/tenant', { name: document.getElementById('addTenantName').value, slug: document.getElementById('addTenantSlug').value, email: document.getElementById('addTenantEmail').value });
+                    showToast('Tenant created!');
+                    closeAddTenantModal();
+                    fetchTenants();
+                } catch (err) { showToast(err.message, false); }
+            });
+
+            function closeDetailModal() { detailModal.style.display = 'none'; }
+            modalCloseBtn.addEventListener('click', closeDetailModal);
+            modalCloseFooterBtn.addEventListener('click', closeDetailModal);
+
+            // Logout
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem(TOKEN_KEY);
+                localStorage.removeItem(USER_KEY);
+                window.location.href = '/super-admin/index.html';
+            });
+
+            // Toggle view buttons and selectors
+            const btnViewTable = document.getElementById('btn-view-table');
+            const btnViewGraph = document.getElementById('btn-view-graph');
+            const userTableContainer = document.getElementById('user-table-container');
+            const userGraphContainer = document.getElementById('user-graph-container');
+            const graphUserSelector = document.getElementById('graphUserSelector');
+
+            if (btnViewTable && btnViewGraph) {
+                btnViewTable.addEventListener('click', () => {
+                    btnViewTable.classList.add('active-toggle');
+                    btnViewTable.style.background = 'rgba(255,255,255,0.1)';
+                    btnViewTable.style.color = '#fff';
+                    btnViewGraph.classList.remove('active-toggle');
+                    btnViewGraph.style.background = 'transparent';
+                    btnViewGraph.style.color = 'rgba(255,255,255,0.6)';
+                    userTableContainer.style.display = 'block';
+                    userGraphContainer.style.display = 'none';
+                });
+
+                btnViewGraph.addEventListener('click', () => {
+                    btnViewGraph.classList.add('active-toggle');
+                    btnViewGraph.style.background = 'rgba(255,255,255,0.1)';
+                    btnViewGraph.style.color = '#fff';
+                    btnViewTable.classList.remove('active-toggle');
+                    btnViewTable.style.background = 'transparent';
+                    btnViewTable.style.color = 'rgba(255,255,255,0.6)';
+                    userTableContainer.style.display = 'none';
+                    userGraphContainer.style.display = 'block';
+                    
+                    if (graphUserSelector && graphUserSelector.value) {
+                        loadUserActivityChart(graphUserSelector.value);
+                    }
+                });
+            }
+
+            if (graphUserSelector) {
+                graphUserSelector.addEventListener('change', (e) => {
+                    loadUserActivityChart(e.target.value);
+                });
+            }
+
+            // Click outside dropdowns to close them
+            document.addEventListener('click', () => {
+                document.querySelectorAll('.dropdown-menu').forEach(el => el.style.display = 'none');
+            });
+
+            window.toggleDropdown = function(e, id) {
+                e.stopPropagation();
+                const menu = document.getElementById(`dropdown-${id}`);
+                const isShowing = menu && menu.style.display === 'block';
+                document.querySelectorAll('.dropdown-menu').forEach(el => el.style.display = 'none');
+                if (menu && !isShowing) {
+                    menu.style.display = 'block';
+                }
+            };
+
+            window.toggleExpandRow = async function(e, id) {
+                e.stopPropagation();
+                const btn = e.currentTarget;
+                const detailRow = document.getElementById(`detail-row-${id}`);
+                const isShowing = detailRow.style.display === 'table-row';
+                
+                if (isShowing) {
+                    detailRow.style.display = 'none';
+                    btn.textContent = '▶';
+                } else {
+                    detailRow.style.display = 'table-row';
+                    btn.textContent = '▼';
+                    
+                    // Fetch dynamic details
+                    const dynamicContainer = document.getElementById(`dynamic-activities-${id}`);
+                    const detailsSummary = document.getElementById(`dynamic-summary-${id}`);
+                    if (dynamicContainer.dataset.loaded === 'false') {
+                        try {
+                            const res = await apiCall('GET', `/admin/user-details/${id}`);
+                            const details = res.data || {};
+                            
+                            // Render user activity stream
+                            const recent = details.recent_registrations || [];
+                            let streamHtml = `<div style="display: flex; justify-content: space-between; padding: 0.45rem; background: rgba(255,255,255,0.02); border-radius: 4px; margin-bottom: 0.4rem; border: 1px solid rgba(255,255,255,0.04);">
+                                <span>User created event: <strong>${escapeHtml(details.name)}</strong></span>
+                                <span style="color: rgba(255,255,255,0.4);">${new Date(details.last_active_timestamp).toLocaleDateString('en-IN')}</span>
+                            </div>`;
+                            
+                            if (recent.length === 0) {
+                                streamHtml += `<div style="padding: 0.5rem; color: rgba(255,255,255,0.4); font-style: italic;">No attendee registrations yet.</div>`;
+                            } else {
+                                streamHtml += recent.map(r => `
+                                    <div style="display: flex; justify-content: space-between; padding: 0.45rem; background: rgba(255,255,255,0.02); border-radius: 4px; margin-bottom: 0.4rem; border: 1px solid rgba(255,255,255,0.04);">
+                                        <span>Attendee registered: <strong>${escapeHtml(r.name)}</strong></span>
+                                        <span style="color: rgba(255,255,255,0.4);">${new Date(r.created_at).toLocaleString('en-IN')}</span>
+                                    </div>
+                                `).join('');
+                            }
+                            dynamicContainer.innerHTML = streamHtml;
+                            
+                            // Render quick insights
+                            detailsSummary.innerHTML = `
+                                <div style="margin-bottom:0.5rem;">Plan Status: <span class="badge badge-active">${escapeHtml(details.current_plan_status.toUpperCase())}</span></div>
+                                <div style="margin-bottom:0.5rem;">Total Events Created: <strong>${details.total_events_created}</strong></div>
+                                <div style="margin-bottom:0.5rem;">Total Paid: <strong style="color: #4ade80;">₹${details.total_amount_paid.toLocaleString('en-IN')}</strong></div>
+                                <div>Last Active: <span style="color: rgba(255,255,255,0.5);">${new Date(details.last_active_timestamp).toLocaleString('en-IN')}</span></div>
+                            `;
+                            dynamicContainer.dataset.loaded = 'true';
+                        } catch (err) {
+                            dynamicContainer.innerHTML = `<div style="color: #f87171; padding: 0.5rem;">Failed to load insights: ${escapeHtml(err.message)}</div>`;
+                        }
+                    }
+                }
+            };
+
+            window.viewUserActivity = function(e, tenantId, tenantName) {
+                e.preventDefault();
+                if (btnViewGraph) {
+                    btnViewGraph.click();
+                }
+                if (graphUserSelector) {
+                    graphUserSelector.value = tenantId;
+                }
+                loadUserActivityChart(tenantId);
+            };
+
+            window.adminToggleSuspend = async function(e, id, suspend) {
+                e.preventDefault();
+                if (!confirm(`Are you sure you want to ${suspend ? 'suspend' : 'activate'} this tenant?`)) return;
+                try {
+                    await apiCall('POST', `/admin/tenant/${id}/${suspend ? 'suspend' : 'unsuspend'}`);
+                    showToast(`Tenant ${suspend ? 'suspended' : 'activated'} successfully!`);
+                    fetchRegistrations();
+                } catch (err) { showToast(err.message, false); }
+            };
+
+            window.resetUserPassword = async function(e, id, email) {
+                e.preventDefault();
+                if (!confirm(`Are you sure you want to reset password for ${email}?`)) return;
+                try {
+                    const res = await apiCall('POST', `/admin/tenants/${id}/reset-password`);
+                    alert(`Password reset successful!\n\nUser: ${email}\nTemporary Password: ${res.temp_password}\n\nPlease copy this password and share it with the user.`);
+                } catch (err) { showToast(err.message, false); }
+            };
+
+            let userActivityChartInstance = null;
+
+            async function loadUserActivityChart(tenantId) {
+                const canvas = document.getElementById('userActivityTrendChart');
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+
+                let targetId = tenantId;
+                if (!targetId || targetId === '00000000-0000-0000-0000-000000000001') {
+                    // Check if there is an expanded detail row in the table
+                    const expandedRow = document.querySelector('.detail-row[style*="display: table-row"]');
+                    if (expandedRow) {
+                        const rowId = expandedRow.id.replace('detail-row-', '');
+                        if (rowId && rowId !== '00000000-0000-0000-0000-000000000001') {
+                            targetId = rowId;
+                        }
+                    }
+                    // Fallback to first non-placeholder tenant in the list
+                    if (!targetId || targetId === '00000000-0000-0000-0000-000000000001') {
+                        if (graphUserSelector && graphUserSelector.value && graphUserSelector.value !== '00000000-0000-0000-0000-000000000001') {
+                            targetId = graphUserSelector.value;
+                        } else {
+                            const actualTenant = registrations.find(t => t.id && t.id !== '00000000-0000-0000-0000-000000000001');
+                            if (actualTenant) {
+                                targetId = actualTenant.id;
+                            }
+                        }
+                    }
+                }
+
+                if (graphUserSelector && graphUserSelector.value !== targetId) {
+                    graphUserSelector.value = targetId;
+                }
+
+                try {
+                    document.getElementById('graph-user-title').textContent = "Loading user activity trend...";
+                    const res = await apiCall('GET', `/admin/user-details/${targetId}`);
+                    const details = res.data || {};
+                    const trend = details.activity_trend || [];
+
+                    document.getElementById('graph-user-title').textContent = `Activity Trend: ${escapeHtml(details.name)} (30 Days)`;
+
+                    if (userActivityChartInstance) {
+                        userActivityChartInstance.destroy();
+                    }
+
+                    const labels = trend.map(t => {
+                        const parts = t.date.split('-');
+                        return parts.length === 3 ? `${parts[1]}-${parts[2]}` : t.date;
+                    });
+                    const counts = trend.map(t => t.count);
+
+                    userActivityChartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Event Registrations',
+                                data: counts,
+                                fill: true,
+                                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                                borderColor: 'rgba(139, 92, 246, 1)',
+                                tension: 0.3,
+                                borderWidth: 2,
+                                pointBackgroundColor: 'rgba(217, 70, 239, 1)',
+                                pointBorderColor: '#ffffff',
+                                pointRadius: 3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                    ticks: { color: 'rgba(255, 255, 255, 0.6)', font: { family: 'Inter', size: 10 } }
+                                },
+                                y: {
+                                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                    ticks: { color: 'rgba(255, 255, 255, 0.6)', font: { family: 'Inter', size: 10 }, stepSize: 1 }
+                                }
+                            },
+                            plugins: {
+                                legend: { display: false }
+                            }
+                        }
+                    });
+                } catch (err) {
+                    console.error('Failed to load user activity chart:', err);
+                    document.getElementById('graph-user-title').textContent = "Failed to load activity trend.";
+                }
+            }
+
+            // Tenant Accounts
+            async function fetchRegistrations() {
+                try {
+                    const res = await apiCall('GET', '/admin/tenant-logins');
+                    registrations = res.data || res || [];
+                    renderRegistrationsTable(registrations);
+                } catch (err) { registrationsTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--status-cancelled);">Failed to load tenant accounts.</td></tr>'; }
+            }
+
+            function renderRegistrationsTable(list) {
+                if (list.length === 0) {
+                    registrationsTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No tenant accounts found</td></tr>';
+                    return;
+                }
+
+                // Populate Graph Selector
+                if (graphUserSelector) {
+                    const currentVal = graphUserSelector.value;
+                    graphUserSelector.innerHTML = list.map(t => `<option value="${t.id}">${escapeHtml(t.name)} (${escapeHtml(t.email)})</option>`).join('');
+                    if (currentVal && list.some(t => t.id === currentVal)) {
+                        graphUserSelector.value = currentVal;
+                    }
+                }
+
+                registrationsTableBody.innerHTML = list.map(t => {
+                    const isActive = t.is_active !== false;
+                    const isPremium = (t.subscription_plan || '').toLowerCase() === 'premium' || (t.subscription_plan || '').toLowerCase() === 'scaleup pro';
+                    const rowStyle = isPremium ? 'style="border-left: 4px solid #d4af37; background: rgba(212, 175, 55, 0.03);"' : '';
+                    const premiumTag = isPremium ? '<span class="badge" style="background: rgba(212, 175, 55, 0.15); color: #ffd700; border: 1px solid rgba(212, 175, 55, 0.3); font-weight: 700; margin-left: 6px;">✨ Premium</span>' : '';
+                    const lastLoginStr = t.updated_at ? new Date(t.updated_at).toLocaleDateString('en-IN') : '--';
+
+                    return `
+                        <tr ${rowStyle} class="main-user-row" id="row-${t.id}">
+                            <td style="text-align: center; padding: 0.8rem 0.5rem;"><button onclick="toggleExpandRow(event, '${t.id}')" style="background: transparent; border: none; color: rgba(255,255,255,0.6); cursor: pointer; font-size: 0.75rem; padding: 0.25rem;">▶</button></td>
+                            <td><code>${escapeHtml(t.id.substring(0, 8))}...</code></td>
+                            <td style="font-weight: 600; color: var(--text-white);">${escapeHtml(t.name)}</td>
+                            <td>${escapeHtml(t.email)}</td>
+                            <td><span class="badge badge-trial">${(t.subscription_plan || 'free').toUpperCase()}</span>${premiumTag}</td>
+                            <td>${lastLoginStr}</td>
+                            <td><span class="badge badge-${isActive ? 'active' : 'suspended'}">${isActive ? 'Active' : 'Inactive'}</span></td>
+                            <td style="text-align: right; padding-right: 1.5rem;">
+                                <!-- Dropdown Action -->
+                                <div class="dropdown" style="position: relative; display: inline-block;">
+                                    <button class="btn btn-sm" onclick="toggleDropdown(event, '${t.id}')" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: #fff; cursor: pointer; border-radius: 6px; padding: 0.4rem 0.8rem;">Actions ▾</button>
+                                    <div class="dropdown-menu" id="dropdown-${t.id}" style="display: none; position: absolute; right: 0; top: 100%; background: rgba(20, 20, 31, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; z-index: 100; min-width: 150px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(8px); padding: 0.5rem 0; text-align: left;">
+                                        <a href="#" onclick="viewUserActivity(event, '${t.id}', '${escapeHtml(t.name)}')" style="display: block; padding: 0.6rem 1rem; color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.85rem; transition: background 0.2s;">🔍 View Activity</a>
+                                        ${isActive 
+                                          ? `<a href="#" onclick="adminToggleSuspend(event, '${t.id}', true)" style="display: block; padding: 0.6rem 1rem; color: #f87171; text-decoration: none; font-size: 0.85rem; transition: background 0.2s;">⏸️ Suspend</a>` 
+                                          : `<a href="#" onclick="adminToggleSuspend(event, '${t.id}', false)" style="display: block; padding: 0.6rem 1rem; color: #4ade80; text-decoration: none; font-size: 0.85rem; transition: background 0.2s;">▶️ Activate</a>`
+                                        }
+                                        <a href="#" onclick="resetUserPassword(event, '${t.id}', '${escapeHtml(t.email)}')" style="display: block; padding: 0.6rem 1rem; color: #60a5fa; text-decoration: none; font-size: 0.85rem; transition: background 0.2s;">🔑 Reset Password</a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="detail-row" id="detail-row-${t.id}" style="display: none; background: rgba(255,255,255,0.015);">
+                            <td></td>
+                            <td colspan="7" style="padding: 1.5rem 2rem; border-bottom: 1px solid rgba(255,255,255,0.04);">
+                                <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 2.5rem;">
+                                    <div>
+                                        <h5 style="margin: 0 0 0.75rem 0; color: #a855f7; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px;">User Activity Stream</h5>
+                                        <div class="activity-stream" id="dynamic-activities-${t.id}" data-loaded="false" style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem; color: rgba(255,255,255,0.75);">
+                                            <div style="padding: 0.5rem; color: rgba(255,255,255,0.45); font-style: italic;"><div class="loading-spinner" style="display:inline-block; width:12px; height:12px; margin-right:6px;"></div>Loading activity logs...</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h5 style="margin: 0 0 0.75rem 0; color: #3b82f6; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px;">Support Quick Insights</h5>
+                                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.75); line-height: 1.5;" id="dynamic-summary-${t.id}">
+                                            <div style="padding: 0.5rem; color: rgba(255,255,255,0.45); font-style: italic;"><div class="loading-spinner" style="display:inline-block; width:12px; height:12px; margin-right:6px;"></div>Loading insights...</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // Subscription Settings
+            async function fetchPlans() {
+                try {
+                    const res = await apiCall('GET', '/admin/plans');
+                    plans = res.data || res || [];
+                    renderPlansTable(plans);
+                } catch (err) { plansTableBody.innerHTML = '<tr><td colspan="4">Failed to load</td></tr>'; }
+            }
+
+            function renderPlansTable(list) {
+                plansTableBody.innerHTML = list.map(p => {
+                    const price = p.price_inr !== undefined ? p.price_inr : p.price_monthly;
+                    return `
+                        <tr>
+                            <td>${escapeHtml(p.name)}</td>
+                            <td>₹${price}</td>
+                            <td><button class="btn btn-sm btn-view" onclick="openEditPlan('${p.id}', '${escapeHtml(p.name)}', ${price}, '${escapeHtml(JSON.stringify(p.features))}')">Edit</button></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            window.openEditPlan = function(id, name, price, featuresJson) {
+                document.getElementById('editPlanId').value = id;
+                document.getElementById('editPlanName').value = name;
+                document.getElementById('editPlanPrice').value = price;
+                document.getElementById('editPlanFeatures').value = JSON.parse(featuresJson).join('\n');
+                editPlanModal.style.display = 'flex';
+            };
+
+            closeEditPlanBtn1.addEventListener('click', () => editPlanModal.style.display = 'none');
+            closeEditPlanBtn2.addEventListener('click', () => editPlanModal.style.display = 'none');
+
+            editPlanForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                try {
+                    await apiCall('PUT', `/admin/plans/${document.getElementById('editPlanId').value}`, {
+                        price_inr: parseInt(document.getElementById('editPlanPrice').value),
+                        price_monthly: parseInt(document.getElementById('editPlanPrice').value),
+                        features: document.getElementById('editPlanFeatures').value.split('\n')
+                    });
+                    showToast('Plan updated!');
+                    editPlanModal.style.display = 'none';
+                    fetchPlans();
+                } catch (err) { showToast(err.message, false); }
+            });
+
+            // System Settings
+            async function fetchSystemSettings() {
+                try {
+                    const res = await apiCall('GET', '/admin/global-settings');
+                    const settings = res.data || res || {};
+                    maintenanceModeToggle.checked = !!settings.maintenance_mode;
+                    supportEmailInput.value = settings.support_email || '';
+                } catch (err) { showToast('Failed to load system settings', false); }
+            }
+
+            systemSettingsForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                try {
+                    await apiCall('POST', '/admin/global-settings', { maintenance_mode: maintenanceModeToggle.checked, support_email: supportEmailInput.value });
+                    showToast('Settings saved!');
+                } catch (err) { showToast(err.message, false); }
+            });
+
+            // ── Access Control Whitelist ──────────────────────────────────────
+
+            // Cache current user's email to protect self-revoke
+            let currentAdminEmail = '';
+            try {
+                const _u = JSON.parse(localStorage.getItem('sa_user') || '{}');
+                currentAdminEmail = (_u.email || '').toLowerCase();
+            } catch (_) {}
+
+            async function fetchWhitelist() {
+                const tbody = document.getElementById('whitelistTableBody');
+                const countBadge = document.getElementById('whitelistCount');
+                if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-secondary);"><div class="loading-spinner" style="display:inline-block;"></div> Loading...</td></tr>';
+
+                try {
+                    const res = await apiCall('GET', '/admin/whitelist');
+                    const list = res.data || [];
+                    if (countBadge) countBadge.textContent = list.length + ' Authorized';
+                    renderWhitelist(list);
+                } catch (err) {
+                    if (tbody) tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--status-cancelled);">Failed to load: ${escapeHtml(err.message)}</td></tr>`;
+                }
+            }
+
+            function renderWhitelist(list) {
+                const tbody = document.getElementById('whitelistTableBody');
+                if (!tbody) return;
+
+                if (!list.length) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-secondary);">No authorized users found.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = list.map(item => {
+                    const isSelf = item.email.toLowerCase() === currentAdminEmail;
+                    const addedDate = item.created_at ? new Date(item.created_at).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+                    return `
+                        <tr>
+                            <td>
+                                <span style="font-weight:600;color:#fff;">${escapeHtml(item.email)}</span>
+                                ${isSelf ? '<span style="margin-left:0.5rem;font-size:0.7rem;padding:0.2rem 0.5rem;border-radius:10px;background:rgba(52,211,153,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.3);">You</span>' : ''}
+                            </td>
+                            <td style="color:rgba(255,255,255,0.5);font-size:0.85rem;">${addedDate}</td>
+                            <td style="text-align:center;">
+                                <span style="font-size:0.75rem;padding:0.25rem 0.65rem;border-radius:20px;background:rgba(124,58,237,0.15);color:rgba(167,139,250,0.9);border:1px solid rgba(124,58,237,0.25);font-weight:600;">Super Admin</span>
+                            </td>
+                            <td style="text-align:center;">
+                                ${isSelf
+                                    ? '<span title="Cannot revoke your own access" style="color:rgba(255,255,255,0.2);font-size:1.1rem;cursor:not-allowed;">🗑️</span>'
+                                    : `<button class="btn-revoke-whitelist" data-email="${escapeHtml(item.email)}" title="Revoke access" style="background:none;border:none;cursor:pointer;color:rgba(248,113,113,0.8);font-size:1.1rem;padding:0.25rem 0.5rem;border-radius:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(248,113,113,0.1)'" onmouseout="this.style.background='none'">🗑️</button>`
+                                }
+                            </td>
+                        </tr>`;
+                }).join('');
+
+                tbody.querySelectorAll('.btn-revoke-whitelist').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const email = btn.dataset.email;
+                        if (!confirm(`Revoke access for ${email}? They will no longer be able to log in.`)) return;
+                        try {
+                            await apiCall('DELETE', '/admin/whitelist/' + encodeURIComponent(email));
+                            showToast(`✅ Access revoked for ${email}`);
+                            fetchWhitelist();
+                        } catch (err) {
+                            showToast(`❌ ${err.message}`, false);
+                        }
+                    });
+                });
+            }
+
+            // Authorize User button
+            const authorizeUserBtn = document.getElementById('authorizeUserBtn');
+            const whitelistEmailInput = document.getElementById('whitelistEmailInput');
+
+            if (authorizeUserBtn) {
+                authorizeUserBtn.addEventListener('click', async () => {
+                    const email = whitelistEmailInput ? whitelistEmailInput.value.trim() : '';
+                    if (!email) { showToast('Please enter an email address', false); return; }
+
+                    authorizeUserBtn.disabled = true;
+                    authorizeUserBtn.textContent = '⏳ Authorizing...';
+                    try {
+                        await apiCall('POST', '/admin/whitelist', { email });
+                        showToast(`✅ ${email} has been authorized`);
+                        if (whitelistEmailInput) whitelistEmailInput.value = '';
+                        fetchWhitelist();
+                    } catch (err) {
+                        showToast(`❌ ${err.message}`, false);
+                    } finally {
+                        authorizeUserBtn.disabled = false;
+                        authorizeUserBtn.innerHTML = '✚ Authorize User';
+                    }
+                });
+
+                // Also submit on Enter key in the email input
+                if (whitelistEmailInput) {
+                    whitelistEmailInput.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') { e.preventDefault(); authorizeUserBtn.click(); }
+                    });
+                }
+            }
+
+            // Coupons management
+            let coupons = [];
+
+            async function fetchCoupons() {
+                try {
+                    const res = await apiCall('GET', '/admin/coupons');
+                    coupons = res.data || res || [];
+                    renderCouponsTable(coupons);
+                } catch (err) {
+                    console.error('Failed to load coupons:', err);
+                    const body = document.getElementById('couponsTableBody');
+                    if (body) body.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--status-cancelled);">Failed to load coupons.</td></tr>`;
+                }
+            }
+
+            function renderCouponsTable(list) {
+                const body = document.getElementById('couponsTableBody');
+                if (!body) return;
+                if (list.length === 0) {
+                    body.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No coupons found</td></tr>`;
+                    return;
+                }
+                body.innerHTML = list.map(c => {
+                    const isActive = c.is_active !== false;
+                    const expiry = c.expiry_date ? new Date(c.expiry_date).toLocaleDateString('en-IN') : '--';
+                    return `
+                        <tr>
+                            <td style="font-weight: 600; color: var(--text-white);"><code>${escapeHtml(c.code)}</code></td>
+                            <td>${c.discount_percent}%</td>
+                            <td>${expiry}</td>
+                            <td>
+                                <span class="badge badge-${isActive ? 'active' : 'suspended'}">${isActive ? 'Active' : 'Inactive'}</span>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            const createCouponForm = document.getElementById('createCouponForm');
+            if (createCouponForm) {
+                createCouponForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    try {
+                        const code = document.getElementById('couponCode').value;
+                        const discount_percent = parseInt(document.getElementById('couponDiscount').value);
+                        const expiry_date = document.getElementById('couponExpiry').value;
+                        await apiCall('POST', '/admin/coupons', { code, discount_percent, expiry_date });
+                        showToast('Coupon created successfully!');
+                        createCouponForm.reset();
+                        fetchCoupons();
+                    } catch (err) {
+                        showToast(err.message, false);
+                    }
+                });
+            }
+
+            // ─── Analytics Dashboard Charts ───────────────────────────────────────
+            let planChartInstance = null;
+            let growthChartInstance = null;
+            // New Analytics Tab chart instances
+            let analyticsRevenueChartInst = null;
+            let analyticsPlanChartInst = null;
+            let analyticsGrowthChartInst = null;
+
+            // Helper: format currency in INR
+            function formatINR(amount) {
+                if (amount >= 100000) return '₹' + (amount / 100000).toFixed(1) + 'L';
+                if (amount >= 1000) return '₹' + (amount / 1000).toFixed(1) + 'K';
+                return '₹' + amount.toLocaleString('en-IN');
+            }
+
+            // Helper: short date label MM-DD
+            function shortDate(dateStr) {
+                const parts = dateStr.split('-');
+                return parts.length === 3 ? `${parts[1]}/${parts[2]}` : dateStr;
+            }
+
+            // Common dark-theme Chart.js scale options
+            const darkScales = {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+                    ticks: { color: 'rgba(255,255,255,0.5)', font: { family: 'Inter', size: 10 }, maxRotation: 45 }
+                },
+                y: {
+                    grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+                    ticks: { color: 'rgba(255,255,255,0.5)', font: { family: 'Inter', size: 10 } },
+                    beginAtZero: true
+                }
+            };
+
+            async function fetchAnalytics() {
+                try {
+                    const res = await apiCall('GET', '/admin/analytics-summary');
+                    const data = res.data || {};
+
+                    // ── Metric cards ─────────────────────────────────
+                    const revEl = document.getElementById('analyticsRevenue');
+                    const tenEl = document.getElementById('analyticsActiveTenants');
+                    const conEl = document.getElementById('analyticsConversion');
+                    const badge = document.getElementById('analyticsLoadingBadge');
+
+                    if (revEl) revEl.textContent = formatINR(data.total_revenue || 0);
+                    if (tenEl) tenEl.textContent = (data.total_active_tenants || 0).toLocaleString();
+                    if (conEl) conEl.textContent = (data.conversion_rate || 0) + '%';
+                    if (badge) { badge.style.display = 'inline-flex'; }
+
+                    // ── Analytics tab charts ──────────────────────────
+                    renderAnalyticsPlanChart(data.plan_distribution || []);
+                    renderAnalyticsRevenueChart(data.revenue || []);
+                    renderAnalyticsGrowthChart(data.registration_growth || []);
+
+                    // ── Dashboard tab legacy charts (planSplitChart / growthChart) ──
+                    renderPlanChart(data.plan_distribution || []);
+                    renderGrowthChart(data.registration_growth || []);
+                } catch (err) {
+                    console.error('Failed to load analytics summary:', err);
+                }
+            }
+
+            // ── ANALYTICS TAB: Revenue Line Chart ────────────────────────────────
+            function renderAnalyticsRevenueChart(revenueTrend) {
+                const canvas = document.getElementById('analyticsRevenueChart');
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+                if (analyticsRevenueChartInst) analyticsRevenueChartInst.destroy();
+
+                const labels = revenueTrend.map(d => shortDate(d.date));
+                const amounts = revenueTrend.map(d => d.amount || 0);
+
+                const gradient = ctx.createLinearGradient(0, 0, 0, 280);
+                gradient.addColorStop(0, 'rgba(124,58,237,0.35)');
+                gradient.addColorStop(1, 'rgba(124,58,237,0.02)');
+
+                analyticsRevenueChartInst = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: 'Revenue (₹)',
+                            data: amounts,
+                            fill: true,
+                            backgroundColor: gradient,
+                            borderColor: 'rgba(167,139,250,1)',
+                            tension: 0.4,
+                            borderWidth: 2.5,
+                            pointBackgroundColor: 'rgba(167,139,250,1)',
+                            pointBorderColor: 'rgba(20,14,40,1)',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        scales: {
+                            ...darkScales,
+                            y: {
+                                ...darkScales.y,
+                                ticks: {
+                                    ...darkScales.y.ticks,
+                                    callback: v => formatINR(v)
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(14,10,30,0.95)',
+                                titleColor: '#a78bfa',
+                                bodyColor: '#e5e7eb',
+                                borderColor: 'rgba(124,58,237,0.4)',
+                                borderWidth: 1,
+                                callbacks: { label: ctx => ' ' + formatINR(ctx.parsed.y) }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ── ANALYTICS TAB: Plan Doughnut Chart ───────────────────────────────
+            function renderAnalyticsPlanChart(planDistribution) {
+                const canvas = document.getElementById('analyticsPlanChart');
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+                if (analyticsPlanChartInst) analyticsPlanChartInst.destroy();
+
+                const labels = planDistribution.length > 0
+                    ? planDistribution.map(d => d.plan.charAt(0).toUpperCase() + d.plan.slice(1))
+                    : ['No Data'];
+                const counts = planDistribution.length > 0
+                    ? planDistribution.map(d => d.count)
+                    : [1];
+
+                const COLORS = [
+                    'rgba(167,139,250,0.85)',  // violet
+                    'rgba(96,165,250,0.85)',    // blue
+                    'rgba(52,211,153,0.85)',    // emerald
+                    'rgba(251,191,36,0.85)',    // amber
+                    'rgba(248,113,113,0.85)',   // red
+                ];
+                const BORDERS = COLORS.map(c => c.replace('0.85', '1'));
+
+                analyticsPlanChartInst = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels,
+                        datasets: [{
+                            data: counts,
+                            backgroundColor: COLORS.slice(0, counts.length),
+                            borderColor: BORDERS.slice(0, counts.length),
+                            borderWidth: 2,
+                            hoverOffset: 8,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '68%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: 'rgba(255,255,255,0.7)',
+                                    font: { family: 'Inter', size: 11 },
+                                    padding: 14,
+                                    usePointStyle: true,
+                                    pointStyle: 'circle',
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(14,10,30,0.95)',
+                                titleColor: '#a78bfa',
+                                bodyColor: '#e5e7eb',
+                                borderColor: 'rgba(124,58,237,0.4)',
+                                borderWidth: 1,
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ── ANALYTICS TAB: Growth Line Chart ─────────────────────────────────
+            function renderAnalyticsGrowthChart(registrationGrowth) {
+                const canvas = document.getElementById('analyticsGrowthChart');
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+                if (analyticsGrowthChartInst) analyticsGrowthChartInst.destroy();
+
+                const labels = registrationGrowth.map(d => shortDate(d.date));
+                const counts = registrationGrowth.map(d => d.count);
+                let running = 0;
+                const cumulative = counts.map(c => { running += c; return running; });
+
+                const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+                gradient.addColorStop(0, 'rgba(52,211,153,0.3)');
+                gradient.addColorStop(1, 'rgba(52,211,153,0.02)');
+
+                analyticsGrowthChartInst = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: 'Cumulative Registrations',
+                            data: cumulative,
+                            fill: true,
+                            backgroundColor: gradient,
+                            borderColor: 'rgba(52,211,153,1)',
+                            tension: 0.4,
+                            borderWidth: 2.5,
+                            pointBackgroundColor: 'rgba(52,211,153,1)',
+                            pointBorderColor: 'rgba(14,10,30,1)',
+                            pointBorderWidth: 2,
+                            pointRadius: 3,
+                            pointHoverRadius: 5,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        scales: darkScales,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(14,10,30,0.95)',
+                                titleColor: '#34d399',
+                                bodyColor: '#e5e7eb',
+                                borderColor: 'rgba(52,211,153,0.3)',
+                                borderWidth: 1,
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ── DASHBOARD TAB LEGACY: Plan Split Doughnut ────────────────────────
+            function renderPlanChart(planDistribution) {
+                const canvas = document.getElementById('planSplitChart');
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+                if (planChartInstance) planChartInstance.destroy();
+
+                const labels = planDistribution.map(item => item.plan.toUpperCase());
+                const counts = planDistribution.map(item => item.count);
+
+                planChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels.length > 0 ? labels : ['NO DATA'],
+                        datasets: [{
+                            data: counts.length > 0 ? counts : [0],
+                            backgroundColor: [
+                                'rgba(217, 70, 239, 0.7)',
+                                'rgba(139, 92, 246, 0.7)',
+                                'rgba(59, 130, 246, 0.7)',
+                                'rgba(245, 158, 11, 0.7)',
+                                'rgba(34, 197, 94, 0.7)'
+                            ],
+                            borderColor: 'rgba(255, 255, 255, 0.15)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: '#ffffff', font: { family: 'Inter', size: 12 } }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ── DASHBOARD TAB LEGACY: Growth Line Chart ──────────────────────────
+            function renderGrowthChart(registrationGrowth) {
+                const canvas = document.getElementById('growthChart');
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+                if (growthChartInstance) growthChartInstance.destroy();
+
+                const labels = registrationGrowth.map(item => shortDate(item.date));
+                const counts = registrationGrowth.map(item => item.count);
+                let runningSum = 0;
+                const cumulativeCounts = counts.map(c => { runningSum += c; return runningSum; });
+
+                growthChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: 'Total registrations',
+                            data: cumulativeCounts,
+                            fill: true,
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            borderColor: 'rgba(139, 92, 246, 1)',
+                            tension: 0.3,
+                            borderWidth: 2,
+                            pointBackgroundColor: 'rgba(217, 70, 239, 1)',
+                            pointBorderColor: '#ffffff',
+                            pointRadius: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: 'rgba(255, 255, 255, 0.6)', font: { family: 'Inter', size: 10 } } },
+                            y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: 'rgba(255, 255, 255, 0.6)', font: { family: 'Inter', size: 10 }, stepSize: 1 } }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            // Initial
+            fetchStats();
+            fetchTenants();
+            fetchAnalytics();
+        })();
+    </script>
+</body>
+</html>

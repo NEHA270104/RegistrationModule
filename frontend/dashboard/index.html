@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tenant Dashboard</title>
+    <link rel="stylesheet" href="css/dashboard.css?v=1.0.1">
+    <link rel="stylesheet" href="/css/flyer.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jsPDF & html2canvas for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Supabase JS Client for Realtime -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-screen">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo">
+                    <i data-lucide="calendar-check"></i>
+                </div>
+                <h1>Tenant Dashboard</h1>
+                <p>Sign in to manage your registration events</p>
+            </div>
+            <form id="login-form" class="login-form">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" placeholder="you@example.com" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" id="login-btn">
+                    <span class="btn-text">Sign In</span>
+                    <span class="btn-spinner" style="display:none;"><i class="fas fa-spinner fa-spin"></i></span>
+                </button>
+                <div id="login-error" class="login-error" style="display:none;"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard Shell -->
+    <div id="dashboard-shell" class="dashboard-shell" style="display:none;">
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i data-lucide="calendar-check"></i>
+                </div>
+                <h2 id="sidebar-tenant-name">Dashboard</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/dashboard" class="nav-item active" data-section="overview">
+                    <i data-lucide="layout-dashboard"></i><span>Overview</span>
+                </a>
+
+                <!-- Registration Hub -->
+                <div class="nav-group">
+                    <div class="nav-group-header">
+                        <div class="nav-group-header-left">
+                            <i data-lucide="clipboard-list"></i><span>Registration Hub</span>
+                        </div>
+                        <i data-lucide="chevron-down" class="group-arrow"></i>
+                    </div>
+                    <div class="nav-group-items">
+                        <a href="/dashboard/events.html" class="nav-sub-item" data-section="events">
+                            <div class="nav-sub-item-left">
+                                <i data-lucide="calendar"></i><span>Events</span>
+                            </div>
+                        </a>
+                        <a href="/dashboard/flyer-generation.html" class="nav-sub-item" data-section="flyers">
+                            <div class="nav-sub-item-left">
+                                <i data-lucide="image"></i><span>Flyer Generation</span>
+                            </div>
+                        </a>
+                        <a href="/dashboard/email-templates.html" class="nav-sub-item" data-section="email-templates">
+                            <div class="nav-sub-item-left">
+                                <i data-lucide="mail"></i><span>Email Templates</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <a href="/dashboard/subscription" class="nav-item" data-section="subscription">
+                    <i data-lucide="credit-card"></i><span>Subscription</span>
+                </a>
+                <a href="/dashboard/analytics" class="nav-item" data-section="analytics">
+                    <i data-lucide="trending-up"></i><span>Analytics</span>
+                </a>
+                <a href="/dashboard/activity-log" class="nav-item" data-section="activity-log">
+                    <i data-lucide="activity"></i><span>Activity Log</span>
+                </a>
+                <a href="#" class="nav-item" data-section="admin-notifications" id="nav-item-admin-notifications" style="display: none;">
+                    <i data-lucide="bell-ring"></i><span>Admin Alerts</span>
+                </a>
+                <a href="/dashboard/settings" class="nav-item" data-section="settings">
+                    <i data-lucide="settings"></i><span>Settings</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-wrapper">
+            <!-- Top Header -->
+            <header class="top-header">
+                <button id="sidebar-toggle" class="sidebar-toggle">
+                    <i data-lucide="menu"></i>
+                </button>
+                <div class="header-right" style="display: flex; align-items: center; gap: 12px;">
+                    <button id="clean-slate-btn" class="btn btn-sm btn-outline" style="border-color: rgba(244,63,94,0.35); color: #fda4af; background: rgba(244,63,94,0.06); gap: 5px;" title="Reset all test data and restart onboarding">
+                        <i data-lucide="rotate-ccw" style="width:13px;height:13px;"></i> Reset Data
+                    </button>
+                    <div class="notification-wrapper" id="notification-bell" style="position: relative; cursor: pointer; font-size: 18px; color: var(--text-light); margin-right: 5px;">
+                        <i data-lucide="bell"></i>
+                        <span class="badge" id="notification-badge" style="display: none; position: absolute; top: -2px; right: -2px; background: #ef4444; border-radius: 50%; width: 8px; height: 8px;"></span>
+                        <!-- Notification Dropdown Menu -->
+                        <div class="notification-dropdown" id="notification-dropdown" style="display: none; position: absolute; right: 0; top: 35px; width: 320px; background: rgba(20, 20, 31, 0.95); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 10px 0; text-align: left;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 15px 10px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+                                <h4 style="margin: 0; font-size: 14px; font-weight: 600; color: #fff;">Notifications</h4>
+                                <span style="font-size: 11px; color: #d946ef; font-weight: 600; cursor: pointer;" id="clear-notifications-btn">Mark all read</span>
+                            </div>
+                            <div id="notification-items" style="max-height: 250px; overflow-y: auto; font-size: 12px; color: rgba(255, 255, 255, 0.75);">
+                                <div style="padding: 20px 15px; text-align: center; color: rgba(255, 255, 255, 0.45); font-style: italic;">No notifications yet</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Theme Switcher Pill -->
+                    <div class="theme-switcher-pill" id="theme-switcher-pill" title="Switch dashboard theme" aria-label="Theme switcher">
+                        <span class="theme-dot" id="theme-dot" style="background: linear-gradient(135deg, #38bdf8, #ec4899);"></span>
+                        <span class="theme-pill-label" id="theme-pill-label">Theme</span>
+                        <!-- Dropdown -->
+                        <div class="theme-switcher-dropdown" id="theme-switcher-dropdown" role="listbox" aria-label="Select theme">
+                            <div class="theme-dd-option" data-theme="dark" role="option">
+                                <span class="theme-dd-swatch" style="background: linear-gradient(135deg, #020617, #38bdf8);"></span>
+                                Dark High-Tech
+                            </div>
+                            <div class="theme-dd-option" data-theme="light" role="option">
+                                <span class="theme-dd-swatch" style="background: linear-gradient(135deg, #f1f5f9, #4f46e5);"></span>
+                                Light Clean
+                            </div>
+                            <div class="theme-dd-option" data-theme="neon" role="option">
+                                <span class="theme-dd-swatch" style="background: linear-gradient(135deg, #f0abfc, #818cf8, #00f5ff);"></span>
+                                Vibrant Neon
+                            </div>
+                        </div>
+                    </div>
+
+                    <span class="header-user" id="header-user-name">
+                        <i data-lucide="circle-user"></i> <span></span>
+                    </span>
+                    <button id="logout-btn" class="btn btn-sm btn-outline">Logout</button>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <main id="main-content" class="main-content">
+                <!-- Sections are injected here by JS -->
+            </main>
+        </div>
+    </div>
+
+    <!-- Global Modal -->
+    <div id="modal-overlay" class="modal-overlay" style="display:none;">
+        <div class="modal" id="modal-container">
+            <div class="modal-header">
+                <h3 id="modal-title">Modal</h3>
+                <button class="modal-close" id="modal-close-btn"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+            <div class="modal-footer" id="modal-footer"></div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay" style="display:none;">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="js/dashboard-auth.js"></script>
+    <script src="js/plan-permissions.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

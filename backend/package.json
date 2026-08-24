@@ -7,7 +7,7 @@
   "scripts": {
     "predev": "kill-port 3000 || exit 0",
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "npx tsc",
     "prestart": "kill-port 3000 || exit 0",
     "start": "node dist/index.js",
     "lint": "eslint src/**/*.ts",

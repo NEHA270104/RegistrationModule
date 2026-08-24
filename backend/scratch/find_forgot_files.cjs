@@ -17,4 +17,4 @@ function searchDir(dir) {
     }
 }
 
-searchDir('C:/Users/NEHA CHAVAN/Desktop/Registration/bizflow-registration-main/frontend');
+searchDir('C:/Users/NEHA CHAVAN/Desktop/Registration/eventreg-platform/frontend');

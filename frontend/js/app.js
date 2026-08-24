@@ -858,14 +858,22 @@ function startRedirectCountdown() {
   redirectCountdownInterval = setInterval(updateCountdown, 1000);
 }
 
-// BizFlow modal functions
+// EventReg / Brand modal functions
 function openBizflowModal() {
-  document.getElementById('bizflow-modal').classList.remove('hidden');
+  openEventRegModal();
+}
+function openEventRegModal() {
+  const modal = document.getElementById('eventreg-modal') || document.getElementById('bizflow-modal');
+  if (modal) modal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 }
 
 function closeBizflowModal() {
-  document.getElementById('bizflow-modal').classList.add('hidden');
+  closeEventRegModal();
+}
+function closeEventRegModal() {
+  const modal = document.getElementById('eventreg-modal') || document.getElementById('bizflow-modal');
+  if (modal) modal.classList.add('hidden');
   document.body.style.overflow = '';
 }
 
@@ -1018,9 +1026,9 @@ class RegistrationApp {
       }
     });
 
-    document.getElementById('bizflow-modal')?.addEventListener('click', (e) => {
+    (document.getElementById('eventreg-modal') || document.getElementById('bizflow-modal'))?.addEventListener('click', (e) => {
       if (e.target.classList.contains('modal')) {
-        closeBizflowModal();
+        closeEventRegModal();
       }
     });
 
@@ -1047,7 +1055,7 @@ class RegistrationApp {
       if (e.key === 'Escape') {
         closeRegistrationModal();
         closeSuccessModal();
-        closeBizflowModal();
+        closeEventRegModal();
         closePrivacyModal();
         closeTermsModal();
         closeMessageModal();

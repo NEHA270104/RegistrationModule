@@ -3,7 +3,7 @@ import path from 'path';
 
 // Load env from backend
 import dotenv from 'dotenv';
-dotenv.config({ path: 'c:/Users/NEHA CHAVAN/Desktop/Registration/bizflow-registration-main/backend/.env' });
+dotenv.config({ path: 'c:/Users/NEHA CHAVAN/Desktop/Registration/eventreg-platform/backend/.env' });
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
@@ -102,7 +102,7 @@ export interface Database {
   
   code += `    };\n  };\n}\n`;
 
-  const outputPath = 'c:/Users/NEHA CHAVAN/Desktop/Registration/bizflow-registration-main/backend/src/types/supabase.ts';
+  const outputPath = 'c:/Users/NEHA CHAVAN/Desktop/Registration/eventreg-platform/backend/src/types/supabase.ts';
   fs.writeFileSync(outputPath, code);
   console.log("TypeScript types generated successfully to:", outputPath);
 }

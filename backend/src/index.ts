@@ -57,12 +57,14 @@ app.use(
         'http://localhost:5173',
         'http://localhost:5500',
         'http://127.0.0.1:5500',
-        // Firebase Hosting domains
+        // EventReg & Netlify domains
+        'https://registration.eventreg.in',
+        'https://eventreg-platform.web.app',
+        'https://eventreg-platform.firebaseapp.com',
+        // Legacy hosting domains
         'https://bizflowai-478116.web.app',
         'https://bizflowai-478116.firebaseapp.com',
-        // Custom domain
         'https://registration.bizflowai.in',
-        // Cloud Run domain
         'https://bizflow-registration-847587405518.asia-south1.run.app',
         // Agent Studio
         'https://agentstudio.brtneura.com',

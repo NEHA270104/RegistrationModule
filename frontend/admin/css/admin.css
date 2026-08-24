@@ -95,6 +95,7 @@ body {
     color: var(--primary-600);
 }
 
+.header-eventreg-logo,
 .header-bizflow-logo {
     height: 32px;
     width: auto;
@@ -130,6 +131,7 @@ body {
     margin-bottom: 1.5rem;
 }
 
+.auth-eventreg-logo,
 .auth-bizflow-logo {
     height: 50px;
     width: auto;

@@ -1,7 +1,7 @@
 const fs = require('fs');
 
-const indexHtml = fs.readFileSync('C:/Users/NEHA CHAVAN/Desktop/Registration/bizflow-registration-main/frontend/index.html', 'utf8');
-const appJs = fs.readFileSync('C:/Users/NEHA CHAVAN/Desktop/Registration/bizflow-registration-main/frontend/js/app.js', 'utf8');
+const indexHtml = fs.readFileSync('C:/Users/NEHA CHAVAN/Desktop/Registration/eventreg-platform/frontend/index.html', 'utf8');
+const appJs = fs.readFileSync('C:/Users/NEHA CHAVAN/Desktop/Registration/eventreg-platform/frontend/js/app.js', 'utf8');
 
 function findOccurrences(content, name) {
     const lines = content.split('\n');

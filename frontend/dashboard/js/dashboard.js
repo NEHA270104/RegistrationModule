@@ -2298,7 +2298,7 @@ const Dashboard = (() => {
         let currentSlug = options.tenantSlug || getSlug();
         let selectedTemplate = 'summit-classic';
         let flyerFormat = 'square'; // 'portrait', 'square', 'landscape'
-        let flyerLogoSrc = '/images/BizflowLogo.png';
+        let flyerLogoSrc = '/images/EventRegLogo.png';
         let tenantData = {};
         let flyerConfig = {};
 
@@ -2368,7 +2368,7 @@ const Dashboard = (() => {
                 flyerConfig.event_date = flyerConfig.event_date || tenantData.event_date || '21st February 2026';
                 flyerConfig.event_time = flyerConfig.event_time || tenantData.event_time || '9:00 AM - 5:00 PM IST';
                 flyerConfig.venue = flyerConfig.venue || tenantData.event_venue || 'Centre For Police Research, Pune';
-                flyerConfig.logo_url = flyerConfig.logo_url || tenantData.logo_url || '/images/BizflowLogo.png';
+                flyerConfig.logo_url = flyerConfig.logo_url || tenantData.logo_url || '/images/EventRegLogo.png';
                 
                 // Position defaults
                 flyerConfig.qr_x = flyerConfig.qr_x !== undefined && flyerConfig.qr_x !== null ? flyerConfig.qr_x : 800;
@@ -3137,7 +3137,7 @@ const Dashboard = (() => {
             registration_confirmation: 'Registration Confirmed - {{Event_Name}}',
             payment_receipt: 'Payment Receipt - {{Event_Name}}',
             subscription_invoice: 'Subscription Invoice - {{Company_Name}}',
-            trial_expiring: 'Your BizFlow trial is expiring soon',
+            trial_expiring: 'Your EventReg trial is expiring soon',
             subscription_cancelled: 'Subscription Cancelled',
         };
 

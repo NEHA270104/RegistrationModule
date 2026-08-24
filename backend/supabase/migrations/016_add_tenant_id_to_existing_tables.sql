@@ -6,7 +6,7 @@ VALUES (
   '00000000-0000-0000-0000-000000000001',
   'BRTNeura',
   'brtneura',
-  'support@bizflowai.in',
+  'support@eventregplatform.com',
   '+918188050895',
   'BRTNeura Technologies',
   'scaleup_pro',

@@ -22,7 +22,7 @@
 
 ## 1. Executive Summary & High-Level System Architecture
 
-The **EventReg Platform** (by BRTNeura / BizFlowAI) is a high-concurrency, multi-tenant Software-as-a-Service (SaaS) platform engineered for event organizers, enterprise summits, and MSMEs. The platform empowers organizers to provision branded event workspaces, generate dynamic marketing flyers, publish high-converting registration funnels, accept instantaneous payments via Razorpay, and monitor real-time attendee telemetry.
+The **EventReg Platform** (by EventReg Platform Technology LLP) is a high-concurrency, multi-tenant Software-as-a-Service (SaaS) platform engineered for event organizers, enterprise summits, and MSMEs. The platform empowers organizers to provision branded event workspaces, generate dynamic marketing flyers, publish high-converting registration funnels, accept instantaneous payments via Razorpay, and monitor real-time attendee telemetry.
 
 ### 1.1 Architecture Topology
 

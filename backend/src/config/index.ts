@@ -105,7 +105,7 @@ export const config = {
     date: '21st February 2026',
     time: '9:00 AM - 5:00 PM IST',
     venue: 'Centre For Police Research, (CPR) Pune, Pune University Chowk, Dr Homi Bhabha Rd, Chavan Nagar, Pashan, Pune, Maharashtra 411008',
-    supportEmail: 'support@bizflowai.in',
+    supportEmail: 'support@eventregplatform.com',
     supportPhone: '+91 8188050895',
   },
 

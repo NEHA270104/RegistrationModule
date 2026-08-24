@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-const frontendDir = 'c:/Users/NEHA CHAVAN/Desktop/Registration/bizflow-registration-main/frontend';
+const frontendDir = 'c:/Users/NEHA CHAVAN/Desktop/Registration/eventreg-platform/frontend';
 
 function walk(dir: string, callback: (file: string) => void) {
   const files = fs.readdirSync(dir);

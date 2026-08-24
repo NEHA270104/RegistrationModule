@@ -1,6 +1,6 @@
 import fs from 'fs';
 
-const content = fs.readFileSync('c:/Users/NEHA CHAVAN/Desktop/Registration/bizflow-registration-main/frontend/onboarding/index.html', 'utf8');
+const content = fs.readFileSync('c:/Users/NEHA CHAVAN/Desktop/Registration/eventreg-platform/frontend/onboarding/index.html', 'utf8');
 const lines = content.split('\n');
 
 lines.forEach((line, index) => {

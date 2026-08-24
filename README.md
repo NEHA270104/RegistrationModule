@@ -276,5 +276,5 @@ MIT License - Free for commercial use
 
 ## Support
 
-- Email: support@bizflowai.in
+- Email: support@eventregplatform.com
 - Issues: Create GitHub issue

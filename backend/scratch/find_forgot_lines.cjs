@@ -1,5 +1,5 @@
 const fs = require('fs');
-const content = fs.readFileSync('C:/Users/NEHA CHAVAN/Desktop/Registration/bizflow-registration-main/frontend/dashboard/js/dashboard.js', 'utf8');
+const content = fs.readFileSync('C:/Users/NEHA CHAVAN/Desktop/Registration/eventreg-platform/frontend/dashboard/js/dashboard.js', 'utf8');
 const lines = content.split('\n');
 
 lines.forEach((line, idx) => {

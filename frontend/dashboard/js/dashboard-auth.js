@@ -225,17 +225,34 @@ const DashboardAuth = (() => {
     // ---- API calls ----
 
     async function login(email) {
-        const res = await fetch('/api/auth/login-email-only', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email }),
-        });
+        let data;
+        if (typeof window !== 'undefined' && typeof window.safeApiFetch === 'function') {
+            data = await window.safeApiFetch('/auth/login-email-only', {
+                method: 'POST',
+                body: JSON.stringify({ email }),
+            });
+        } else {
+            const url = (typeof window !== 'undefined' && typeof window.resolveApiUrl === 'function')
+                ? window.resolveApiUrl('/auth/login-email-only')
+                : 'https://bizflow-registration.onrender.com/api/auth/login-email-only';
 
-        const data = await res.json();
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+            });
+            const ct = res.headers.get('content-type') || '';
+            if (ct.includes('application/json')) {
+                data = await res.json().catch(() => ({}));
+            } else {
+                const text = await res.text().catch(() => '');
+                try { data = JSON.parse(text); } catch { data = { message: text || `HTTP ${res.status}` }; }
+            }
 
-        if (!res.ok) {
-            const errorMsg = data.error?.message || data.message || (typeof data.error === 'string' ? data.error : null) || 'Login failed';
-            throw new Error(errorMsg);
+            if (!res.ok) {
+                const errorMsg = data.error?.message || data.message || (typeof data.error === 'string' ? data.error : null) || 'Login failed';
+                throw new Error(errorMsg);
+            }
         }
 
         const payload = data.data || data;
@@ -272,16 +289,33 @@ const DashboardAuth = (() => {
         const rt = getRefreshTokenValue();
         if (!rt) throw new Error('No refresh token');
 
-        const res = await fetch('/api/auth/refresh', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refresh_token: rt }),
-        });
+        let data;
+        if (typeof window !== 'undefined' && typeof window.safeApiFetch === 'function') {
+            data = await window.safeApiFetch('/auth/refresh', {
+                method: 'POST',
+                body: JSON.stringify({ refresh_token: rt }),
+            });
+        } else {
+            const url = (typeof window !== 'undefined' && typeof window.resolveApiUrl === 'function')
+                ? window.resolveApiUrl('/auth/refresh')
+                : 'https://bizflow-registration.onrender.com/api/auth/refresh';
 
-        const data = await res.json();
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refresh_token: rt }),
+            });
+            const ct = res.headers.get('content-type') || '';
+            if (ct.includes('application/json')) {
+                data = await res.json().catch(() => ({}));
+            } else {
+                const text = await res.text().catch(() => '');
+                try { data = JSON.parse(text); } catch { data = { message: text || `HTTP ${res.status}` }; }
+            }
 
-        if (!res.ok) {
-            throw new Error(data.message || data.error || 'Token refresh failed');
+            if (!res.ok) {
+                throw new Error(data.message || data.error || 'Token refresh failed');
+            }
         }
 
         const payload = data.data || data;

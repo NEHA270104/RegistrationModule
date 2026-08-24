@@ -173,7 +173,10 @@
   // Safe JSON API Fetch Helper
   async function safeFetchJson(url) {
     try {
-      const res = await fetch(url);
+      const targetUrl = (typeof window !== 'undefined' && typeof window.resolveApiUrl === 'function')
+        ? window.resolveApiUrl(url)
+        : (url.startsWith('http') ? url : `https://bizflow-registration.onrender.com/api${url.startsWith('/api/') ? url.slice(4) : (url.startsWith('/') ? url : '/' + url)}`);
+      const res = await fetch(targetUrl);
       const contentType = res.headers.get('content-type') || '';
       if (!contentType.includes('application/json')) {
         return null;

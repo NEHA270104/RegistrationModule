@@ -872,7 +872,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Trigger backend automated event form generation workflow
                 try {
                     const token = window.DashboardAuth ? window.DashboardAuth.getToken() : null;
-                    const res = await fetch(`/api/t/${encodeURIComponent(tenantSlug)}/events/from-flyer`, {
+                    const targetUrl = (typeof window !== 'undefined' && typeof window.resolveApiUrl === 'function')
+                        ? window.resolveApiUrl(`/t/${encodeURIComponent(tenantSlug)}/events/from-flyer`)
+                        : `/api/t/${encodeURIComponent(tenantSlug)}/events/from-flyer`;
+
+                    const res = await fetch(targetUrl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -881,7 +885,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         body: JSON.stringify(eventPayload)
                     });
 
-                    if (res.ok) {
+                    const ct = res.headers.get('content-type') || '';
+                    if (res.ok && ct.includes('application/json')) {
                         const json = await res.json();
                         if (json.success && json.data) {
                             finalSlug = json.data.form_slug || finalSlug;

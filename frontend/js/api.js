@@ -12,7 +12,10 @@ class ApiClient {
    * Make HTTP request
    */
   async request(endpoint, options = {}) {
-    const url = `${this.baseUrl}${endpoint}`;
+    const rawUrl = endpoint.startsWith('http://') || endpoint.startsWith('https://')
+      ? endpoint
+      : `${this.baseUrl.replace(/\/$/, '')}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+
     const defaultOptions = {
       headers: {
         'Content-Type': 'application/json',
@@ -29,17 +32,25 @@ class ApiClient {
     };
 
     try {
-      const response = await fetch(url, config);
+      const response = await fetch(rawUrl, config);
       const contentType = response.headers.get('content-type') || '';
       let data;
 
       if (contentType.includes('application/json')) {
-        data = await response.json();
+        try {
+          data = await response.json();
+        } catch {
+          throw new ApiError(
+            'The server returned an unparseable JSON response. Please check cloud backend status.',
+            'INVALID_JSON',
+            response.status
+          );
+        }
       } else {
-        const text = await response.text();
+        const text = await response.text().catch(() => '');
         if (text.startsWith('<!DOCTYPE') || text.includes('<html')) {
           throw new ApiError(
-            `Backend API route (${endpoint}) returned static HTML instead of JSON. Ensure the backend server is running and Netlify proxy rules are active.`,
+            `Backend API route (${endpoint}) returned static HTML instead of JSON. Ensure the backend server is running on Render and CORS is active.`,
             'HTML_ROUTING_ERROR',
             response.status
           );
@@ -47,9 +58,10 @@ class ApiClient {
         try {
           data = JSON.parse(text);
         } catch {
+          const previewText = text.length > 80 ? text.slice(0, 80) + '...' : text;
           throw new ApiError(
-            `Malformed API response from ${endpoint} (${response.status})`,
-            'INVALID_JSON',
+            previewText || `Server responded with status ${response.status}`,
+            'NON_JSON_RESPONSE',
             response.status
           );
         }
@@ -57,7 +69,7 @@ class ApiClient {
 
       if (!response.ok) {
         const apiError = new ApiError(
-          data?.error?.message || data?.message || 'Request failed',
+          data?.error?.message || data?.message || (typeof data?.error === 'string' ? data.error : null) || 'Request failed',
           data?.error?.code || data?.code || 'REQUEST_ERROR',
           response.status
         );

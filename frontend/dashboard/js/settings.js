@@ -77,10 +77,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!slug || !token) return;
 
         try {
-            const res = await fetch(`/api/t/${slug}/account`, {
+            const targetUrl = (typeof window !== 'undefined' && typeof window.resolveApiUrl === 'function')
+                ? window.resolveApiUrl(`/t/${slug}/account`)
+                : `/api/t/${slug}/account`;
+
+            const res = await fetch(targetUrl, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (res.ok) {
+            const ct = res.headers.get('content-type') || '';
+            if (res.ok && ct.includes('application/json')) {
                 const json = await res.json();
                 const acct = json.account || json.tenant || json || {};
                 const merged = { ...localTenant, ...acct };
@@ -125,7 +130,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const token = DashboardAuth.getToken();
                 const slug = mergedTenant.slug;
                 if (slug && token) {
-                    await fetch(`/api/t/${slug}/account`, {
+                    const saveUrl = (typeof window !== 'undefined' && typeof window.resolveApiUrl === 'function')
+                        ? window.resolveApiUrl(`/t/${slug}/account`)
+                        : `/api/t/${slug}/account`;
+
+                    await fetch(saveUrl, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',

@@ -164,8 +164,11 @@ const Dashboard = (() => {
             opts.body = JSON.stringify(body);
         }
 
-        const res = await fetch(path, opts);
-        const contentType = res.headers.get('content-type') || '';
+        const targetUrl = (typeof window !== 'undefined' && typeof window.resolveApiUrl === 'function')
+            ? window.resolveApiUrl(path)
+            : (path.startsWith('http') ? path : `https://bizflow-registration.onrender.com/api${path.startsWith('/api/') ? path.slice(4) : (path.startsWith('/') ? path : '/' + path)}`);
+
+        const res = await fetch(targetUrl, opts);
 
         async function parseSafeBody(response) {
             const ct = response.headers.get('content-type') || '';
@@ -179,7 +182,7 @@ const Dashboard = (() => {
             try {
                 return JSON.parse(text);
             } catch {
-                return { rawText: text };
+                return { rawText: text, message: text || `HTTP ${response.status}` };
             }
         }
 
@@ -188,7 +191,7 @@ const Dashboard = (() => {
             try {
                 await DashboardAuth.refreshToken();
                 headers['Authorization'] = `Bearer ${DashboardAuth.getToken()}`;
-                const retry = await fetch(path, { ...opts, headers });
+                const retry = await fetch(targetUrl, { ...opts, headers });
                 if (!retry.ok) {
                     const d = await parseSafeBody(retry);
                     throw new Error(d.message || d.error || `Request failed (${retry.status})`);
@@ -313,14 +316,31 @@ const Dashboard = (() => {
             errorEl.style.display = 'none';
 
             try {
-                const response = await fetch('/api/auth/forgot-password', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ identifier }),
-                });
-                const result = await response.json();
-                if (!response.ok || !result.success) {
-                    throw new Error(result.error?.message || result.message || 'Failed to send OTP');
+                let result;
+                if (typeof window !== 'undefined' && typeof window.safeApiFetch === 'function') {
+                    result = await window.safeApiFetch('/auth/forgot-password', {
+                        method: 'POST',
+                        body: JSON.stringify({ identifier }),
+                    });
+                } else {
+                    const url = (typeof window !== 'undefined' && typeof window.resolveApiUrl === 'function')
+                        ? window.resolveApiUrl('/auth/forgot-password')
+                        : 'https://bizflow-registration.onrender.com/api/auth/forgot-password';
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ identifier }),
+                    });
+                    const ct = response.headers.get('content-type') || '';
+                    if (ct.includes('application/json')) {
+                        result = await response.json().catch(() => ({}));
+                    } else {
+                        const text = await response.text().catch(() => '');
+                        try { result = JSON.parse(text); } catch { result = { message: text || `HTTP ${response.status}` }; }
+                    }
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.error?.message || result.message || 'Failed to send OTP');
+                    }
                 }
 
                 showOtpVerificationModal(identifier);
@@ -379,14 +399,31 @@ const Dashboard = (() => {
             errorEl.style.display = 'none';
 
             try {
-                const response = await fetch('/api/auth/verify-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ identifier, otp }),
-                });
-                const result = await response.json();
-                if (!response.ok || !result.success) {
-                    throw new Error(result.error?.message || result.message || 'Invalid or expired OTP');
+                let result;
+                if (typeof window !== 'undefined' && typeof window.safeApiFetch === 'function') {
+                    result = await window.safeApiFetch('/auth/verify-otp', {
+                        method: 'POST',
+                        body: JSON.stringify({ identifier, otp }),
+                    });
+                } else {
+                    const url = (typeof window !== 'undefined' && typeof window.resolveApiUrl === 'function')
+                        ? window.resolveApiUrl('/auth/verify-otp')
+                        : 'https://bizflow-registration.onrender.com/api/auth/verify-otp';
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ identifier, otp }),
+                    });
+                    const ct = response.headers.get('content-type') || '';
+                    if (ct.includes('application/json')) {
+                        result = await response.json().catch(() => ({}));
+                    } else {
+                        const text = await response.text().catch(() => '');
+                        try { result = JSON.parse(text); } catch { result = { message: text || `HTTP ${response.status}` }; }
+                    }
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.error?.message || result.message || 'Invalid or expired OTP');
+                    }
                 }
 
                 const resetToken = result.resetToken;

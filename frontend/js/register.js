@@ -62,18 +62,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 3. Fetch Event Metadata
     try {
-        const res = await fetch(`/api/public/events/${encodeURIComponent(eventSlug)}`);
-        const contentType = res.headers.get('content-type') || '';
         let json = null;
-        if (contentType.includes('application/json')) {
-            json = await res.json();
+        if (typeof window !== 'undefined' && typeof window.safeApiFetch === 'function') {
+            json = await window.safeApiFetch(`/public/events/${encodeURIComponent(eventSlug)}`);
         } else {
-            const text = await res.text();
-            try { json = JSON.parse(text); } catch (_) {}
+            const url = (typeof window !== 'undefined' && typeof window.resolveApiUrl === 'function')
+                ? window.resolveApiUrl(`/public/events/${encodeURIComponent(eventSlug)}`)
+                : `https://bizflow-registration.onrender.com/api/public/events/${encodeURIComponent(eventSlug)}`;
+            const res = await fetch(url);
+            const contentType = res.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                json = await res.json();
+            } else {
+                const text = await res.text().catch(() => '');
+                try { json = JSON.parse(text); } catch (_) {}
+            }
         }
 
         if (!json || !json.success || !json.data || !json.data.event) {
-            throw new Error(json?.error?.message || 'Event details not found');
+            throw new Error(json?.error?.message || json?.message || 'Event details not found');
         }
 
         const { event, tenant } = json.data;
@@ -189,22 +196,47 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             try {
-                const res = await fetch(`/api/public/events/${encodeURIComponent(eventSlug)}/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name,
-                        email,
-                        phone,
-                        business_name,
-                        pass_type
-                    })
-                });
+                let json = null;
+                if (typeof window !== 'undefined' && typeof window.safeApiFetch === 'function') {
+                    json = await window.safeApiFetch(`/public/events/${encodeURIComponent(eventSlug)}/register`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            name,
+                            email,
+                            phone,
+                            business_name,
+                            pass_type
+                        })
+                    });
+                } else {
+                    const url = (typeof window !== 'undefined' && typeof window.resolveApiUrl === 'function')
+                        ? window.resolveApiUrl(`/public/events/${encodeURIComponent(eventSlug)}/register`)
+                        : `https://bizflow-registration.onrender.com/api/public/events/${encodeURIComponent(eventSlug)}/register`;
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name,
+                            email,
+                            phone,
+                            business_name,
+                            pass_type
+                        })
+                    });
+                    const contentType = res.headers.get('content-type') || '';
+                    if (contentType.includes('application/json')) {
+                        json = await res.json().catch(() => ({}));
+                    } else {
+                        const text = await res.text().catch(() => '');
+                        try { json = JSON.parse(text); } catch (_) { json = { message: text }; }
+                    }
+                    if (!res.ok || !json?.success) {
+                        throw new Error(json?.error?.message || json?.message || 'Failed to complete registration');
+                    }
+                }
 
-                const json = await res.json();
-
-                if (!res.ok || !json.success) {
-                    throw new Error(json.error?.message || 'Failed to complete registration');
+                if (!json || !json.success) {
+                    throw new Error(json?.error?.message || json?.message || 'Failed to complete registration');
                 }
 
                 // Render success pass

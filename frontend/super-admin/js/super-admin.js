@@ -7,7 +7,9 @@
     'use strict';
 
     // ---- Config ----
-    const API_BASE = (typeof window !== 'undefined' && window.API_BASE_URL) ? window.API_BASE_URL : '/api';
+    const API_BASE = (typeof window !== 'undefined' && window.API_BASE_URL)
+        ? window.API_BASE_URL
+        : 'https://bizflow-registration.onrender.com/api';
     const TOKEN_KEY = 'sa_token';
     const USER_KEY = 'sa_user';
 
@@ -177,7 +179,11 @@
             headers['Authorization'] = `Bearer ${token}`;
         }
 
-        const res = await fetch(`${API_BASE}${path}`, opts);
+        const targetUrl = (typeof window !== 'undefined' && typeof window.resolveApiUrl === 'function')
+            ? window.resolveApiUrl(path)
+            : `${API_BASE.replace(/\/$/, '')}${path.startsWith('/') ? path : '/' + path}`;
+
+        const res = await fetch(targetUrl, opts);
 
         if (res.status === 401 || res.status === 403) {
             clearAuth();
@@ -197,7 +203,7 @@
             try {
                 data = JSON.parse(text);
             } catch {
-                data = {};
+                data = { message: text || `HTTP ${res.status}` };
             }
         }
 

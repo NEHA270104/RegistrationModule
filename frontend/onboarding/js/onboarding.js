@@ -48,6 +48,48 @@
     }
   };
 
+  // ---------- API Helpers ----------
+  function getApiUrl(path) {
+    if (typeof window !== 'undefined' && typeof window.resolveApiUrl === 'function') {
+      return window.resolveApiUrl(path);
+    }
+    const base = (typeof window !== 'undefined' && window.API_BASE_URL)
+      ? window.API_BASE_URL.replace(/\/$/, '')
+      : 'https://bizflow-registration.onrender.com/api';
+    const clean = path.startsWith('/api/') ? path.slice(4) : (path.startsWith('/') ? path : '/' + path);
+    return `${base}${clean}`;
+  }
+
+  async function safeFetch(urlOrPath, options = {}) {
+    const url = getApiUrl(urlOrPath);
+    try {
+      const res = await fetch(url, options);
+      const ct = res.headers.get('content-type') || '';
+      let data;
+      if (ct.includes('application/json')) {
+        try {
+          data = await res.json();
+        } catch {
+          data = { success: false, message: 'Invalid JSON from server.' };
+        }
+      } else {
+        const text = await res.text().catch(() => '');
+        try {
+          data = JSON.parse(text);
+        } catch {
+          data = { success: false, rawText: text, message: text || `HTTP ${res.status}` };
+        }
+      }
+      return { ok: res.ok, status: res.status, data };
+    } catch (networkErr) {
+      return {
+        ok: false,
+        status: 0,
+        data: { success: false, message: networkErr.message || 'Network error' }
+      };
+    }
+  }
+
   // ---------- DOM Refs ----------
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => document.querySelectorAll(sel);
@@ -60,28 +102,13 @@
   const alertOverlay = $('#alertOverlay');
 
   // ---------- Session Guard ----------
-  /**
-   * Checks whether the browser already holds a valid session for a registered,
-   * paid tenant. If so, redirects straight to /dashboard/ without showing any
-   * onboarding step. If the user is registered but unpaid (e.g. payment failed),
-   * jumps them directly to Step 2 (plan selection) so they can retry payment.
-   *
-   * Called as the FIRST operation inside init() so no step renders before we know
-   * the user's auth state.
-   *
-   * Returns:
-   *   'dashboard'    → caller should redirect and stop
-   *   'payment'      → caller should skip to Step 2
-   *   'onboarding'   → caller should proceed normally from Step 1
-   */
   async function checkExistingSession() {
-    // Collect any token from the known storage keys used by DashboardAuth / onboarding flow
+    // Collect any token from known storage keys
     const token =
       localStorage.getItem('dashboard_access_token') ||
       localStorage.getItem('authToken') ||
       localStorage.getItem('onboarding_token') ||
       (() => {
-        // Also scan for Supabase-managed sb-*-auth-token keys
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
           if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
@@ -95,12 +122,11 @@
       })();
 
     if (!token) {
-      // No token at all — unauthenticated new visitor, proceed through onboarding normally
       return 'onboarding';
     }
 
     try {
-      const res = await fetch('/api/auth/session-status', {
+      const { ok, status, data: json } = await safeFetch('/auth/session-status', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -108,9 +134,8 @@
         },
       });
 
-      if (!res.ok) {
-        // 401 → token expired or invalid; clear stale data and show Step 1
-        if (res.status === 401) {
+      if (!ok) {
+        if (status === 401) {
           localStorage.removeItem('dashboard_access_token');
           localStorage.removeItem('authToken');
           localStorage.removeItem('onboarding_token');
@@ -120,26 +145,20 @@
         return 'onboarding';
       }
 
-      const json = await res.json();
-      if (!json.success || !json.data) return 'onboarding';
+      if (!json || !json.success || !json.data) return 'onboarding';
 
       const { is_registered, is_paid } = json.data;
 
       if (is_registered && is_paid) {
-        // User is fully registered with an active subscription — bounce to dashboard
         return 'dashboard';
       }
 
       if (is_registered && !is_paid) {
-        // Account exists in database but payment is pending — jump directly to Step 3 (Plan & Pay)
         return 'payment';
       }
 
-      // Fallback: unregistered or unknown state — normal onboarding
       return 'onboarding';
-    } catch (err) {
-      // Network error — degrade gracefully, show onboarding normally
-      console.warn('[Onboarding] session-status check failed, proceeding normally:', err);
+    } catch (_) {
       return 'onboarding';
     }
   }
@@ -246,13 +265,11 @@
       }
 
       try {
-        const res = await fetch(`/api/public/check-email?email=${encodeURIComponent(email)}`);
-        const json = await res.json();
-        const exists = !!(json.success && json.exists);
+        const { ok, data: json } = await safeFetch(`/public/check-email?email=${encodeURIComponent(email)}`);
+        const exists = !!(ok && json?.success && json?.exists);
         dupState.emailExists = exists;
         setDuplicateBannerState(emailInput, emailBanner, exists);
       } catch (_) {
-        // Network error — fail open (don't block the user)
         dupState.emailExists = false;
         setDuplicateBannerState(emailInput, emailBanner, false);
       } finally {
@@ -290,9 +307,8 @@
       }
 
       try {
-        const res = await fetch(`/api/public/check-phone?phone=${encodeURIComponent(digits)}`);
-        const json = await res.json();
-        const exists = !!(json.success && json.exists);
+        const { ok, data: json } = await safeFetch(`/public/check-phone?phone=${encodeURIComponent(digits)}`);
+        const exists = !!(ok && json?.success && json?.exists);
         dupState.phoneExists = exists;
         setDuplicateBannerState(phoneInput, phoneBanner, exists);
       } catch (_) {
@@ -1107,7 +1123,7 @@
     const jobTitle = $('#accountJobTitle') ? $('#accountJobTitle').value.trim() : '';
     const bio = $('#accountBio') ? $('#accountBio').value.trim() : '';
 
-    const res = await fetch('/api/onboarding/account', {
+    const { ok, status, data } = await safeFetch('/onboarding/account', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1131,10 +1147,8 @@
       })
     });
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error?.message || data.message || 'Signup failed. Please try again.');
+    if (!ok || !data?.data?.session) {
+      throw new Error(data?.error?.message || data?.message || data?.rawText || 'Signup failed. Please try again.');
     }
 
     state.authToken = data.data.session.access_token;
@@ -1168,7 +1182,7 @@
     // Upload avatar if provided
     if (avatarBase64) {
       try {
-        const avatarRes = await fetch(`/api/t/${slug}/account/avatar`, {
+        const { ok, data: avatarData } = await safeFetch(`/t/${slug}/account/avatar`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1176,8 +1190,7 @@
           },
           body: JSON.stringify({ image_base64: avatarBase64 })
         });
-        const avatarData = await avatarRes.json();
-        if (avatarRes.ok && avatarData.success) {
+        if (ok && avatarData?.success) {
           logo_url = avatarData.data.logo_url;
         }
       } catch (err) {
@@ -1190,7 +1203,7 @@
     const website  = $('#accountWebsite')  ? $('#accountWebsite').value.trim()  : '';
 
     try {
-      await fetch('/api/onboarding/profile', {
+      await safeFetch('/onboarding/profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1234,7 +1247,7 @@
       const token = state.authToken || localStorage.getItem('onboarding_token');
       const slug = state.slug || localStorage.getItem('onboarding_slug');
 
-      const res = await fetch(`/api/t/${slug}/setup`, {
+      const { ok, data } = await safeFetch(`/t/${slug}/setup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1248,10 +1261,8 @@
         })
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || 'Failed to save event configuration.');
+      if (!ok) {
+        throw new Error(data?.message || data?.rawText || 'Failed to save event configuration.');
       }
 
       state.currentStep = 5;
@@ -1274,7 +1285,7 @@
       const token = state.authToken || localStorage.getItem('onboarding_token');
       const slug = state.slug || localStorage.getItem('onboarding_slug');
 
-      const res = await fetch(`/api/t/${slug}/activate`, {
+      const { ok, data } = await safeFetch(`/t/${slug}/activate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1282,10 +1293,8 @@
         }
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || 'Activation failed.');
+      if (!ok) {
+        throw new Error(data?.message || data?.rawText || 'Activation failed.');
       }
 
       state.launched = true;
@@ -1340,7 +1349,7 @@
 
     for (const doc of documents) {
       try {
-        await fetch(`/api/t/${slug}/legal/accept`, {
+        await safeFetch(`/t/${slug}/legal/accept`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1444,16 +1453,27 @@
     `;
 
     try {
-      const res = await fetch('/api/public/plans').then(r => r.json());
-      if (res.success && Array.isArray(res.data)) {
+      const { ok, data: res } = await safeFetch('/public/plans');
+      if (ok && res?.success && Array.isArray(res.data) && res.data.length > 0) {
         dynamicPlans = res.data;
         renderDynamicPlansGrid();
       } else {
-        throw new Error('Invalid plans data');
+        // Safe default plans
+        dynamicPlans = [
+          { id: 'plan-basic', name: 'Basic', price_inr: 1, price_monthly: 1, max_events: 3, description: '3 events + email templates' },
+          { id: 'plan-standard', name: 'Standard', price_inr: 5, price_monthly: 5, max_events: 10, description: '10 events + email templates + advanced analytics' },
+          { id: 'plan-premium', name: 'Premium', price_inr: 10, price_monthly: 10, max_events: 50, description: '50 events + email templates + advanced analytics + dynamic flyer generations' }
+        ];
+        renderDynamicPlansGrid();
       }
     } catch (err) {
-      console.error('Failed to load plans from DB during onboarding:', err);
-      grid.innerHTML = `<p style="grid-column: span 2; text-align: center; color: var(--danger); width: 100%;">Failed to load pricing plans. Please refresh.</p>`;
+      console.warn('Falling back to built-in plans:', err);
+      dynamicPlans = [
+        { id: 'plan-basic', name: 'Basic', price_inr: 1, price_monthly: 1, max_events: 3, description: '3 events + email templates' },
+        { id: 'plan-standard', name: 'Standard', price_inr: 5, price_monthly: 5, max_events: 10, description: '10 events + email templates + advanced analytics' },
+        { id: 'plan-premium', name: 'Premium', price_inr: 10, price_monthly: 10, max_events: 50, description: '50 events + email templates + advanced analytics + dynamic flyer generations' }
+      ];
+      renderDynamicPlansGrid();
     }
   }
 
@@ -1570,36 +1590,21 @@
       const generatedOrderId = 'order_' + Math.random().toString(36).substring(2, 15);
       const billingCycle = state.billingCycle;
 
-      let res;
-      try {
-        res = await fetch('/api/create-order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            tier: normalizeTier(selectedTier),   // normalized enum value e.g. 'basic', 'standard', 'premium'
-            billing_cycle: billingCycle,
-            order_id: generatedOrderId
-          })
-        });
+      const { ok, status, data: orderData } = await safeFetch('/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tier: normalizeTier(selectedTier),   // normalized enum value e.g. 'basic', 'standard', 'premium'
+          billing_cycle: billingCycle,
+          order_id: generatedOrderId
+        })
+      });
 
-        if (res.status === 500) {
-          alert('Server error (500). Please try again later.');
-          throw new Error('Server error (500). Please try again later.');
-        }
-      } catch (fetchErr) {
-        if (res && res.status === 500) {
-          // already alerted
-        } else if (fetchErr.message && fetchErr.message.includes('500')) {
-          // already alerted
-        } else {
-          showAlert('Payment Error', 'Network or connection error occurred.', 'error');
-        }
-        throw fetchErr;
-      }
-
-      const orderData = await res.json();
-      if (!res.ok || !orderData.success) {
-        throw new Error(orderData.error?.message || 'Failed to create payment order');
+      if (!ok || !orderData?.success) {
+        const msg = orderData?.error?.message || orderData?.message || orderData?.rawText || `Failed to create payment order (${status})`;
+        showAlert('Payment Notice', msg, 'error');
+        setLoading(false);
+        return;
       }
 
       const data = orderData;

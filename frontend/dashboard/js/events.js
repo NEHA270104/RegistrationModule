@@ -372,10 +372,14 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchAttendeesFromCloud() {
         try {
             const token = DashboardAuth.getToken();
-            const res = await fetch(`/api/t/${encodeURIComponent(tenantSlug)}/events/attendees`, {
+            const targetUrl = (typeof window !== 'undefined' && typeof window.resolveApiUrl === 'function')
+                ? window.resolveApiUrl(`/t/${encodeURIComponent(tenantSlug)}/events/attendees`)
+                : `/api/t/${encodeURIComponent(tenantSlug)}/events/attendees`;
+            const res = await fetch(targetUrl, {
                 headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) }
             });
-            if (res.ok) {
+            const ct = res.headers.get('content-type') || '';
+            if (res.ok && ct.includes('application/json')) {
                 const json = await res.json();
                 if (json.success && Array.isArray(json.data?.attendees)) {
                     return json.data.attendees;

@@ -16,7 +16,10 @@ const CONFIG = {
   })(),
 
   // API Configuration
-  // Dynamic resolution supporting localhost, Netlify proxy, and cloud backends
+  // Points explicitly to the live hosted cloud backend service (Render) in production,
+  // and local dev server when running locally.
+  PROD_BACKEND_URL: 'https://bizflow-registration.onrender.com/api',
+
   API_BASE_URL: (() => {
     if (typeof window !== 'undefined') {
       if (window.CUSTOM_API_BASE_URL) return window.CUSTOM_API_BASE_URL;
@@ -26,7 +29,8 @@ const CONFIG = {
         return 'http://localhost:3000/api';
       }
     }
-    return '/api';
+    // Explicit live hosted backend URL on Render
+    return 'https://bizflow-registration.onrender.com/api';
   })(),
 
   // Tenant-scoped API base (for public endpoints)
@@ -198,4 +202,76 @@ Object.freeze(CONFIG.MESSAGES);
 if (typeof window !== 'undefined') {
   window.CONFIG = CONFIG;
   window.API_BASE_URL = CONFIG.API_BASE_URL;
+
+  window.resolveApiUrl = function(endpoint) {
+    if (!endpoint) return CONFIG.API_BASE_URL;
+    if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) return endpoint;
+    const base = (CONFIG.API_BASE_URL || 'https://bizflow-registration.onrender.com/api').replace(/\/$/, '');
+    const cleanPath = endpoint.startsWith('/api/')
+      ? endpoint.slice(4)
+      : (endpoint.startsWith('/') ? endpoint : '/' + endpoint);
+    return `${base}${cleanPath}`;
+  };
+
+  window.safeApiFetch = async function(urlOrPath, options = {}) {
+    const url = window.resolveApiUrl(urlOrPath);
+    const defaultOptions = {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    };
+    const config = {
+      ...defaultOptions,
+      ...options,
+      headers: {
+        ...defaultOptions.headers,
+        ...(options.headers || {}),
+      },
+    };
+
+    try {
+      const res = await fetch(url, config);
+      const contentType = res.headers.get('content-type') || '';
+      let data;
+
+      if (contentType.includes('application/json')) {
+        try {
+          data = await res.json();
+        } catch {
+          data = { success: false, message: 'Invalid JSON response from server.' };
+        }
+      } else {
+        const rawText = await res.text().catch(() => '');
+        if (rawText.startsWith('<!DOCTYPE') || rawText.includes('<html')) {
+          data = {
+            success: false,
+            isHtml: true,
+            message: `API route returned static HTML (${res.status}). Verify cloud backend connectivity.`
+          };
+        } else {
+          try {
+            data = JSON.parse(rawText);
+          } catch {
+            data = {
+              success: false,
+              rawText,
+              message: rawText.trim() || `API request returned HTTP ${res.status}`
+            };
+          }
+        }
+      }
+
+      if (!res.ok) {
+        const msg = data?.message || data?.error?.message || (typeof data?.error === 'string' ? data.error : null) || data?.rawText || `Request failed (${res.status})`;
+        const err = new Error(msg);
+        err.status = res.status;
+        err.data = data;
+        throw err;
+      }
+
+      return data;
+    } catch (err) {
+      throw err;
+    }
+  };
 }

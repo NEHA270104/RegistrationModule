@@ -30,12 +30,35 @@ class ApiClient {
 
     try {
       const response = await fetch(url, config);
-      const data = await response.json();
+      const contentType = response.headers.get('content-type') || '';
+      let data;
+
+      if (contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        if (text.startsWith('<!DOCTYPE') || text.includes('<html')) {
+          throw new ApiError(
+            `Backend API route (${endpoint}) returned static HTML instead of JSON. Ensure the backend server is running and Netlify proxy rules are active.`,
+            'HTML_ROUTING_ERROR',
+            response.status
+          );
+        }
+        try {
+          data = JSON.parse(text);
+        } catch {
+          throw new ApiError(
+            `Malformed API response from ${endpoint} (${response.status})`,
+            'INVALID_JSON',
+            response.status
+          );
+        }
+      }
 
       if (!response.ok) {
         const apiError = new ApiError(
-          data.error?.message || 'Request failed',
-          data.error?.code || 'REQUEST_ERROR',
+          data?.error?.message || data?.message || 'Request failed',
+          data?.error?.code || data?.code || 'REQUEST_ERROR',
           response.status
         );
         throw apiError;
@@ -47,7 +70,7 @@ class ApiClient {
         throw error;
       }
       throw new ApiError(
-        CONFIG.MESSAGES.NETWORK_ERROR,
+        error.message || CONFIG.MESSAGES.NETWORK_ERROR,
         'NETWORK_ERROR',
         0
       );

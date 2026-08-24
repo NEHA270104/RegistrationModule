@@ -170,11 +170,25 @@
   }
 
 
+  // Safe JSON API Fetch Helper
+  async function safeFetchJson(url) {
+    try {
+      const res = await fetch(url);
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        return null;
+      }
+      return await res.json();
+    } catch {
+      return null;
+    }
+  }
+
   async function initDynamicContent() {
     try {
       // 1. Fetch system settings
-      const settingsRes = await fetch('/api/public/settings').then(r => r.json());
-      if (settingsRes.success && settingsRes.data) {
+      const settingsRes = await safeFetchJson('/api/public/settings');
+      if (settingsRes && settingsRes.success && settingsRes.data) {
         const settings = settingsRes.data;
         if (settings.maintenance_mode === true || settings.maintenance_mode === 'true') {
           window.maintenanceModeActive = true;
@@ -197,17 +211,17 @@
         });
       }
     } catch (err) {
-      console.error('Failed to load public settings:', err);
+      console.warn('Could not load public settings (using offline defaults):', err);
     }
 
     try {
       // 2. Fetch plans
-      const plansRes = await fetch('/api/public/plans').then(r => r.json());
-      if (plansRes.success && Array.isArray(plansRes.data)) {
+      const plansRes = await safeFetchJson('/api/public/plans');
+      if (plansRes && plansRes.success && Array.isArray(plansRes.data)) {
         renderPricingGrid(plansRes.data);
       }
     } catch (err) {
-      console.error('Failed to load public plans:', err);
+      console.warn('Could not load public plans (using offline defaults):', err);
     }
   }
 

@@ -165,6 +165,23 @@ const Dashboard = (() => {
         }
 
         const res = await fetch(path, opts);
+        const contentType = res.headers.get('content-type') || '';
+
+        async function parseSafeBody(response) {
+            const ct = response.headers.get('content-type') || '';
+            if (ct.includes('application/json')) {
+                return await response.json().catch(() => ({}));
+            }
+            const text = await response.text().catch(() => '');
+            if (text.startsWith('<!DOCTYPE') || text.includes('<html')) {
+                return { isHtml: true, message: `API endpoint returned HTML instead of JSON (${response.status}). Check backend connectivity.` };
+            }
+            try {
+                return JSON.parse(text);
+            } catch {
+                return { rawText: text };
+            }
+        }
 
         if (res.status === 401) {
             // Try refresh once
@@ -173,10 +190,10 @@ const Dashboard = (() => {
                 headers['Authorization'] = `Bearer ${DashboardAuth.getToken()}`;
                 const retry = await fetch(path, { ...opts, headers });
                 if (!retry.ok) {
-                    const d = await retry.json().catch(() => ({}));
+                    const d = await parseSafeBody(retry);
                     throw new Error(d.message || d.error || `Request failed (${retry.status})`);
                 }
-                return retry.json().catch(() => ({}));
+                return await parseSafeBody(retry);
             } catch {
                 DashboardAuth.logout();
                 showLoginScreen();
@@ -184,14 +201,15 @@ const Dashboard = (() => {
             }
         }
 
-        if (!res.ok) {
-            const d = await res.json().catch(() => ({}));
-            console.error('API call failed details:', d);
-            const errMsg = d.message || (d.error && d.error.message) || (typeof d.error === 'string' ? d.error : null) || `Request failed (${res.status})`;
+        const data = await parseSafeBody(res);
+
+        if (!res.ok || data.isHtml) {
+            console.error('API call failed details:', data);
+            const errMsg = data.message || (data.error && data.error.message) || (typeof data.error === 'string' ? data.error : null) || `Request failed (${res.status})`;
             throw new Error(errMsg);
         }
 
-        return res.json().catch(() => ({}));
+        return data;
     }
 
     // ---- Loading ----
@@ -637,49 +655,107 @@ const Dashboard = (() => {
     async function loadOverview() {
         const mc = els.mainContent();
         if (!mc) return;
-        
-        // Center-aligned spinner UI during fetch
-        mc.innerHTML = `
-            <div class="section-header">
-                <h2>Overview</h2>
-            </div>
-            <div class="overview-loader-container">
-                <div class="spinner"></div>
-                <p>Loading overview data...</p>
-            </div>
-        `;
 
+        const slug = getSlug() || 'default';
+        const cacheKey = `cached_overview_${slug}`;
+        let renderedFromCache = false;
+
+        // 1. Instant Cache Hydration from localStorage
         try {
-            const slug = await ensureSlug();
-            if (currentSection !== 'overview') return;
-            console.log(`Attempting to load data for slug: ${slug}`);
+            const cachedRaw = localStorage.getItem(cacheKey);
+            if (cachedRaw) {
+                const cachedStats = JSON.parse(cachedRaw);
+                if (cachedStats && typeof cachedStats === 'object') {
+                    renderOverview(cachedStats);
+                    renderedFromCache = true;
+                }
+            }
+        } catch (_) {}
 
-            const data = await apiCall('GET', `/api/t/${slug}/overview`);
+        // If no cached data available, render responsive skeleton shell immediately
+        if (!renderedFromCache) {
+            mc.innerHTML = `
+                <div class="section-header">
+                    <h2>Overview</h2>
+                    <button class="btn btn-outline btn-sm" id="btn-refresh-overview" disabled>
+                        <i data-lucide="refresh-cw" class="animate-spin"></i> Syncing...
+                    </button>
+                </div>
+                <div class="overview-stats-grid">
+                    <div class="stat-card skeleton-card">
+                        <div class="stat-icon blue"><i data-lucide="users"></i></div>
+                        <div class="stat-info">
+                            <h3 class="skeleton-text">--</h3>
+                            <p>Total Registrations</p>
+                        </div>
+                    </div>
+                    <div class="stat-card skeleton-card">
+                        <div class="stat-icon green"><i data-lucide="check-circle"></i></div>
+                        <div class="stat-info">
+                            <h3 class="skeleton-text">--</h3>
+                            <p>Confirmed Payments</p>
+                        </div>
+                    </div>
+                    <div class="stat-card skeleton-card">
+                        <div class="stat-icon purple"><i data-lucide="indian-rupee"></i></div>
+                        <div class="stat-info">
+                            <h3 class="skeleton-text">--</h3>
+                            <p>Total Revenue</p>
+                        </div>
+                    </div>
+                    <div class="stat-card skeleton-card">
+                        <div class="stat-icon red"><i data-lucide="clipboard-list"></i></div>
+                        <div class="stat-info">
+                            <h3 class="skeleton-text">--</h3>
+                            <p>Waitlist Entries</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="overview-loader-container" style="padding: 24px; text-align: center;">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 8px; font-size: 13px; color: var(--text-muted);">Syncing live telemetry...</p>
+                </div>
+            `;
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // 2. Asynchronous Background Data Synchronization
+        try {
+            const resolvedSlug = await ensureSlug();
+            if (currentSection !== 'overview') return;
+
+            const data = await apiCall('GET', `/api/t/${resolvedSlug}/overview`);
             if (currentSection !== 'overview') return;
             const stats = data.data || data.stats || data;
+
+            // Cache for subsequent instant loads
+            try {
+                localStorage.setItem(`cached_overview_${resolvedSlug}`, JSON.stringify(stats));
+            } catch (_) {}
 
             renderOverview(stats);
         } catch (err) {
             if (currentSection !== 'overview') return;
-            console.error('Error loading overview:', err);
-            mc.innerHTML = `
-                <div class="section-header">
-                    <h2>Overview</h2>
-                </div>
-                <div class="empty-state">
-                    <i class="fas fa-exclamation-circle" style="color:var(--danger);"></i>
-                    <h3>Unable to load dashboard</h3>
-                    <p style="margin: 8px 0 16px 0;">${escapeHtml(err.message || 'An error occurred while fetching dashboard metrics.')}</p>
-                    <button class="btn btn-primary" id="btn-retry-overview">
-                        <i class="fas fa-redo"></i> Retry
-                    </button>
-                </div>
-            `;
+            if (!renderedFromCache) {
+                console.error('Error loading overview:', err);
+                mc.innerHTML = `
+                    <div class="section-header">
+                        <h2>Overview</h2>
+                    </div>
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-circle" style="color:var(--danger);"></i>
+                        <h3>Unable to load dashboard</h3>
+                        <p style="margin: 8px 0 16px 0;">${escapeHtml(err.message || 'An error occurred while fetching dashboard metrics.')}</p>
+                        <button class="btn btn-primary" id="btn-retry-overview">
+                            <i class="fas fa-redo"></i> Retry
+                        </button>
+                    </div>
+                `;
 
-            // Bind Retry button
-            const btnRetry = $('#btn-retry-overview');
-            if (btnRetry) {
-                btnRetry.addEventListener('click', loadOverview);
+                const btnRetry = $('#btn-retry-overview');
+                if (btnRetry) {
+                    btnRetry.addEventListener('click', loadOverview);
+                }
             }
         }
     }
@@ -3066,10 +3142,18 @@ const Dashboard = (() => {
                 btn.disabled = true;
                 errorEl.style.display = 'none';
 
+                // Optimistic Instant Shell Rendering from cached tenant
+                const cachedTenant = DashboardAuth.getTenant();
+                if (cachedTenant) {
+                    showDashboard();
+                }
+
                 try {
                     await DashboardAuth.login(email);
                     showDashboard();
                 } catch (err) {
+                    // Revert to login screen if authentication fails
+                    showLoginScreen();
                     errorEl.textContent = err.message;
                     errorEl.style.display = 'block';
                 } finally {

@@ -7,7 +7,7 @@
     'use strict';
 
     // ---- Config ----
-    const API_BASE = '/api';
+    const API_BASE = (typeof window !== 'undefined' && window.API_BASE_URL) ? window.API_BASE_URL : '/api';
     const TOKEN_KEY = 'sa_token';
     const USER_KEY = 'sa_user';
 
@@ -177,11 +177,6 @@
             headers['Authorization'] = `Bearer ${token}`;
         }
 
-        const opts = { method, headers };
-        if (body && method !== 'GET') {
-            opts.body = JSON.stringify(body);
-        }
-
         const res = await fetch(`${API_BASE}${path}`, opts);
 
         if (res.status === 401 || res.status === 403) {
@@ -190,10 +185,24 @@
             throw new Error('Session expired. Please login again.');
         }
 
-        const data = await res.json();
+        const contentType = res.headers.get('content-type') || '';
+        let data;
+        if (contentType.includes('application/json')) {
+            data = await res.json().catch(() => ({}));
+        } else {
+            const text = await res.text().catch(() => '');
+            if (text.startsWith('<!DOCTYPE') || text.includes('<html')) {
+                throw new Error(`API endpoint (${path}) returned HTML instead of JSON. Ensure backend is running.`);
+            }
+            try {
+                data = JSON.parse(text);
+            } catch {
+                data = {};
+            }
+        }
 
         if (!res.ok) {
-            throw new Error(data.message || `Request failed (${res.status})`);
+            throw new Error(data.message || data.error || `Request failed (${res.status})`);
         }
 
         return data;

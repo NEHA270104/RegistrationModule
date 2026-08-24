@@ -16,19 +16,17 @@ const CONFIG = {
   })(),
 
   // API Configuration
-  // Frontend and backend are served from the same origin on Cloud Run
+  // Dynamic resolution supporting localhost, Netlify proxy, and cloud backends
   API_BASE_URL: (() => {
-    const base = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-      ? 'http://localhost:3000/api'
-      : '/api';
-
-    // If tenant slug is detected, use tenant-scoped public API
-    const pathParts = window.location.pathname.split('/');
-    if (pathParts[1] === 't' && pathParts[2]) {
-      // For tenant-scoped pages, still use base /api but tenant endpoints use /api/t/:slug/public/*
-      return base;
+    if (typeof window !== 'undefined') {
+      if (window.CUSTOM_API_BASE_URL) return window.CUSTOM_API_BASE_URL;
+      const stored = localStorage.getItem('api_base_url');
+      if (stored) return stored;
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return 'http://localhost:3000/api';
+      }
     }
-    return base;
+    return '/api';
   })(),
 
   // Tenant-scoped API base (for public endpoints)
@@ -196,3 +194,8 @@ const CONFIG = {
 Object.freeze(CONFIG.COMMON_BENEFITS);
 Object.freeze(CONFIG.VALIDATION);
 Object.freeze(CONFIG.MESSAGES);
+
+if (typeof window !== 'undefined') {
+  window.CONFIG = CONFIG;
+  window.API_BASE_URL = CONFIG.API_BASE_URL;
+}

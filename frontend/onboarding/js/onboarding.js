@@ -343,6 +343,141 @@
       });
     }
 
+    // ── Custom Industry "Others" Modal & 50-Char Counter ────────────────────
+    const industrySelect = $('#companyIndustry');
+    const customIndustryModal = $('#customIndustryModal');
+    const customIndustryInput = $('#customIndustryInput');
+    const customIndustryCounter = $('#customIndustryCounter');
+    const customIndustryError = $('#customIndustryError');
+    const btnSaveCustomIndustry = $('#btnSaveCustomIndustry');
+    const btnCancelCustomIndustry = $('#btnCancelCustomIndustry');
+    let lastSelectedIndustry = '';
+
+    function updateIndustryCharCounter() {
+      if (!customIndustryInput || !customIndustryCounter) return;
+      if (customIndustryInput.value.length > 50) {
+        customIndustryInput.value = customIndustryInput.value.slice(0, 50);
+      }
+      const len = customIndustryInput.value.length;
+      customIndustryCounter.textContent = `${len}/50`;
+      customIndustryCounter.classList.toggle('limit-near', len >= 40 && len < 50);
+      customIndustryCounter.classList.toggle('limit-reached', len >= 50);
+    }
+
+    function openCustomIndustryModal() {
+      if (!customIndustryModal) return;
+      customIndustryModal.style.display = 'flex';
+      if (customIndustryInput) {
+        customIndustryInput.value = state.customIndustry || '';
+        updateIndustryCharCounter();
+        setTimeout(() => customIndustryInput.focus(), 50);
+      }
+      if (customIndustryError) customIndustryError.style.display = 'none';
+    }
+
+    function closeCustomIndustryModal() {
+      if (!customIndustryModal) return;
+      customIndustryModal.style.display = 'none';
+      if (customIndustryError) customIndustryError.style.display = 'none';
+    }
+
+    if (industrySelect) {
+      industrySelect.addEventListener('change', (e) => {
+        if (industrySelect.value === 'Others') {
+          openCustomIndustryModal();
+        } else {
+          lastSelectedIndustry = industrySelect.value;
+          state.customIndustry = '';
+        }
+      });
+    }
+
+    if (customIndustryInput) {
+      customIndustryInput.addEventListener('input', () => {
+        updateIndustryCharCounter();
+        if (customIndustryError) customIndustryError.style.display = 'none';
+      });
+
+      customIndustryInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (btnSaveCustomIndustry) btnSaveCustomIndustry.click();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          if (btnCancelCustomIndustry) btnCancelCustomIndustry.click();
+        }
+      });
+    }
+
+    if (btnSaveCustomIndustry) {
+      btnSaveCustomIndustry.addEventListener('click', () => {
+        const val = (customIndustryInput?.value || '').trim();
+        if (!val || val.length > 50) {
+          if (customIndustryError) {
+            customIndustryError.textContent = 'Please enter a valid industry (1-50 characters).';
+            customIndustryError.style.display = 'block';
+          }
+          if (customIndustryInput) customIndustryInput.focus();
+          return;
+        }
+
+        state.customIndustry = val;
+
+        // Upsert dynamic custom option
+        if (industrySelect) {
+          let customOption = Array.from(industrySelect.options).find(opt => opt.getAttribute('data-custom') === 'true');
+          if (!customOption) {
+            customOption = document.createElement('option');
+            customOption.setAttribute('data-custom', 'true');
+            const othersOpt = industrySelect.querySelector('option[value="Others"]');
+            if (othersOpt) {
+              industrySelect.insertBefore(customOption, othersOpt);
+            } else {
+              industrySelect.appendChild(customOption);
+            }
+          }
+          customOption.value = val;
+          customOption.textContent = `${val} (Custom)`;
+          customOption.selected = true;
+          lastSelectedIndustry = val;
+
+          industrySelect.classList.remove('is-invalid');
+          const group = industrySelect.closest('.form-group');
+          if (group) {
+            const errEl = group.querySelector('.field-error');
+            if (errEl) errEl.style.display = 'none';
+          }
+        }
+
+        closeCustomIndustryModal();
+      });
+    }
+
+    if (btnCancelCustomIndustry) {
+      btnCancelCustomIndustry.addEventListener('click', () => {
+        if (industrySelect) {
+          if (state.customIndustry) {
+            const customOption = Array.from(industrySelect.options).find(opt => opt.getAttribute('data-custom') === 'true');
+            if (customOption) customOption.selected = true;
+          } else if (lastSelectedIndustry && lastSelectedIndustry !== 'Others') {
+            industrySelect.value = lastSelectedIndustry;
+          } else {
+            industrySelect.selectedIndex = 0;
+          }
+        }
+        closeCustomIndustryModal();
+      });
+    }
+
+    if (customIndustryModal) {
+      customIndustryModal.addEventListener('click', (e) => {
+        if (e.target === customIndustryModal) {
+          if (btnCancelCustomIndustry) btnCancelCustomIndustry.click();
+        }
+      });
+    }
+    // ── End Custom Industry Modal ───────────────────────────────────────────
+
     // Alert close
     $('#alertCloseBtn').addEventListener('click', hideAlert);
     alertOverlay.addEventListener('click', (e) => {
@@ -577,7 +712,14 @@
     }
 
     const industry = $('#companyIndustry').value;
-    if (!industry) { markInvalid('companyIndustry', 'Please select an industry'); valid = false; }
+    if (!industry) {
+      markInvalid('companyIndustry', 'Please select an industry');
+      valid = false;
+    } else if (industry === 'Others' && !state.customIndustry) {
+      markInvalid('companyIndustry', 'Please specify your custom industry');
+      if (typeof openCustomIndustryModal === 'function') openCustomIndustryModal();
+      valid = false;
+    }
 
     return valid;
   }

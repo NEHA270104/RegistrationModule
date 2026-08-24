@@ -38,6 +38,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Pass selector logic
     const passOptions = document.querySelectorAll('.pass-option');
     const selectedPassInput = document.getElementById('selected-pass-type');
+    
+    // Auto-select initial pass from URL (?tier=vip / ?pass=general)
+    const initialPassParam = (params.get('tier') || params.get('pass') || '').toLowerCase();
+    if (initialPassParam && passOptions.length > 0) {
+        passOptions.forEach(opt => {
+            const optVal = (opt.dataset.pass || '').toLowerCase();
+            if (optVal === initialPassParam || optVal.includes(initialPassParam)) {
+                passOptions.forEach(p => p.classList.remove('active'));
+                opt.classList.add('active');
+                if (selectedPassInput) selectedPassInput.value = opt.dataset.pass;
+            }
+        });
+    }
+
     passOptions.forEach(opt => {
         opt.addEventListener('click', () => {
             passOptions.forEach(p => p.classList.remove('active'));
@@ -49,10 +63,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 3. Fetch Event Metadata
     try {
         const res = await fetch(`/api/public/events/${encodeURIComponent(eventSlug)}`);
-        const json = await res.json();
+        const contentType = res.headers.get('content-type') || '';
+        let json = null;
+        if (contentType.includes('application/json')) {
+            json = await res.json();
+        } else {
+            const text = await res.text();
+            try { json = JSON.parse(text); } catch (_) {}
+        }
 
-        if (!json.success || !json.data || !json.data.event) {
-            throw new Error(json.error?.message || 'Event details not found');
+        if (!json || !json.success || !json.data || !json.data.event) {
+            throw new Error(json?.error?.message || 'Event details not found');
         }
 
         const { event, tenant } = json.data;

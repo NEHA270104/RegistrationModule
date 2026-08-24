@@ -2,7 +2,98 @@
   base = "frontend"
   publish = "."
 
+# ── 1. API Proxy to Live Backend (Render / Railway / Cloud Run) ───────────────
+[[redirects]]
+  from = "/api/*"
+  to = "https://bizflow-registration.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+# ── 2. Admin & Super-Admin Portals ────────────────────────────────────────────
+[[redirects]]
+  from = "/admin-portal"
+  to = "/admin/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/admin-portal/*"
+  to = "/admin/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/admin"
+  to = "/admin/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/super-admin"
+  to = "/super-admin/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/super-admin/*"
+  to = "/super-admin/index.html"
+  status = 200
+
+# ── 3. Tenant Dashboard & Onboarding SPAs ─────────────────────────────────────
+[[redirects]]
+  from = "/dashboard"
+  to = "/dashboard/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/dashboard/*"
+  to = "/dashboard/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/onboarding"
+  to = "/onboarding/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/onboarding/*"
+  to = "/onboarding/index.html"
+  status = 200
+
+# ── 4. Hosted Public Event Pages & Tenant Slugs ───────────────────────────────
+[[redirects]]
+  from = "/register"
+  to = "/register.html"
+  status = 200
+
+[[redirects]]
+  from = "/register/*"
+  to = "/register.html"
+  status = 200
+
+[[redirects]]
+  from = "/t/*"
+  to = "/index.html"
+  status = 200
+
+# ── 5. SaaS Landing Page & Catch-All Rewrite ──────────────────────────────────
+[[redirects]]
+  from = "/landing"
+  to = "/landing/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/landing/*"
+  to = "/landing/index.html"
+  status = 200
+
 [[redirects]]
   from = "/"
+  to = "/landing/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/*"
   to = "/landing/index.html"
   status = 200

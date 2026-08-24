@@ -22,6 +22,19 @@ let redirectCountdownInterval = null;
 let redirectCountdownSeconds = 60;
 let redirectCancelled = false;
 
+// Helper for safe JSON fetching (protects against static HTML 404/200 rewrites)
+async function safeFetchJson(url, options) {
+  try {
+    const res = await fetch(url, options);
+    if (!res.ok) return null;
+    const ct = res.headers.get('content-type') || '';
+    if (!ct.includes('application/json')) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Fetch dynamic settings from API and merge with static config
  * Falls back to static config if API fails
@@ -33,13 +46,12 @@ async function loadDynamicSettings() {
       ? `${CONFIG.API_BASE_URL}/t/${CONFIG.TENANT_SLUG}/public/config`
       : `${CONFIG.API_BASE_URL}/settings`;
 
-    const response = await fetch(settingsUrl);
-    if (!response.ok) {
+    const rawConfig = await safeFetchJson(settingsUrl);
+    if (!rawConfig) {
       console.warn('Failed to fetch dynamic settings, using static config');
       return;
     }
 
-    const rawConfig = await response.json();
     // Tenant-scoped config wraps data differently
     dynamicConfig = CONFIG.TENANT_SLUG ? (rawConfig.data?.settings || rawConfig) : rawConfig;
 
@@ -190,9 +202,8 @@ async function loadDynamicSettings() {
     } else {
       // Fallback: fetch from dedicated endpoint
       try {
-        const guestResponse = await fetch(`${CONFIG.API_BASE_URL}/guests`);
-        if (guestResponse.ok) {
-          const guestData = await guestResponse.json();
+        const guestData = await safeFetchJson(`${CONFIG.API_BASE_URL}/guests`);
+        if (guestData) {
           const guests = guestData.data?.guests || [];
           if (guests.length > 0) {
             renderGuestSpeakers(guests);
@@ -211,9 +222,8 @@ async function loadDynamicSettings() {
     } else {
       // Fallback: fetch from dedicated endpoint
       try {
-        const benefitResponse = await fetch(`${CONFIG.API_BASE_URL}/msme-benefits`);
-        if (benefitResponse.ok) {
-          const benefitData = await benefitResponse.json();
+        const benefitData = await safeFetchJson(`${CONFIG.API_BASE_URL}/msme-benefits`);
+        if (benefitData) {
           const benefits = benefitData.data?.benefits || [];
           if (benefits.length > 0) {
             renderMsmeBenefits(benefits);
@@ -637,11 +647,13 @@ function getOfferPrice(tier) {
  */
 async function initSeatAvailability() {
   try {
-    const response = await fetch(`${CONFIG.API_BASE_URL}/seats`);
-    if (response.ok) {
-      seatAvailability = await response.json();
+    const data = await safeFetchJson(`${CONFIG.API_BASE_URL}/seats`);
+    if (data) {
+      seatAvailability = data;
       setDefaultTierByAvailability();
       updateLiveSeatCounter();
+    } else {
+      selectTier('vip');
     }
   } catch (error) {
     console.error('Failed to fetch seat availability:', error);
@@ -730,9 +742,9 @@ function updateLiveSeatCounter() {
 function startSeatPolling() {
   setInterval(async () => {
     try {
-      const response = await fetch(`${CONFIG.API_BASE_URL}/seats`);
-      if (response.ok) {
-        seatAvailability = await response.json();
+      const data = await safeFetchJson(`${CONFIG.API_BASE_URL}/seats`);
+      if (data) {
+        seatAvailability = data;
         updateLiveSeatCounter();
       }
     } catch (error) {

@@ -20,6 +20,7 @@ import { authService } from '../services/auth.service.js';
 import { tenantService } from '../services/tenant.service.js';
 import { supabaseAdmin } from '../config/supabaseAdmin.js';
 import { subscriptionService } from '../services/subscription.service.js';
+import { getTicketQrCode, getEventQrCode } from '../controllers/registration.controller.js';
 
 const router = Router();
 
@@ -40,6 +41,10 @@ router.use('/seats', seatsRouter);
 router.use('/', paymentRouter);
 router.use('/registration', registrationRouter);
 router.use('/waitlist', waitlistRouter);
+
+// QR code generation endpoints
+router.get('/qr/ticket/:bookingId', asyncHandler(getTicketQrCode));
+router.get('/qr/event/:eventSlug', asyncHandler(getEventQrCode));
 router.use('/admin', adminRouter);
 router.use('/settings', settingsRouter);
 router.use('/guests', guestRouter);

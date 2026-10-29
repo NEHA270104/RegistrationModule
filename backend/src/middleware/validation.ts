@@ -83,7 +83,7 @@ export const adminFiltersSchema = z.object({
 });
 
 export const bookingIdSchema = z.object({
-  bookingId: z.string().regex(/^BF-2026-\d{6}$/, 'Invalid booking ID format'),
+  bookingId: z.string().regex(/^(BF|BK)(-\d{4,6})?-\d{3,8}(-\w+)?$/i, 'Invalid booking ID format'),
 });
 
 // ============================================

@@ -29,18 +29,24 @@ export class AuditService {
    */
   async log(entry: AuditEntry): Promise<void> {
     try {
+      const isUuid = (val?: string) =>
+        val ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val) : false;
+
       await supabaseAdmin
-        .from('audit_log')
+        .from('admin_activity_log')
         .insert({
-          tenant_id: entry.tenant_id || null,
-          actor_id: entry.actor_id || null,
-          actor_role: entry.actor_role || 'system',
           action: entry.action,
-          resource_type: entry.resource_type,
-          resource_id: entry.resource_id || null,
+          admin_identifier: entry.actor_id || entry.actor_role || entry.tenant_id || 'system',
+          entity_type: entry.resource_type,
+          entity_id: isUuid(entry.resource_id) ? entry.resource_id : null,
+          new_value: {
+            ...(entry.metadata || {}),
+            resource_id: entry.resource_id,
+            tenant_id: entry.tenant_id,
+            user_agent: entry.user_agent,
+            actor_role: entry.actor_role,
+          },
           ip_address: entry.ip_address || null,
-          user_agent: entry.user_agent || null,
-          metadata: entry.metadata || {},
         });
     } catch (err) {
       logger.error('Audit log failed', {
@@ -62,34 +68,41 @@ export class AuditService {
     const limit = filters.limit || 50;
     const offset = (page - 1) * limit;
 
-    let query = supabaseAdmin
-      .from('audit_log')
-      .select('*', { count: 'exact' })
-      .eq('tenant_id', tenantId);
+    try {
+      let query = supabaseAdmin
+        .from('admin_activity_log')
+        .select('*', { count: 'exact' });
 
-    if (filters.action) {
-      query = query.eq('action', filters.action);
-    }
-    if (filters.resource_type) {
-      query = query.eq('resource_type', filters.resource_type);
-    }
-    if (filters.date_from) {
-      query = query.gte('created_at', filters.date_from);
-    }
-    if (filters.date_to) {
-      query = query.lte('created_at', filters.date_to);
-    }
+      if (filters.action) {
+        query = query.ilike('action', `%${filters.action}%`);
+      }
+      if (filters.date_from) {
+        query = query.gte('created_at', filters.date_from);
+      }
+      if (filters.date_to) {
+        query = query.lte('created_at', filters.date_to);
+      }
 
-    query = query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
+      query = query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
 
-    const { data, count, error } = await query;
+      const { data, count, error } = await query;
 
-    if (error) {
-      logger.error('Error fetching tenant audit log', { tenantId, error: error.message });
+      if (error) {
+        logger.error('Error fetching tenant audit log', { tenantId, error: error.message });
+        return { entries: [], total: 0 };
+      }
+
+      const filtered = (data || []).filter((entry: any) => {
+        if (!entry.new_value && !entry.admin_identifier) return true;
+        const entryTenant = entry.new_value?.tenant_id || entry.tenant_id;
+        return !entryTenant || entryTenant === tenantId || entryTenant === '00000000-0000-0000-0000-000000000001';
+      });
+
+      return { entries: filtered, total: count || filtered.length };
+    } catch (err: any) {
+      logger.error('Tenant audit query failed', { message: err?.message });
       return { entries: [], total: 0 };
     }
-
-    return { entries: data || [], total: count || 0 };
   }
 
   /**
@@ -102,33 +115,35 @@ export class AuditService {
     const limit = filters.limit || 50;
     const offset = (page - 1) * limit;
 
-    let query = supabaseAdmin
-      .from('audit_log')
-      .select('*, tenants:tenant_id(name, slug)', { count: 'exact' });
+    try {
+      let query = supabaseAdmin
+        .from('admin_activity_log')
+        .select('*', { count: 'exact' });
 
-    if (filters.action) {
-      query = query.eq('action', filters.action);
-    }
-    if (filters.resource_type) {
-      query = query.eq('resource_type', filters.resource_type);
-    }
-    if (filters.date_from) {
-      query = query.gte('created_at', filters.date_from);
-    }
-    if (filters.date_to) {
-      query = query.lte('created_at', filters.date_to);
-    }
+      if (filters.action) {
+        query = query.ilike('action', `%${filters.action}%`);
+      }
+      if (filters.date_from) {
+        query = query.gte('created_at', filters.date_from);
+      }
+      if (filters.date_to) {
+        query = query.lte('created_at', filters.date_to);
+      }
 
-    query = query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
+      query = query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
 
-    const { data, count, error } = await query;
+      const { data, count, error } = await query;
 
-    if (error) {
-      logger.error('Error fetching global audit log', { error: error.message });
+      if (error) {
+        logger.error('Error fetching global audit log', { error: error.message });
+        return { entries: [], total: 0 };
+      }
+
+      return { entries: data || [], total: count || 0 };
+    } catch (err: any) {
+      logger.error('Global audit query failed', { message: err?.message });
       return { entries: [], total: 0 };
     }
-
-    return { entries: data || [], total: count || 0 };
   }
 }
 

@@ -11,7 +11,31 @@ export async function getRegistration(req: Request, res: Response): Promise<void
   try {
     const { bookingId } = req.params;
 
-    const registration = await registrationService.getByBookingId(bookingId);
+    let registration = await registrationService.getByBookingId(bookingId);
+
+    // If not found in main table, check eventService
+    if (!registration) {
+      const { eventService } = await import('../services/event.service.js');
+      const attendee = await eventService.getAttendeeByBookingId(bookingId);
+      if (attendee) {
+        registration = {
+          id: attendee.id,
+          booking_id: attendee.booking_id,
+          name: attendee.name,
+          email: attendee.email,
+          phone: attendee.phone,
+          business_name: attendee.business_name || null,
+          tier: attendee.pass_type.toLowerCase() as any,
+          amount_paid: 0,
+          payment_status: 'confirmed',
+          registration_status: attendee.status,
+          created_at: attendee.registered_at,
+          payment_confirmed_at: attendee.registered_at,
+          utm_source: `event:${attendee.event_slug}`,
+          utm_campaign: attendee.event_title,
+        } as any;
+      }
+    }
 
     if (!registration) {
       res.status(404).json({
@@ -24,19 +48,24 @@ export async function getRegistration(req: Request, res: Response): Promise<void
       return;
     }
 
-    // Return limited data for public endpoint
+    // Return ticket pass details
     res.status(200).json({
       success: true,
       data: {
+        id: registration.id,
         booking_id: registration.booking_id,
         name: registration.name,
         email: maskEmail(registration.email),
+        phone: registration.phone ? registration.phone.replace(/(\d{2})\d+(\d{2})/, '$1******$2') : null,
+        business_name: registration.business_name || null,
         tier: registration.tier,
         amount_paid: registration.amount_paid,
         payment_status: registration.payment_status,
         registration_status: registration.registration_status,
         created_at: registration.created_at,
         payment_confirmed_at: registration.payment_confirmed_at,
+        event_title: registration.utm_campaign || 'AI for MSME Business Summit 2026',
+        event_slug: registration.utm_source ? registration.utm_source.replace('event:', '') : 'ai-msme-business-summit-2026',
       },
     });
   } catch (error) {
@@ -52,6 +81,111 @@ export async function getRegistration(req: Request, res: Response): Promise<void
         code: 'FETCH_ERROR',
       },
     });
+  }
+}
+
+/**
+ * Check-in attendee at gate / badge scan
+ * POST /api/registration/checkin
+ */
+export async function checkInRegistration(req: Request, res: Response): Promise<void> {
+  try {
+    const { booking_id } = req.body;
+    if (!booking_id) {
+      res.status(400).json({
+        success: false,
+        error: {
+          message: 'Booking ID is required for check-in',
+          code: 'VALIDATION_ERROR',
+        },
+      });
+      return;
+    }
+
+    const { eventService } = await import('../services/event.service.js');
+    const result = await eventService.checkInAttendee(booking_id);
+    res.status(200).json(result);
+  } catch (error) {
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({
+        success: false,
+        error: {
+          message: error.message,
+          code: error.code,
+        },
+      });
+      return;
+    }
+    logger.error('Error in checkInRegistration controller', { error });
+    res.status(500).json({
+      success: false,
+      error: {
+        message: 'Failed to process check-in',
+        code: 'CHECKIN_ERROR',
+      },
+    });
+  }
+}
+
+/**
+ * Serve QR code image for ticket pass
+ * GET /api/qr/ticket/:bookingId
+ */
+export async function getTicketQrCode(req: Request, res: Response): Promise<void> {
+  try {
+    const { bookingId } = req.params;
+    const QRCode = (await import('qrcode')).default;
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+    const host = req.headers['x-forwarded-host'] || req.get('host') || 'localhost:3000';
+    const baseUrl = `${protocol}://${host}`;
+    const targetUrl = `${baseUrl}/ticket.html?booking=${encodeURIComponent(bookingId)}`;
+
+    const qrBuffer = await QRCode.toBuffer(targetUrl, {
+      width: 320,
+      margin: 2,
+      color: {
+        dark: '#05070f',
+        light: '#ffffff'
+      }
+    });
+
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.send(qrBuffer);
+  } catch (error) {
+    logger.error('Error generating ticket QR code', { error });
+    res.status(500).send('Error generating QR code');
+  }
+}
+
+/**
+ * Serve QR code image for event registration
+ * GET /api/qr/event/:eventSlug
+ */
+export async function getEventQrCode(req: Request, res: Response): Promise<void> {
+  try {
+    const { eventSlug } = req.params;
+    const QRCode = (await import('qrcode')).default;
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+    const host = req.headers['x-forwarded-host'] || req.get('host') || 'localhost:3000';
+    const baseUrl = `${protocol}://${host}`;
+    const targetUrl = `${baseUrl}/register/${encodeURIComponent(eventSlug)}`;
+
+    const qrBuffer = await QRCode.toBuffer(targetUrl, {
+      width: 320,
+      margin: 2,
+      color: {
+        dark: '#05070f',
+        light: '#ffffff'
+      }
+    });
+
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.send(qrBuffer);
+  } catch (error) {
+    logger.error('Error generating event QR code', { error });
+    res.status(500).send('Error generating QR code');
   }
 }
 

@@ -2640,10 +2640,24 @@ const Dashboard = (() => {
         }
 
         // Helper to draw QR code on canvas
-        function drawQRCode(ctx, x, y, size) {
+        function drawQRCode(ctx, x, y, size, eventSlug) {
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(x, y, size, size);
             
+            const slug = eventSlug || (typeof currentTenant !== 'undefined' && currentTenant ? currentTenant.slug : 'default');
+            const qrUrl = (typeof window.resolveApiUrl === 'function')
+                ? window.resolveApiUrl(`/qr/event/${encodeURIComponent(slug)}`)
+                : `/api/qr/event/${encodeURIComponent(slug)}`;
+
+            try {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    ctx.drawImage(img, x, y, size, size);
+                };
+                img.src = qrUrl;
+            } catch (_) {}
+
             ctx.fillStyle = '#000000';
             
             const finderSize = Math.floor(size * 7 / 29);

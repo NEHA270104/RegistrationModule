@@ -78,6 +78,16 @@ export const tenantAuth = async (req: TenantRequest, res: Response, next: NextFu
         if (tenant) {
           req.tenantSlug = tenant.slug;
         }
+
+        const slugParam = req.params.slug;
+        if (slugParam && req.userRole !== 'super_admin' && req.tenantSlug && slugParam !== req.tenantSlug) {
+          res.status(403).json({
+            success: false,
+            error: { message: 'Access denied to this tenant', code: 'TENANT_MISMATCH' },
+          });
+          return;
+        }
+
         return next();
       }
     }

@@ -569,19 +569,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getQrCodeSvg(size = 46) {
-        return `<svg width="${size}" height="${size}" viewBox="0 0 29 29" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;border-radius:4px;">
-            <rect width="29" height="29" fill="white"/>
-            <rect x="2" y="2" width="7" height="7" fill="#0f172a"/>
-            <rect x="3" y="3" width="5" height="5" fill="white"/>
-            <rect x="4" y="4" width="3" height="3" fill="#0f172a"/>
-            <rect x="20" y="2" width="7" height="7" fill="#0f172a"/>
-            <rect x="21" y="3" width="5" height="5" fill="white"/>
-            <rect x="22" y="4" width="3" height="3" fill="#0f172a"/>
-            <rect x="2" y="20" width="7" height="7" fill="#0f172a"/>
-            <rect x="3" y="21" width="5" height="5" fill="white"/>
-            <rect x="4" y="22" width="3" height="3" fill="#0f172a"/>
-            <path d="M10 2h2v2h-2zM14 2h3v1h-3zM10 5h1v1h-1zM12 5h2v2h-2zM15 4h2v2h-2zM18 2h1v3h-1z M2 10h1v3h-1zM4 10h2v1h-2zM7 11h2v2h-2zM10 9h3v1h-3zM14 8h2v2h-2zM17 10h2v1h-2zM20 10h1v2h-1zM23 9h2v2h-2zM26 10h2v1h-2z M10 13h2v2h-2zM13 14h2v2h-2zM16 12h2v3h-2zM19 14h3v1h-3zM23 13h1v3h-1zM26 13h2v2h-2z M10 16h1v3h-1zM12 17h3v1h-3zM16 16h2v2h-2zM19 16h1v2h-1zM21 17h3v1h-3zM25 16h3v1h-3z M10 20h2v2h-2zM13 20h1v3h-1zM15 21h2v1h-2zM18 20h3v1h-3zM22 20h2v2h-2zM25 20h2v2h-2z M10 23h3v1h-3zM14 24h2v2h-2zM17 23h2v2h-2zM20 24h1v2h-1zM22 23h3v1h-3zM26 23h1v3h-1z M10 26h1v2h-1zM12 25h3v2h-3zM16 26h2v2h-2zM19 25h2v2h-2zM22 26h2v1h-2zM25 26h3v2h-3z" fill="#0f172a"/>
-        </svg>`;
+        const slug = (quizState && quizState.main_heading)
+            ? quizState.main_heading.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')
+            : 'ai-msme-business-summit-2026';
+        const qrUrl = (typeof window !== 'undefined' && typeof window.resolveApiUrl === 'function')
+            ? window.resolveApiUrl(`/qr/event/${encodeURIComponent(slug)}`)
+            : `/api/qr/event/${encodeURIComponent(slug)}`;
+
+        return `<img src="${qrUrl}" width="${size}" height="${size}" style="display:block;border-radius:4px;object-fit:contain;background:#fff;" alt="QR Pass" onerror="this.outerHTML='<svg width=\\'${size}\\' height=\\'${size}\\' viewBox=\\'0 0 29 29\\' fill=\\'none\\' xmlns=\\'http://www.w3.org/2000/svg\\' style=\\'display:block;border-radius:4px;\\'><rect width=\\'29\\' height=\\'29\\' fill=\\'white\\'/><rect x=\\'2\\' y=\\'2\\' width=\\'7\\' height=\\'7\\' fill=\\'#0f172a\\'/><rect x=\\'3\\' y=\\'3\\' width=\\'5\\' height=\\'5\\' fill=\\'white\\'/><rect x=\\'4\\' y=\\'4\\' width=\\'3\\' height=\\'3\\' fill=\\'#0f172a\\'/><rect x=\\'20\\' y=\\'2\\' width=\\'7\\' height=\\'7\\' fill=\\'#0f172a\\'/><rect x=\\'21\\' y=\\'3\\' width=\\'5\\' height=\\'5\\' fill=\\'white\\'/><rect x=\\'22\\' y=\\'4\\' width=\\'3\\' height=\\'3\\' fill=\\'#0f172a\\'/><rect x=\\'2\\' y=\\'20\\' width=\\'7\\' height=\\'7\\' fill=\\'#0f172a\\'/><rect x=\\'3\\' y=\\'21\\' width=\\'5\\' height=\\'5\\' fill=\\'white\\'/><rect x=\\'4\\' y=\\'22\\' width=\\'3\\' height=\\'3\\' fill=\\'#0f172a\\'/></svg>'"/>`;
     }
 
     function getSpeakersHtml(guests, accent) {

@@ -285,6 +285,14 @@ app.get('/register', (req: Request, res: Response) => {
   res.sendFile(path.join(frontendPath, 'register.html'));
 });
 
+// Serve candidate ticket pass page /ticket and /ticket/:bookingId
+app.get('/ticket', (req: Request, res: Response) => {
+  res.sendFile(path.join(frontendPath, 'ticket.html'));
+});
+app.get('/ticket/:bookingId', (req: Request, res: Response) => {
+  res.sendFile(path.join(frontendPath, 'ticket.html'));
+});
+
 // Fallback: serve landing page for unknown non-API routes
 app.get('*', (req: Request, res: Response, next: NextFunction) => {
   if (req.path.startsWith('/api')) {

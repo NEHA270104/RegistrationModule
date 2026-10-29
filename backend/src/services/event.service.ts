@@ -242,6 +242,24 @@ export class EventService {
       inMemoryEvents.set(finalSlug, newEvent);
       inMemoryAttendees.set(eventId, []);
 
+      // Persist to Supabase site_settings
+      try {
+        await supabase
+          .from('site_settings')
+          .upsert({
+            setting_key: `event:${finalSlug}`,
+            setting_value: newEvent,
+            setting_type: 'json',
+            category: 'events',
+            description: `Automated event for ${newEvent.title}`,
+            is_public: true,
+            tenant_id: tenantId || '00000000-0000-0000-0000-000000000001',
+          }, { onConflict: 'setting_key' });
+        logger.info('Event persisted to Supabase site_settings', { slug: finalSlug });
+      } catch (persistErr: any) {
+        logger.warn('Non-blocking event persistence warning:', { message: persistErr?.message });
+      }
+
       logger.info('Automated event created from flyer', {
         eventId,
         slug: finalSlug,
@@ -276,14 +294,33 @@ export class EventService {
     } | null;
   }> {
     ensureSeedEvent();
-    const event = inMemoryEvents.get(eventSlug);
+    let event = inMemoryEvents.get(eventSlug);
     if (!event) {
-      // Also check by ID
-      const byId = Array.from(inMemoryEvents.values()).find(e => e.id === eventSlug);
-      if (!byId) {
-        throw new AppError('Event not found or has expired', 404, 'EVENT_NOT_FOUND');
+      // Check by ID in memory
+      event = Array.from(inMemoryEvents.values()).find(e => e.id === eventSlug);
+    }
+    if (!event) {
+      // Check database site_settings
+      try {
+        const { data: dbSetting } = await supabase
+          .from('site_settings')
+          .select('setting_value')
+          .eq('setting_key', `event:${eventSlug}`)
+          .single();
+
+        if (dbSetting?.setting_value) {
+          event = dbSetting.setting_value as EventRecord;
+          inMemoryEvents.set(event.slug, event);
+          if (!inMemoryAttendees.has(event.id)) {
+            inMemoryAttendees.set(event.id, []);
+          }
+        }
+      } catch {
+        // Continue
       }
-      return this.enrichEventWithTenant(byId);
+    }
+    if (!event) {
+      throw new AppError('Event not found or has expired', 404, 'EVENT_NOT_FOUND');
     }
     return this.enrichEventWithTenant(event);
   }
@@ -395,11 +432,13 @@ export class EventService {
           utm_campaign: event.title,
           ip_address: metadata?.ip || null,
           user_agent: metadata?.userAgent || null,
+          tenant_id: event.tenant_id || '00000000-0000-0000-0000-000000000001',
         });
       logger.info('Attendee synced directly to Supabase registrations table', {
         bookingId,
         email: emailClean,
-        eventSlug: event.slug
+        eventSlug: event.slug,
+        tenantId: event.tenant_id
       });
     } catch (syncErr: any) {
       logger.warn('Non-blocking Supabase sync error (in-memory registered):', { message: syncErr?.message });
@@ -423,6 +462,27 @@ export class EventService {
    */
   async getTenantEvents(tenantId: string): Promise<EventRecord[]> {
     ensureSeedEvent();
+    
+    // Attempt to load tenant events from site_settings
+    try {
+      const { data: settings } = await supabase
+        .from('site_settings')
+        .select('setting_value')
+        .eq('category', 'events')
+        .or(`tenant_id.eq.${tenantId},tenant_id.eq.00000000-0000-0000-0000-000000000001`);
+
+      if (settings && settings.length > 0) {
+        for (const item of settings) {
+          const ev = item.setting_value as EventRecord;
+          if (ev && ev.slug) {
+            inMemoryEvents.set(ev.slug, ev);
+          }
+        }
+      }
+    } catch (e: any) {
+      logger.warn('Failed to query site_settings for tenant events', { error: e?.message });
+    }
+
     const all = Array.from(inMemoryEvents.values());
     const tenantEvents = all.filter(e => e.tenant_id === tenantId || e.tenant_id === '00000000-0000-0000-0000-000000000001');
 
@@ -442,16 +502,186 @@ export class EventService {
     ensureSeedEvent();
     const events = await this.getTenantEvents(tenantId);
     const eventIds = new Set(events.map(e => e.id));
+    const eventMapBySlug = new Map(events.map(e => [e.slug, e]));
 
     const result: AttendeeRecord[] = [];
+    const seenBookingIds = new Set<string>();
+
+    // 1. Get from in-memory cache
     for (const [eventId, list] of inMemoryAttendees.entries()) {
       if (eventIds.has(eventId)) {
-        result.push(...list);
+        for (const att of list) {
+          result.push(att);
+          seenBookingIds.add(att.booking_id);
+        }
       }
+    }
+
+    // 2. Query persistent Supabase registrations table
+    try {
+      const { data: dbRegs, error } = await supabase
+        .from('registrations')
+        .select('*')
+        .or(`tenant_id.eq.${tenantId},tenant_id.eq.00000000-0000-0000-0000-000000000001`)
+        .order('created_at', { ascending: false });
+
+      if (dbRegs && !error) {
+        for (const reg of dbRegs) {
+          if (!seenBookingIds.has(reg.booking_id)) {
+            let slug = 'default';
+            if (reg.utm_source && reg.utm_source.startsWith('event:')) {
+              slug = reg.utm_source.replace('event:', '');
+            }
+            const matchingEvent = eventMapBySlug.get(slug);
+
+            result.push({
+              id: reg.id,
+              event_id: matchingEvent?.id || 'event-default-1',
+              event_slug: slug,
+              event_title: matchingEvent?.title || reg.utm_campaign || 'Business Summit 2026',
+              tenant_id: reg.tenant_id || tenantId,
+              booking_id: reg.booking_id,
+              ticket_code: `PASS-${reg.booking_id.slice(-6)}`,
+              name: reg.name,
+              email: reg.email,
+              phone: reg.phone,
+              business_name: reg.business_name,
+              pass_type: reg.tier ? (reg.tier.charAt(0).toUpperCase() + reg.tier.slice(1)) : 'Standard',
+              status: reg.registration_status === 'checked_in' ? 'checked_in' : 'confirmed',
+              registered_at: reg.created_at,
+              notes: null,
+            });
+            seenBookingIds.add(reg.booking_id);
+          }
+        }
+      }
+    } catch (dbErr: any) {
+      logger.warn('Non-blocking registrations query error in getAllTenantAttendees:', { message: dbErr?.message });
     }
 
     // Sort newest first
     return result.sort((a, b) => new Date(b.registered_at).getTime() - new Date(a.registered_at).getTime());
+  }
+
+  /**
+   * Get single attendee by booking ID
+   */
+  async getAttendeeByBookingId(bookingId: string): Promise<AttendeeRecord | null> {
+    ensureSeedEvent();
+    // Search in-memory attendees
+    for (const list of inMemoryAttendees.values()) {
+      const found = list.find(a => a.booking_id.toUpperCase() === bookingId.toUpperCase());
+      if (found) return found;
+    }
+
+    // Search database registrations
+    try {
+      const { data: reg } = await supabase
+        .from('registrations')
+        .select('*')
+        .eq('booking_id', bookingId)
+        .single();
+
+      if (reg) {
+        let slug = 'default';
+        if (reg.utm_source && reg.utm_source.startsWith('event:')) {
+          slug = reg.utm_source.replace('event:', '');
+        }
+        const event = inMemoryEvents.get(slug);
+
+        return {
+          id: reg.id,
+          event_id: event?.id || 'event-default-1',
+          event_slug: slug,
+          event_title: event?.title || reg.utm_campaign || 'Business Summit 2026',
+          tenant_id: reg.tenant_id || '00000000-0000-0000-0000-000000000001',
+          booking_id: reg.booking_id,
+          ticket_code: `PASS-${reg.booking_id.slice(-6)}`,
+          name: reg.name,
+          email: reg.email,
+          phone: reg.phone,
+          business_name: reg.business_name,
+          pass_type: reg.tier ? (reg.tier.charAt(0).toUpperCase() + reg.tier.slice(1)) : 'Standard',
+          status: reg.registration_status === 'checked_in' ? 'checked_in' : 'confirmed',
+          registered_at: reg.created_at,
+          notes: null,
+        };
+      }
+    } catch {
+      // Not found
+    }
+
+    return null;
+  }
+
+  /**
+   * Gate Check-in an attendee by booking ID
+   */
+  async checkInAttendee(bookingId: string, tenantId?: string): Promise<{
+    success: boolean;
+    message: string;
+    attendee: AttendeeRecord;
+    checked_in_at: string;
+  }> {
+    const attendee = await this.getAttendeeByBookingId(bookingId);
+    if (!attendee) {
+      throw new AppError('Ticket or booking ID not found.', 404, 'NOT_FOUND');
+    }
+
+    if (attendee.status === 'checked_in') {
+      throw new AppError(`Attendee ${attendee.name} has already checked in!`, 409, 'ALREADY_CHECKED_IN');
+    }
+
+    const now = new Date().toISOString();
+    attendee.status = 'checked_in';
+
+    // Update in-memory
+    for (const list of inMemoryAttendees.values()) {
+      const item = list.find(a => a.booking_id.toUpperCase() === bookingId.toUpperCase());
+      if (item) {
+        item.status = 'checked_in';
+      }
+    }
+
+    // Update Supabase registrations table
+    try {
+      await supabase
+        .from('registrations')
+        .update({
+          registration_status: 'checked_in',
+          ticket_downloaded: true,
+          updated_at: now,
+        })
+        .eq('booking_id', bookingId);
+    } catch (e: any) {
+      logger.warn('Non-blocking DB update error during check-in:', { message: e?.message });
+    }
+
+    // Audit log
+    try {
+      const { auditService } = await import('./audit.service.js');
+      await auditService.log({
+        action: 'ATTENDEE_CHECKIN',
+        resource_type: 'registration',
+        resource_id: attendee.id,
+        tenant_id: attendee.tenant_id,
+        metadata: {
+          booking_id: bookingId,
+          name: attendee.name,
+          pass_type: attendee.pass_type,
+          event_slug: attendee.event_slug,
+        },
+      });
+    } catch {
+      // Non-blocking
+    }
+
+    return {
+      success: true,
+      message: `Welcome, ${attendee.name}! Check-in verified.`,
+      attendee,
+      checked_in_at: now,
+    };
   }
 
   /**

@@ -246,10 +246,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const confirmedTicket = document.getElementById('confirmed-ticket-code');
                     const confirmedName = document.getElementById('confirmed-attendee-name');
                     const confirmedPass = document.getElementById('confirmed-pass-tier');
+                    const qrImg = document.getElementById('confirmed-qr-image');
+                    const passBtn = document.getElementById('view-digital-pass-btn');
 
+                    const refCode = json.booking_id || json.ticket_code || 'CONFIRMED';
                     if (confirmedTicket) confirmedTicket.textContent = json.ticket_code || json.booking_id || 'CONFIRMED';
                     if (confirmedName) confirmedName.textContent = name;
                     if (confirmedPass) confirmedPass.textContent = `${pass_type} Pass`;
+
+                    if (qrImg && refCode) {
+                        const qrUrl = (typeof window !== 'undefined' && typeof window.resolveApiUrl === 'function')
+                            ? window.resolveApiUrl(`/qr/ticket/${encodeURIComponent(refCode)}`)
+                            : `/api/qr/ticket/${encodeURIComponent(refCode)}`;
+                        qrImg.src = qrUrl;
+                        qrImg.style.display = 'block';
+                    }
+
+                    if (passBtn && refCode) {
+                        passBtn.href = `/ticket.html?booking=${encodeURIComponent(refCode)}`;
+                        passBtn.style.display = 'inline-flex';
+                    }
                 }
 
                 if (window.lucide) window.lucide.createIcons();

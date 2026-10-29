@@ -4,6 +4,9 @@ import {
   checkRegistration,
   checkPendingRegistration,
   resendConfirmationEmail,
+  checkInRegistration,
+  getTicketQrCode,
+  getEventQrCode,
 } from '../controllers/registration.controller.js';
 import { readOnlyLimiter, standardLimiter } from '../middleware/rateLimiter.js';
 import { validateParams, bookingIdSchema } from '../middleware/validation.js';
@@ -12,16 +15,11 @@ import { asyncHandler } from '../middleware/errorHandler.js';
 const router = Router();
 
 /**
- * @route GET /api/registration/:bookingId
- * @desc Get registration details by booking ID
- * @access Public (limited data)
+ * @route POST /api/registration/checkin
+ * @desc Check-in attendee by booking ID
+ * @access Public / Gate scanner
  */
-router.get(
-  '/:bookingId',
-  readOnlyLimiter,
-  validateParams(bookingIdSchema),
-  asyncHandler(getRegistration)
-);
+router.post('/checkin', standardLimiter, asyncHandler(checkInRegistration));
 
 /**
  * @route POST /api/registration/check
@@ -36,6 +34,18 @@ router.post('/check', standardLimiter, asyncHandler(checkRegistration));
  * @access Public
  */
 router.post('/pending', standardLimiter, asyncHandler(checkPendingRegistration));
+
+/**
+ * @route GET /api/registration/:bookingId
+ * @desc Get registration details by booking ID
+ * @access Public (limited data)
+ */
+router.get(
+  '/:bookingId',
+  readOnlyLimiter,
+  validateParams(bookingIdSchema),
+  asyncHandler(getRegistration)
+);
 
 /**
  * @route POST /api/registration/:bookingId/resend-email

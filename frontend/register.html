@@ -346,11 +346,21 @@
                                 <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Attendee:</span>
                                 <strong id="confirmed-attendee-name" style="font-size: 13px; color: #fff;">Name</strong>
                             </div>
-                            <div style="display: flex; justify-content: space-between;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
                                 <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Pass Tier:</span>
                                 <span id="confirmed-pass-tier" class="badge" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8;">Standard Pass</span>
                             </div>
+
+                            <!-- Live Scannable Pass QR Code -->
+                            <div style="text-align: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08);">
+                                <img id="confirmed-qr-image" src="" alt="Ticket QR Code" style="width: 140px; height: 140px; border-radius: 12px; background: #fff; padding: 6px; display: none; margin: 0 auto 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);" />
+                                <span style="font-size: 10.5px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;">Official Gate QR Code</span>
+                            </div>
                         </div>
+
+                        <a id="view-digital-pass-btn" href="#" class="btn btn-primary btn-block" style="display: none; gap: 8px; padding: 12px; font-size: 13.5px; font-weight: 800; margin-bottom: 10px; text-decoration: none; justify-content: center; align-items: center; box-shadow: 0 0 20px rgba(0, 245, 255, 0.25);">
+                            <i data-lucide="ticket" style="width: 16px; height: 16px;"></i> View Digital Pass Badge
+                        </a>
 
                         <button onclick="window.print()" class="btn btn-outline btn-block" style="gap: 6px; padding: 10px; font-size: 13px; font-weight: 700; margin-bottom: 8px;">
                             <i data-lucide="printer" style="width: 14px; height: 14px;"></i> Print / Save Pass Receipt
@@ -365,6 +375,7 @@
     </div>
 
     <!-- Scripts -->
+    <script src="/js/config.js"></script>
     <script src="/js/register.js"></script>
 </body>
 </html>
